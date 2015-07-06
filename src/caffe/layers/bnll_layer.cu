@@ -6,7 +6,8 @@
 
 namespace caffe {
 
-const float kBNLL_THRESHOLD = 50.;
+//const float kBNLL_THRESHOLD = 50.;
+#define kBNLL_THRESHOLD 50.0
 
 template <typename Dtype>
 __global__ void BNLLForward(const int n, const Dtype* in, Dtype* out) {

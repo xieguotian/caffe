@@ -91,3 +91,11 @@ LOCK
 LOG*
 CURRENT
 MANIFEST-*
+
+#3rdparty
+3rdparty/
+bin/
+caffe/caffe/src
+caffe/caffe/x64
+caffe/*.sdf
+caffe/caffe/*.pdb

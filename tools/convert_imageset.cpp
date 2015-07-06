@@ -23,6 +23,8 @@
 #include "caffe/util/io.hpp"
 #include "caffe/util/rng.hpp"
 
+#define snprintf sprintf_s
+
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::pair;
 using boost::scoped_ptr;
