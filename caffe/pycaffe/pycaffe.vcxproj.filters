@@ -14,19 +14,22 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="util">
-      <UniqueIdentifier>{cacb756a-62ee-4fbe-b8ec-2a462c730a9b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\util">
-      <UniqueIdentifier>{8415c2c5-ef35-4135-b7a9-0595d641b9dd}</UniqueIdentifier>
+      <UniqueIdentifier>{1ad7cfd6-cd0e-47e4-8980-bef6611e32e4}</UniqueIdentifier>
     </Filter>
     <Filter Include="layers">
-      <UniqueIdentifier>{55548458-99d5-4049-b154-13c838e9ba77}</UniqueIdentifier>
+      <UniqueIdentifier>{80d10f50-c02a-45c9-b735-ef7ef3a56b7e}</UniqueIdentifier>
     </Filter>
     <Filter Include="protobuf">
-      <UniqueIdentifier>{75a2facc-ef2e-49aa-95bb-b9188d3b294f}</UniqueIdentifier>
+      <UniqueIdentifier>{0f869d0e-f1f7-4ef4-ab54-cef235b32d7e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\util">
+      <UniqueIdentifier>{429dabba-2525-41fa-8059-51fb32e2c49f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\python\caffe\_caffe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\caffe\blob.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -249,9 +252,6 @@
     <ClCompile Include="..\..\src\caffe\proto\caffe.pb.cc">
       <Filter>protobuf</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\tools\caffe.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\caffe\mkstemp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -350,9 +350,6 @@
     <ClInclude Include="..\..\src\caffe\proto\caffe.pb.h">
       <Filter>protobuf</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\3rdparty\include\cudnn.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\caffe\mkstemp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -361,9 +358,11 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu">
+    <None Include="..\..\src\caffe\layers\absval_layer.cu">
       <Filter>layers</Filter>
-    </CudaCompile>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\base_data_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>

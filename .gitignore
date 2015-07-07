@@ -83,6 +83,10 @@ docs/gathered
 _site
 doxygen
 docs/dev
+python/caffe/*.dll
+python/caffe/*.pyd
+python/caffe/*.lib
+python/caffe/*.exp
 
 # LevelDB files
 *.sst
@@ -99,3 +103,8 @@ caffe/caffe/src
 caffe/caffe/x64
 caffe/*.sdf
 caffe/caffe/*.pdb
+caffe/pycaffe/src
+caffe/pycaffe/x64
+caffe/pycaffe/*.pdb
+caffe/*.opensdf
+python/caffe/*.pdb
