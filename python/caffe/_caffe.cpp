@@ -31,6 +31,8 @@ namespace caffe {
 // For Python, for now, we'll just always use float as the type.
 typedef float Dtype;
 const int NPY_DTYPE = NPY_FLOAT32;
+//typedef double Dtype;
+//const int NPY_DTYPE = NPY_FLOAT64;
 
 // Selecting mode.
 void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
@@ -166,8 +168,10 @@ struct NdarrayCallPolicies : public bp::default_call_policies {
     Py_DECREF(result);
     const int num_axes = blob->num_axes();
     vector<npy_intp> dims(blob->shape().begin(), blob->shape().end());
-    PyObject *arr_obj = PyArray_SimpleNewFromData(num_axes, dims.data(),
-                                                  NPY_FLOAT32, data);
+    //PyObject *arr_obj = PyArray_SimpleNewFromData(num_axes, dims.data(),
+    //                                              NPY_FLOAT32, data);
+	PyObject *arr_obj = PyArray_SimpleNewFromData(num_axes, dims.data(),
+		NPY_DTYPE, data);
     // SetBaseObject steals a ref, so we need to INCREF.
     Py_INCREF(pyblob.ptr());
     PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(arr_obj),

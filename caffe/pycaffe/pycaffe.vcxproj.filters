@@ -255,6 +255,9 @@
     <ClCompile Include="..\..\src\caffe\mkstemp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\unpooling_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\blob.hpp">
@@ -356,11 +359,6 @@
     <ClInclude Include="..\..\include\caffe\unistd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\src\caffe\layers\absval_layer.cu">
-      <Filter>layers</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\base_data_layer.cu">
@@ -482,6 +480,10 @@
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\util\math_functions.cu">
       <Filter>util</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\unpooling_layer.cu">
+      <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>
