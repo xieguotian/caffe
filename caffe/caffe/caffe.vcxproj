@@ -80,6 +80,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>../../bin/</OutDir>
+    <TargetName>$(ProjectName)_test</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -205,6 +206,7 @@
     <ClCompile Include="..\..\src\caffe\layers\reduction_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\relu_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\reshape_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\sigmoid_cross_entropy_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\sigmoid_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\silence_layer.cpp" />
@@ -266,6 +268,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\prelu_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\reduction_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\relu_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\sigmoid_cross_entropy_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\sigmoid_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\silence_layer.cu" />
@@ -287,6 +290,7 @@
     <ClInclude Include="..\..\include\caffe\common_layers.hpp" />
     <ClInclude Include="..\..\include\caffe\data_layers.hpp" />
     <ClInclude Include="..\..\include\caffe\data_transformer.hpp" />
+    <ClInclude Include="..\..\include\caffe\fast_rcnn_layers.hpp" />
     <ClInclude Include="..\..\include\caffe\filler.hpp" />
     <ClInclude Include="..\..\include\caffe\internal_thread.hpp" />
     <ClInclude Include="..\..\include\caffe\layer.hpp" />

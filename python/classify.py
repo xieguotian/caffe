@@ -92,7 +92,7 @@ def main(argv):
 
     mean, channel_swap = None, None
     if args.mean_file:
-        mean = np.load(args.mean_file)
+        mean = np.load(args.mean_file).mean(1).mean(1)
     if args.channel_swap:
         channel_swap = [int(s) for s in args.channel_swap.split(',')]
 
@@ -116,8 +116,10 @@ def main(argv):
         inputs = np.load(args.input_file)
     elif os.path.isdir(args.input_file):
         print("Loading folder: %s" % args.input_file)
-        inputs =[caffe.io.load_image(im_f)
-                 for im_f in glob.glob(args.input_file + '/*.' + args.ext)]
+        #inputs =[caffe.io.load_image(im_f)
+        #         for im_f in glob.glob(args.input_file + '/*.' + args.ext)]
+        list = glob.glob(args.input_file + '/*.' + args.ext)
+        inputs = list
     else:
         print("Loading file: %s" % args.input_file)
         inputs = [caffe.io.load_image(args.input_file)]
@@ -126,7 +128,15 @@ def main(argv):
 
     # Classify.
     start = time.time()
-    predictions = classifier.predict(inputs, not args.center_only)
+    if len(list)!=0:
+        predictions = []
+        for idx in range(0,len(list),100):
+            inputs = [caffe.io.load_image(im_f)
+                    for im_f in list[idx:idx+100]]
+            predictions.extend(classifier.predict(inputs, not args.center_only))
+            print 'process {} images'.format(idx+100)
+    else:
+        predictions = classifier.predict(inputs, not args.center_only)
     print("Done in %.2f s." % (time.time() - start))
 
     # Save

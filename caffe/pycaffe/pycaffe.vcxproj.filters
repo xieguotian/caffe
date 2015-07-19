@@ -258,6 +258,9 @@
     <ClCompile Include="..\..\src\caffe\layers\unpooling_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\blob.hpp">
@@ -357,6 +360,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\caffe\unistd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\fast_rcnn_layers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -483,6 +489,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\unpooling_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>
