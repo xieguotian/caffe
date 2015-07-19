@@ -1,4 +1,4 @@
-#include <unistd.h>  // for usleep
+//#include <unistd.h>  // for usleep
 
 #include "gtest/gtest.h"
 
@@ -7,6 +7,7 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 
+#include "caffe/unistd.h"
 namespace caffe {
 
 const float kMillisecondsThreshold = 30;

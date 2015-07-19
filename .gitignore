@@ -108,3 +108,6 @@ caffe/pycaffe/x64
 caffe/pycaffe/*.pdb
 caffe/*.opensdf
 python/caffe/*.pdb
+caffe/gtest_caffe/x64
+caffe/gtest_caffe/src
+caffe/gtest_caffe/*.pdb

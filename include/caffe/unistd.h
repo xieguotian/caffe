@@ -5,4 +5,12 @@
 #define _UNISTD_H
 #include <io.h>
 #include <process.h>
+#include <windows.h>
+#define usleep(x) Sleep(x/1000.0)
+/*
+int usleep(unsigned long usec)
+{
+	Sleep(usec / 1000.0);
+}*/
+
 #endif /* _UNISTD_H */
