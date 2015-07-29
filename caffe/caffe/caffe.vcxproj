@@ -80,7 +80,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>../../bin/</OutDir>
-    <TargetName>$(ProjectName)_test</TargetName>
+    <TargetName>extract_features</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -143,6 +143,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../../include;../../src;E:\v-guoxie\lib\opencv\build\include;E:\v-guoxie\lib\opencv\build\include\opencv;E:\v-guoxie\lib\boost_1_58_0;../../3rdparty/include;../../3rdparty/include/openblas;../../3rdparty/include/hdf5;../../3rdparty/include/lmdb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0\include;../../include/caffe;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-D_SCL_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

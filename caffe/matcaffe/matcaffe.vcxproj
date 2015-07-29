@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{E0E67B43-B192-4128-85E9-C5F928B377D0}</ProjectGuid>
+    <ProjectGuid>{5B6EC58A-8109-45E8-929E-47F71C8B9A0F}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>pycaffe</RootNamespace>
+    <RootNamespace>matcaffe</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -78,9 +78,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>../../python/caffe</OutDir>
-    <TargetName>_caffe</TargetName>
-    <TargetExt>.pyd</TargetExt>
+    <OutDir>../../matlab/+caffe/private</OutDir>
+    <TargetName>caffe_</TargetName>
+    <TargetExt>.mexw64</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -88,12 +88,13 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PYCAFFE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MATCAFFE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ModuleDefinitionFile>matcaffe.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -102,12 +103,13 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PYCAFFE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MATCAFFE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ModuleDefinitionFile>matcaffe.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -118,7 +120,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PYCAFFE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MATCAFFE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
@@ -126,6 +128,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <ModuleDefinitionFile>matcaffe.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -136,23 +139,33 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PYCAFFE_EXPORTS;_CRT_SECURE_NO_WARNINGS;USE_CUDNN;WITH_PYTHON_LAYER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MATCAFFE_EXPORTS;_CRT_SECURE_NO_WARNINGS;USE_CUDNN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Anaconda\include;C:\Anaconda\Lib\site-packages\numpy\core\include;../../include/caffe;../../include;../../src;E:\v-guoxie\lib\opencv\build\include;E:\v-guoxie\lib\opencv\build\include\opencv;E:\v-guoxie\lib\boost_1_58_0;../../3rdparty/include;../../3rdparty/include/openblas;../../3rdparty/include/hdf5;../../3rdparty/include/lmdb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\MATLAB\R2014a\extern\include;../../include;../../src;E:\v-guoxie\lib\opencv\build\include;E:\v-guoxie\lib\opencv\build\include\opencv;E:\v-guoxie\lib\boost_1_58_0;../../3rdparty/include;../../3rdparty/include/openblas;../../3rdparty/include/hdf5;../../3rdparty/include/lmdb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0\include;../../include/caffe;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
       <AdditionalOptions>-D_SCL_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\Anaconda\libs;E:\v-guoxie\lib\boost_1_58_0\lib;E:\v-guoxie\lib\opencv\build\x64\vc12\lib;../../3rdparty/lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>python27.lib;opencv_core2410.lib;opencv_flann2410.lib;opencv_imgproc2410.lib;opencv_highgui2410.lib;opencv_legacy2410.lib;opencv_video2410.lib;opencv_ml2410.lib;opencv_calib3d2410.lib;opencv_objdetect2410.lib;opencv_stitching2410.lib;opencv_gpu2410.lib;opencv_nonfree2410.lib;opencv_features2d2410.lib;cudart.lib;cuda.lib;nppi.lib;cufft.lib;cublas.lib;curand.lib;gflags.lib;libglog.lib;libopenblas.dll.a;libprotobuf.lib;libprotoc.lib;leveldb.lib;lmdb.lib;hdf5.lib;hdf5_hl.lib;Shlwapi.lib;cudnn64_65.lib;cudnn.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files\MATLAB\R2014a\extern\lib\win64\microsoft;E:\v-guoxie\lib\boost_1_58_0\lib;E:\v-guoxie\lib\opencv\build\x64\vc12\lib;../../3rdparty/lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0\lib\x64;%(AdditionalLibraryDirectories);$(CudaToolkitLibDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libmat.lib;libmex.lib;libmx.lib;opencv_core2410.lib;opencv_flann2410.lib;opencv_imgproc2410.lib;opencv_highgui2410.lib;opencv_legacy2410.lib;opencv_video2410.lib;opencv_ml2410.lib;opencv_calib3d2410.lib;opencv_objdetect2410.lib;opencv_stitching2410.lib;opencv_gpu2410.lib;opencv_nonfree2410.lib;opencv_features2d2410.lib;cudart.lib;cuda.lib;nppi.lib;cufft.lib;cublas.lib;curand.lib;gflags.lib;libglog.lib;libopenblas.dll.a;libprotobuf.lib;libprotoc.lib;leveldb.lib;lmdb.lib;hdf5_hl.lib;hdf5.lib;Shlwapi.lib;cudnn64_65.lib;cudnn.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+      <AdditionalOptions>/export:mexFunction %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <CudaCompile>
+      <CudaRuntime>Shared</CudaRuntime>
+    </CudaCompile>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <CodeGeneration>compute_20,sm_20;compute_30,sm_30;compute_35,sm_35;compute_50,sm_50</CodeGeneration>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\python\caffe\_caffe.cpp" />
+    <ClCompile Include="..\..\matlab\+caffe\private\caffe_.cpp" />
     <ClCompile Include="..\..\src\caffe\blob.cpp" />
     <ClCompile Include="..\..\src\caffe\common.cpp" />
     <ClCompile Include="..\..\src\caffe\data_transformer.cpp" />
@@ -232,42 +245,6 @@
     <ClCompile Include="..\..\src\caffe\util\upgrade_proto.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\caffe\blob.hpp" />
-    <ClInclude Include="..\..\include\caffe\caffe.hpp" />
-    <ClInclude Include="..\..\include\caffe\common.hpp" />
-    <ClInclude Include="..\..\include\caffe\common_layers.hpp" />
-    <ClInclude Include="..\..\include\caffe\data_layers.hpp" />
-    <ClInclude Include="..\..\include\caffe\data_transformer.hpp" />
-    <ClInclude Include="..\..\include\caffe\fast_rcnn_layers.hpp" />
-    <ClInclude Include="..\..\include\caffe\filler.hpp" />
-    <ClInclude Include="..\..\include\caffe\internal_thread.hpp" />
-    <ClInclude Include="..\..\include\caffe\layer.hpp" />
-    <ClInclude Include="..\..\include\caffe\layer_factory.hpp" />
-    <ClInclude Include="..\..\include\caffe\loss_layers.hpp" />
-    <ClInclude Include="..\..\include\caffe\mkstemp.h" />
-    <ClInclude Include="..\..\include\caffe\net.hpp" />
-    <ClInclude Include="..\..\include\caffe\neuron_layers.hpp" />
-    <ClInclude Include="..\..\include\caffe\python_layer.hpp" />
-    <ClInclude Include="..\..\include\caffe\solver.hpp" />
-    <ClInclude Include="..\..\include\caffe\syncedmem.hpp" />
-    <ClInclude Include="..\..\include\caffe\unistd.h" />
-    <ClInclude Include="..\..\include\caffe\util\benchmark.hpp" />
-    <ClInclude Include="..\..\include\caffe\util\cudnn.hpp" />
-    <ClInclude Include="..\..\include\caffe\util\db.hpp" />
-    <ClInclude Include="..\..\include\caffe\util\db_leveldb.hpp" />
-    <ClInclude Include="..\..\include\caffe\util\db_lmdb.hpp" />
-    <ClInclude Include="..\..\include\caffe\util\device_alternate.hpp" />
-    <ClInclude Include="..\..\include\caffe\util\im2col.hpp" />
-    <ClInclude Include="..\..\include\caffe\util\insert_splits.hpp" />
-    <ClInclude Include="..\..\include\caffe\util\io.hpp" />
-    <ClInclude Include="..\..\include\caffe\util\math_functions.hpp" />
-    <ClInclude Include="..\..\include\caffe\util\mkl_alternate.hpp" />
-    <ClInclude Include="..\..\include\caffe\util\rng.hpp" />
-    <ClInclude Include="..\..\include\caffe\util\upgrade_proto.hpp" />
-    <ClInclude Include="..\..\include\caffe\vision_layers.hpp" />
-    <ClInclude Include="..\..\src\caffe\proto\caffe.pb.h" />
-  </ItemGroup>
-  <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\base_data_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\bnll_layer.cu" />
@@ -311,6 +288,42 @@
     <CudaCompile Include="..\..\src\caffe\layers\unpooling_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\util\im2col.cu" />
     <CudaCompile Include="..\..\src\caffe\util\math_functions.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\caffe\blob.hpp" />
+    <ClInclude Include="..\..\include\caffe\caffe.hpp" />
+    <ClInclude Include="..\..\include\caffe\common.hpp" />
+    <ClInclude Include="..\..\include\caffe\common_layers.hpp" />
+    <ClInclude Include="..\..\include\caffe\data_layers.hpp" />
+    <ClInclude Include="..\..\include\caffe\data_transformer.hpp" />
+    <ClInclude Include="..\..\include\caffe\fast_rcnn_layers.hpp" />
+    <ClInclude Include="..\..\include\caffe\filler.hpp" />
+    <ClInclude Include="..\..\include\caffe\internal_thread.hpp" />
+    <ClInclude Include="..\..\include\caffe\layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layer_factory.hpp" />
+    <ClInclude Include="..\..\include\caffe\loss_layers.hpp" />
+    <ClInclude Include="..\..\include\caffe\mkstemp.h" />
+    <ClInclude Include="..\..\include\caffe\net.hpp" />
+    <ClInclude Include="..\..\include\caffe\neuron_layers.hpp" />
+    <ClInclude Include="..\..\include\caffe\python_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\solver.hpp" />
+    <ClInclude Include="..\..\include\caffe\syncedmem.hpp" />
+    <ClInclude Include="..\..\include\caffe\unistd.h" />
+    <ClInclude Include="..\..\include\caffe\util\benchmark.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\cudnn.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\db.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\db_leveldb.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\db_lmdb.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\device_alternate.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\im2col.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\insert_splits.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\io.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\math_functions.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\mkl_alternate.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\rng.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\upgrade_proto.hpp" />
+    <ClInclude Include="..\..\include\caffe\vision_layers.hpp" />
+    <ClInclude Include="..\..\src\caffe\proto\caffe.pb.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

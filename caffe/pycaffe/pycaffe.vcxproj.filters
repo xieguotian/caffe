@@ -487,11 +487,13 @@
     <CudaCompile Include="..\..\src\caffe\util\math_functions.cu">
       <Filter>util</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\unpooling_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>

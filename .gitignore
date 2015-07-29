@@ -111,3 +111,6 @@ python/caffe/*.pdb
 caffe/gtest_caffe/x64
 caffe/gtest_caffe/src
 caffe/gtest_caffe/*.pdb
+caffe/matcaffe/src
+caffe/matcaffe/x64
+caffe/matcaffe/*.pdb
