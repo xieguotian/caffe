@@ -87,6 +87,10 @@ python/caffe/*.dll
 python/caffe/*.pyd
 python/caffe/*.lib
 python/caffe/*.exp
+matlab/+caffe/private/*.dll
+matlab/+caffe/private/*.lib
+matlab/+caffe/private/*.exp
+matlab/+caffe/private/*.pdb
 
 # LevelDB files
 *.sst

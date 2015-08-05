@@ -5,6 +5,7 @@
 #define _UNISTD_H
 #include <io.h>
 #include <process.h>
+#define NOMINMAX
 #include <windows.h>
 #define usleep(x) Sleep(x/1000.0)
 /*

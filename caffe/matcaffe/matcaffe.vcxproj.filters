@@ -261,6 +261,9 @@
     <ClCompile Include="..\..\matlab\+caffe\private\caffe_.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\k_sparse_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu">
@@ -391,6 +394,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\util\math_functions.cu">
       <Filter>util</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\k_sparse_layer.cu">
+      <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
