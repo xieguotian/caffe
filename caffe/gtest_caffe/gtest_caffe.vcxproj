@@ -32,6 +32,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\cudnn_softmax_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\cudnn_tanh_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\deconv_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\deconv_norm_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\dropout_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\eltwise_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\euclidean_loss_layer.cu" />
@@ -87,6 +88,7 @@
     <ClCompile Include="..\..\src\caffe\layers\cudnn_tanh_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\data_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\deconv_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\deconv_norm_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\dropout_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\dummy_data_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\eltwise_layer.cpp" />
@@ -147,6 +149,7 @@
     <ClCompile Include="..\..\src\caffe\test\test_data_transformer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_db.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_deconvolution_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_deconv_norm_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_dummy_data_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_eltwise_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_euclidean_loss_layer.cpp" />
@@ -163,6 +166,7 @@
     <ClCompile Include="..\..\src\caffe\test\test_inner_product_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_internal_thread.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_io.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_ksparse_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_layer_factory.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_lrn_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_math_functions.cpp" />

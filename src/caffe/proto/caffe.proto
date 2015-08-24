@@ -353,6 +353,7 @@ message LayerParameter {
   optional WindowDataParameter window_data_param = 129;
   optional ROIPoolingParameter roi_pooling_param = 8266711;
   optional KSparseParameter k_sparse_param = 8266712;
+  optional DeconvolutionParameter deconvolution_param = 8266713;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1131,4 +1132,11 @@ message KSparseParameter {
 	optional SparseMethod sparse_type = 1 [default = CHANNEL];
 	// number of k for sparse
 	optional uint32 sparse_k = 2 [default = 1];
+}
+
+// Message that specified deconvolution with weight average or not
+message DeconvolutionParameter{
+	optional bool weight_average = 1 [default = false];
+	optional bool average_train  = 2 [default = false];
+	optional FillerParameter alpha_filler = 3;
 }

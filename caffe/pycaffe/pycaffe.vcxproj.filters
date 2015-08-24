@@ -210,9 +210,6 @@
     <ClCompile Include="..\..\src\caffe\layers\spp_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\caffe\layers\tanh_layer.cpp">
-      <Filter>layers</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\caffe\layers\threshold_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
@@ -262,6 +259,12 @@
       <Filter>layers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\caffe\layers\k_sparse_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\deconv_norm_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\tanhs_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
   </ItemGroup>
@@ -478,9 +481,6 @@
     <CudaCompile Include="..\..\src\caffe\layers\split_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\src\caffe\layers\tanh_layer.cu">
-      <Filter>layers</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\threshold_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
@@ -500,6 +500,12 @@
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\k_sparse_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\deconv_norm_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\tanhs_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>

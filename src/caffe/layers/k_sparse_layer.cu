@@ -40,7 +40,7 @@ namespace caffe {
 						rank_idx[index_r] = rank_idx[index_r_last];
 					}
 				}
-				if (cr - 1 > 0)
+				if (cr - 1 >= 0)
 				{
 					index_r = stride_r + (cr - 1)*height*width;
 					rank_val[index_r] = b_val;

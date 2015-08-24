@@ -106,7 +106,7 @@ namespace caffe {
 							}
 
 							// set b_val on cr-1
-							if (cr - 1 > 0)
+							if (cr - 1 >= 0)
 							{
 								int index_r = (cr - 1)*stride_ch_r + index_b;
 								rank_val[index_r] = b_val;

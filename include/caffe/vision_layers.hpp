@@ -198,6 +198,11 @@ class DeconvolutionLayer : public BaseConvolutionLayer<Dtype> {
 
   virtual inline const char* type() const { return "Deconvolution"; }
 
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+	  const vector<Blob<Dtype>*>& top);
+
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+	  const vector<Blob<Dtype>*>& top);
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -209,6 +214,9 @@ class DeconvolutionLayer : public BaseConvolutionLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual inline bool reverse_dimensions() { return true; }
   virtual void compute_output_shape();
+
+  Blob<Dtype> avg_weights;
+  bool use_avg_weights;
 };
 
 #ifdef USE_CUDNN
@@ -594,6 +602,60 @@ protected:
 	int sparse_k;
 	Blob<int> rank_idx_;
 	Blob<Dtype> rank_val_;
+};
+
+template <typename Dtype>
+class DeconvNormLayer : public Layer<Dtype>
+{
+public:
+	explicit DeconvNormLayer(const LayerParameter& param)
+	: Layer<Dtype>(param) {}
+
+	virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+
+	virtual inline const char* type() const { return "DeconvNorm"; }
+	virtual inline int ExactNumBottomBlobs() const { return 1; }
+	virtual inline int MinTopBlobs() const { return 1; }
+
+	virtual inline int MaxTopBlobs() const { return 1; }
+
+protected:
+	virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+	virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+
+	bool bias_term_;
+	bool average_train;
+
+	Blob<Dtype> constant1;
+	Blob<Dtype> coef_norm;
+	Blob<Dtype> deconv_val;
+	shared_ptr<Blob<Dtype>> alphas;
+
+	Blob<Dtype> deconv1_top_cache;
+	Blob<Dtype> alpha_cache;
+	Blob<Dtype> alpha_cache2;
+	shared_ptr<Blob<Dtype>> weights_alphas;
+
+	vector<Blob<Dtype>*> deconv1_bottom_vec;
+	vector<Blob<Dtype>*> deconv1_top_vec;
+	vector<Blob<Dtype>*> deconv2_top_vec;
+	shared_ptr<DeconvolutionLayer<Dtype>> deconv1_layer;
+	shared_ptr<DeconvolutionLayer<Dtype>> deconv2_layer;
+	vector<Blob<Dtype>*> exp_top_vec;
+	vector<Blob<Dtype>*> exp_bottom_vec;
+	shared_ptr<ExpLayer<Dtype>> exp_layer;
+
+	Blob<Dtype> bias_multiplier;
 };
 
 }  // namespace caffe
