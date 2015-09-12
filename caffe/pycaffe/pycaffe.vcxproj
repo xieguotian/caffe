@@ -213,7 +213,7 @@
     <ClCompile Include="..\..\src\caffe\layers\softmax_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\split_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\spp_layer.cpp" />
-    <ClCompile Include="..\..\src\caffe\layers\tanhs_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\tanh_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\threshold_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\unpooling_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\window_data_layer.cpp" />
@@ -311,7 +311,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\softmax_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\softmax_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\split_layer.cu" />
-    <CudaCompile Include="..\..\src\caffe\layers\tanhs_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\tanh_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\threshold_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\unpooling_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\util\im2col.cu" />

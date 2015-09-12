@@ -70,30 +70,48 @@ namespace caffe {
 		caffe_gpu_set(top_count, Dtype(0), top_data);
 		
 		int count = bottom[0]->num()*bottom[0]->height()*bottom[0]->width();
-		int* rank_idx = rank_idx_.mutable_gpu_data();
-		Dtype* rank_val = rank_val_.mutable_gpu_data();
+
+		int* rank_idx = NULL;
+		Dtype* rank_val = NULL;
 		Dtype* top_mask = NULL;
-		int rank_count = rank_val_.count();
-		caffe_gpu_set(rank_count, Dtype(-FLT_MAX), rank_val);
+		int rank_count = 0;
 
-		switch (this->layer_param_.k_sparse_param().sparse_type())
+		KSparseParameter k_sparse_param = this->layer_param_.k_sparse_param();
+		switch (k_sparse_param.type())
 		{
-		case KSparseParameter_SparseMethod_CHANNEL:
-			if (top.size() > 1)
-				top_mask = top[1]->mutable_gpu_data();
-
-			ChannelSparseFroward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-				count, bottom_data, bottom[0]->num(), bottom[0]->channels(),
-				bottom[0]->height(), bottom[0]->width(), rank_idx_.channels(),
-				top_data, rank_idx, top_mask, rank_val);
+		case KSparseParameter_SparseType_L1:
+			caffe_copy(top_count, bottom_data, top_data);
 			break;
-		case KSparseParameter_SparseMethod_SPAT:
-			NOT_IMPLEMENTED;
+		case KSparseParameter_SparseType_L2:
+			caffe_copy(top_count, bottom_data, top_data);
+			break;
+		case KSparseParameter_SparseType_KSPARSE:
+			rank_idx = rank_idx_.mutable_gpu_data();
+			rank_val = rank_val_.mutable_gpu_data();
+			rank_count = rank_val_.count();
+			caffe_gpu_set(rank_count, Dtype(-FLT_MAX), rank_val);
+			switch (this->layer_param_.k_sparse_param().sparse_type())
+			{
+			case KSparseParameter_SparseMethod_CHANNEL:
+				if (top.size() > 1)
+					top_mask = top[1]->mutable_gpu_data();
+
+				ChannelSparseFroward<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
+					count, bottom_data, bottom[0]->num(), bottom[0]->channels(),
+					bottom[0]->height(), bottom[0]->width(), rank_idx_.channels(),
+					top_data, rank_idx, top_mask, rank_val);
+				break;
+			case KSparseParameter_SparseMethod_SPAT:
+				NOT_IMPLEMENTED;
+				break;
+			default:
+				LOG(FATAL) << "Unknown sparse method.";
+			}
+			CUDA_POST_KERNEL_CHECK;
 			break;
 		default:
-			LOG(FATAL) << "Unknown pooling method.";
+			LOG(FATAL) << "Unknown sparse type.";
 		}
-		CUDA_POST_KERNEL_CHECK;
 	}
 
 	template <typename Dtype>
@@ -123,26 +141,44 @@ namespace caffe {
 		}
 		const Dtype* top_diff = top[0]->gpu_diff();
 		Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-		caffe_gpu_set(bottom[0]->count(), Dtype(0), bottom_diff);
+		//caffe_gpu_set(bottom[0]->count(), Dtype(0), bottom_diff);
 
-		int count = rank_idx_.count();
-		const int* rank_idx = rank_idx_.gpu_data();
-		switch (this->layer_param_.k_sparse_param().sparse_type())
+		int count = 0;
+		const int* rank_idx = NULL;
+
+		KSparseParameter k_sparse_param = this->layer_param_.k_sparse_param();
+		switch (k_sparse_param.type())
 		{
-		case KSparseParameter_SparseMethod_CHANNEL:
-			ChannelSparseBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-				count, top_diff, top[0]->num(), top[0]->channels(),
-				top[0]->height(), top[0]->width(), rank_idx_.channels(),
-				bottom_diff, rank_idx);
+		case KSparseParameter_SparseType_L1:
+			caffe_gpu_sign(top[0]->count(), top[0]->gpu_data(), bottom_diff);
+			caffe_gpu_axpby(bottom[0]->count(), (Dtype)1 , top_diff, decay, bottom_diff);
 			break;
-		case KSparseParameter_SparseMethod_SPAT:
-			NOT_IMPLEMENTED;
+		case KSparseParameter_SparseType_L2:
+			caffe_copy(bottom[0]->count(), top_diff, bottom_diff);
+			caffe_gpu_axpy(bottom[0]->count(), decay, top[0]->gpu_data(), bottom_diff);
+			break;
+		case KSparseParameter_SparseType_KSPARSE:
+			count = rank_idx_.count();
+			rank_idx = rank_idx_.gpu_data();
+			switch (this->layer_param_.k_sparse_param().sparse_type())
+			{
+			case KSparseParameter_SparseMethod_CHANNEL:
+				ChannelSparseBackward<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
+					count, top_diff, top[0]->num(), top[0]->channels(),
+					top[0]->height(), top[0]->width(), rank_idx_.channels(),
+					bottom_diff, rank_idx);
+				break;
+			case KSparseParameter_SparseMethod_SPAT:
+				NOT_IMPLEMENTED;
+				break;
+			default:
+				LOG(FATAL) << "Unknown sparse method.";
+			}
+			CUDA_POST_KERNEL_CHECK;
 			break;
 		default:
-			LOG(FATAL) << "Unknown pooling method.";
+			LOG(FATAL) << "Unknown sparse type.";
 		}
-
-		CUDA_POST_KERNEL_CHECK;
 	}
 
 	INSTANTIATE_LAYER_GPU_FUNCS(KSparseLayer);

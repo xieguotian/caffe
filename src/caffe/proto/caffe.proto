@@ -354,6 +354,7 @@ message LayerParameter {
   optional ROIPoolingParameter roi_pooling_param = 8266711;
   optional KSparseParameter k_sparse_param = 8266712;
   optional DeconvolutionParameter deconvolution_param = 8266713;
+  optional SmoothThresholdParameter smooth_threshold_param = 8266714;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1128,10 +1129,17 @@ message KSparseParameter {
     CHANNEL = 0;
     SPAT = 1;
 	}
+	enum SparseType{
+	L1 = 0;
+	L2 = 1;
+	KSPARSE = 2;
+	}
 	// type of sparse
 	optional SparseMethod sparse_type = 1 [default = CHANNEL];
 	// number of k for sparse
 	optional uint32 sparse_k = 2 [default = 1];
+	optional SparseType type = 3 [default = L1];
+	optional float decay = 4 [default = 0.0];
 }
 
 // Message that specified deconvolution with weight average or not
@@ -1139,4 +1147,11 @@ message DeconvolutionParameter{
 	optional bool weight_average = 1 [default = false];
 	optional bool average_train  = 2 [default = false];
 	optional FillerParameter alpha_filler = 3;
+}
+
+// Message that specified smooth threshold.
+message SmoothThresholdParameter{
+	optional float alpha = 1 [default = 1];
+	optional float beta = 2 [default = 1];
+	optional FillerParameter threshold_filler = 3;
 }
