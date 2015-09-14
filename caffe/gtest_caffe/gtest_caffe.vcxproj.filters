@@ -474,6 +474,12 @@
     <ClCompile Include="..\..\src\caffe\test\test_non_local_layer.cpp">
       <Filter>test</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\test\test_shrinkage_layer.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\shrinkage_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\base_data_layer.cu">
@@ -621,6 +627,9 @@
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\smooth_threshold_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\shrinkage_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>

@@ -841,6 +841,38 @@ protected:
 	shared_ptr<SplitLayer<Dtype>> split_layer_1;
 };
 
+//f(x,sita)=sign(xi)(xi-sita_i)+
+template <typename Dtype>
+class ShrinkageLayer : public Layer<Dtype>
+{
+public:
+	explicit ShrinkageLayer(const LayerParameter& param)
+		: Layer<Dtype>(param){}
+
+	virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+
+	virtual inline const char* type() const { return "shrinkage"; }
+	virtual inline int ExactNumBottomBlobs() const { return 1; }
+	virtual inline int MinTopBlobs() const { return 1; }
+
+	virtual inline int MaxTopBlobs() const { return 1; }
+
+protected:
+	virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+	virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+	Blob<Dtype> sign_x;
+	Blob<Dtype> cache_;
+};
 }  // namespace caffe
 
 #endif  // CAFFE_VISION_LAYERS_HPP_

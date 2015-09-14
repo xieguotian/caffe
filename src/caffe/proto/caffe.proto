@@ -355,6 +355,7 @@ message LayerParameter {
   optional KSparseParameter k_sparse_param = 8266712;
   optional DeconvolutionParameter deconvolution_param = 8266713;
   optional SmoothThresholdParameter smooth_threshold_param = 8266714;
+  optional ShrinkageParameter shrinkage_param = 8266715;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1153,5 +1154,11 @@ message DeconvolutionParameter{
 message SmoothThresholdParameter{
 	optional float alpha = 1 [default = 1];
 	optional float beta = 2 [default = 1];
+	optional FillerParameter threshold_filler = 3;
+}
+
+// Message that specified shrinkage layer
+message ShrinkageParameter
+{
 	optional FillerParameter threshold_filler = 3;
 }
