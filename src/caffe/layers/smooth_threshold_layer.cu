@@ -53,7 +53,7 @@ namespace caffe
 			const int count = bottom[0]->count();
 			Dtype* diff_th = diff.mutable_gpu_data();
 
-			ThresholdBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >>>(
+			ThresholdBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
 				count, top_diff, top_data, bottom_data, bottom_diff, diff_th, beta);
 
 			CUDA_POST_KERNEL_CHECK;
