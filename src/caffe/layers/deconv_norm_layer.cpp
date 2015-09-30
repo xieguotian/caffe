@@ -144,6 +144,8 @@ namespace caffe{
 		Dtype* top_data = top[0]->mutable_cpu_data();
 		const Dtype* deconv1_top_vec_data = deconv1_top_vec[0]->cpu_data();
 		const Dtype* deconv2_top_vec_data = deconv2_top_vec[0]->cpu_data();
+		caffe_add_scalar(deconv1_top_vec[0]->count(), (Dtype) std::numeric_limits<Dtype>::epsilon(), 
+			deconv1_top_vec[0]->mutable_cpu_data());
 		for (int n = 0; n < bottom[0]->num(); ++n)
 		{
 			caffe_div(deconv1_top_vec[0]->count(), deconv2_top_vec_data + deconv2_top_vec[0]->offset(n),

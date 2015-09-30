@@ -52,8 +52,9 @@ namespace caffe {
 		EXPECT_EQ(this->blob_top_->width(), 5);
 
 		layer.Forward(blob_bottom_vec_, blob_top_vec_);
+		const Dtype min_precision = 1e-5;
 		for (int i = 0; i < blob_top_->count(); i++)
-			EXPECT_EQ(blob_top_->mutable_cpu_data()[i], 3);
+			EXPECT_NEAR(blob_top_->mutable_cpu_data()[i], 3, min_precision);
 	}
 
 	TYPED_TEST(Col2ImgMaskLayerTest, TestForward_2) {
@@ -81,8 +82,9 @@ namespace caffe {
 		EXPECT_EQ(this->blob_top_->width(), 5);
 
 		layer.Forward(blob_bottom_vec_, blob_top_vec_);
+		const Dtype min_precision = 1e-5;
 		for (int i = 0; i < blob_top_->count(); i++)
-			EXPECT_EQ(blob_top_->mutable_cpu_data()[i], 2);
+			EXPECT_NEAR(blob_top_->mutable_cpu_data()[i], 2, min_precision);
 	}
 
 	TYPED_TEST(Col2ImgMaskLayerTest, TestBackward) {

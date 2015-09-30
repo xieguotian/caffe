@@ -168,7 +168,7 @@ namespace caffe {
 		shrinkage_param->mutable_threshold_filler()->set_type("constant");
 		shrinkage_param->mutable_threshold_filler()->set_value(0.3);
 
-		SmoothThresholdLayer<Dtype> layer(layer_param);
+		ShrinkageLayer<Dtype> layer(layer_param);
 		GradientChecker<Dtype> checker(1e-5, 1e-2, 1701);
 		checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
 			this->blob_top_vec_);

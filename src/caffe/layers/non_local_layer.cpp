@@ -114,6 +114,25 @@ namespace caffe{
 		this->blobs_[0]->ShareData(*smooth_threshold_layer->blobs()[0]);
 		this->blobs_[0]->ShareDiff(*smooth_threshold_layer->blobs()[0]);
 
+		split_layer_3.reset(new SplitLayer<Dtype>(split_param));
+		split_3_bottom_vec.clear();
+		split_3_top_vec.clear();
+		split_3_bottom_vec.push_back(smooth_top_vec[0]);
+		split_3_top_vec.push_back(&split_3_top_0);
+		split_3_top_vec.push_back(&split_3_top_1);
+		split_layer_3->SetUp(split_3_bottom_vec, split_3_top_vec);
+
+		LayerParameter normalize_param;
+		normalize_layer.reset(new NormalizeLayer<Dtype>(normalize_param));
+		normalize_bottom_vec.clear();
+		normalize_top_vec.clear();
+		normalize_bottom.Reshape(split_3_top_vec[1]->num()*split_3_top_vec[1]->channels(),
+			split_3_top_vec[1]->height(), 1, split_3_top_vec[1]->width());
+		//normalize_bottom_vec.push_back(split_3_top_vec[1]);
+		normalize_bottom_vec.push_back(&normalize_bottom);
+		normalize_top_vec.push_back(&normalize_top);
+		normalize_layer->SetUp(normalize_bottom_vec, normalize_top_vec);
+
 		split_layer_2.reset(new SplitLayer<Dtype>(split_param));
 		split_2_bottom_vec.clear();
 		split_2_top_vec.clear();
@@ -130,9 +149,9 @@ namespace caffe{
 		eltwise_top_vec.clear();
 		eltwise_bottom_vec.push_back(split_1_top_vec[0]);
 		eltwise_bottom_vec.push_back(split_2_top_vec[0]);
-		if (top.size() == 2)
+		if (top.size() == 3)
 		{
-			eltwise_top_vec.push_back(top[1]);
+			eltwise_top_vec.push_back(top[2]);
 			eltwise_layer->SetUp(eltwise_bottom_vec, eltwise_top_vec);
 		}
 		else
@@ -245,10 +264,17 @@ namespace caffe{
 		euclidean_bottom_1.ShareDiff(img2col_1_top);
 		euclidean_layer->Reshape(euclidean_bottom_vec, euclidean_top_vec);
 		smooth_threshold_layer->Reshape(smooth_bottom_vec, smooth_top_vec);
+		split_layer_3->Reshape(split_3_bottom_vec, split_3_top_vec);
+		normalize_bottom.Reshape(split_3_top_vec[1]->num()*split_3_top_vec[1]->channels(),
+			split_3_top_vec[1]->height(), 1, split_3_top_vec[1]->width());
+		normalize_layer->Reshape(normalize_bottom_vec, normalize_top_vec);
+		//top[1]->ReshapeLike(*normalize_top_vec[0]);
+
 		split_2_bottom_vec[0]->ReshapeLike(*split_1_top_vec[0]);
 		split_layer_2->Reshape(split_2_bottom_vec, split_2_top_vec);
+		top[1]->ReshapeLike(*top[0]);
 		//eltwise_bottom_vec[1]->ReshapeLike(*eltwise_bottom_vec[0]);
-		if (top.size()==2)
+		if (top.size()==3)
 			eltwise_layer->Reshape(eltwise_bottom_vec, eltwise_top_vec);
 		//top[0]->ReshapeLike(*euclidean_top_vec[0]);
 	}
@@ -271,30 +297,52 @@ namespace caffe{
 		}
 
 		split_layer_1->Forward(split_1_bottom_vec, split_1_top_vec);
-		euclidean_bottom_0.ShareData(*split_1_top_vec[1]);
+		euclidean_bottom_vec[0]->ShareData(*split_1_top_vec[1]);
 		euclidean_layer->Forward(euclidean_bottom_vec, euclidean_top_vec);
 
 		caffe_scal(euclidean_top_vec[0]->count(),
 			(Dtype)(1.0 / bottom[0]->channels()), euclidean_top_vec[0]->mutable_cpu_data());
 
 		smooth_threshold_layer->Forward(smooth_bottom_vec, smooth_top_vec);
-		
-		int tmp_offset = smooth_top_vec[0]->count() / smooth_top_vec[0]->num();
+		split_layer_3->Forward(split_3_bottom_vec, split_3_top_vec);
+		normalize_bottom_vec[0]->ShareData(*split_3_top_vec[1]);
+		normalize_layer->Forward(normalize_bottom_vec, normalize_top_vec);
+		//top[1]->ShareData(*normalize_top_vec[0]);
+		const Dtype* normalize_top_data = normalize_top_vec[0]->cpu_data();
+		const Dtype* split_3_top_data_1 = normalize_top_vec[0]->cpu_data();
+		Dtype* top_1_data = top[1]->mutable_cpu_data();
+		const int norm_offset = normalize_top_vec[0]->offset(1);
+
+		for (int n = 0; n < normalize_top_vec[0]->num(); ++n)
+		{
+			for (int ch = 0; ch < channels_; ++ch)
+			{
+				caffe_copy(norm_offset, split_3_top_data_1, top_1_data);
+				top_1_data += norm_offset;
+			}
+			split_3_top_data_1 += norm_offset;
+		}
+
+		//int tmp_offset = smooth_top_vec[0]->count() / smooth_top_vec[0]->num();
+		const int tmp_offset = split_3_top_vec[0]->offset(1);
 		
 		Dtype* split_2_bottom_data = split_2_bottom_vec[0]->mutable_cpu_data();
-		const Dtype* smooth_top_data = smooth_top_vec[0]->cpu_data();
+		//const Dtype* smooth_top_data = smooth_top_vec[0]->cpu_data();
+		const Dtype* split_3_top_data = split_3_top_vec[0]->cpu_data();
 		for (int n = 0; n < split_2_bottom_vec[0]->num(); ++n)
 		{
 			for (int ch = 0; ch < channels_; ++ch)
 			{
-				caffe_copy(tmp_offset, smooth_top_data, split_2_bottom_data);
+				//caffe_copy(tmp_offset, smooth_top_data, split_2_bottom_data);
+				caffe_copy(tmp_offset, split_3_top_data, split_2_bottom_data);
 				split_2_bottom_data += tmp_offset;
 			}
-			smooth_top_data += smooth_top_vec[0]->offset(1);
+			//smooth_top_data += smooth_top_vec[0]->offset(1);
+			split_3_top_data += tmp_offset;
 		}
 
 		split_layer_2->Forward(split_2_bottom_vec, split_2_top_vec);
-		if (top.size() == 2)
+		if (top.size() == 3)
 			eltwise_layer->Forward(eltwise_bottom_vec, eltwise_top_vec);
 	
 	}
@@ -320,30 +368,56 @@ namespace caffe{
 				caffe_set(smooth_top_vec[i]->count(), (Dtype)0, smooth_top_vec[i]->mutable_cpu_diff());
 			for (int i = 0; i < split_0_top_vec.size(); i++)
 				caffe_set(split_0_top_vec[i]->count(), (Dtype)0, split_0_top_vec[i]->mutable_cpu_diff());
+			for (int i = 0; i < split_3_top_vec.size(); i++)
+				caffe_set(split_3_top_vec[i]->count(), (Dtype)0, split_3_top_vec[i]->mutable_cpu_diff());
+			for (int i = 0; i < normalize_top_vec.size(); i++)
+				caffe_set(normalize_top_vec[i]->count(), (Dtype)0, normalize_top_vec[i]->mutable_cpu_diff());
 
-			if (top.size() == 2)
+			if (top.size() == 3)
 				eltwise_layer->Backward(eltwise_top_vec, propagate_down_sub, eltwise_bottom_vec);
 
 			split_layer_2->Backward(split_2_top_vec, propagate_down_sub, split_2_bottom_vec);
-			int tmp_offset = smooth_top_vec[0]->offset(1);
+			//int tmp_offset = smooth_top_vec[0]->offset(1);
+			const int tmp_offset = split_3_top_vec[0]->offset(1);
 			//const Dtype* eltwise_bottom_1_diff = eltwise_bottom_vec[1]->cpu_diff();
 			const Dtype* split_2_bottom_diff = split_2_bottom_vec[0]->cpu_diff();
-			Dtype* smooth_top_diff = smooth_top_vec[0]->mutable_cpu_diff();
+			//Dtype* smooth_top_diff = smooth_top_vec[0]->mutable_cpu_diff();
+			Dtype* split_3_top_diff = split_3_top_vec[0]->mutable_cpu_diff();
 			for (int n = 0; n < split_2_bottom_vec[0]->num(); ++n)
 			{
 				for (int ch = 0; ch < channels_; ++ch)
 				{
-					caffe_add(tmp_offset, smooth_top_diff, split_2_bottom_diff, smooth_top_diff);
+					//caffe_add(tmp_offset, smooth_top_diff, split_2_bottom_diff, smooth_top_diff);
+					caffe_add(tmp_offset, split_3_top_diff, split_2_bottom_diff, split_3_top_diff);
 					split_2_bottom_diff += tmp_offset;
 				}
-				smooth_top_diff += tmp_offset;
+				//smooth_top_diff += tmp_offset;
+				split_3_top_diff += tmp_offset;
 			}
+
+			const int norm_offset = normalize_top_vec[0]->offset(1);
+			Dtype* normalize_diff = normalize_top_vec[0]->mutable_cpu_diff();
+			const Dtype* top_1_diff = top[1]->cpu_diff();
+			for (int n = 0; n < normalize_top_vec[0]->num(); ++n)
+			{
+				for (int ch = 0; ch < channels_; ++ch)
+				{
+					caffe_add(tmp_offset, normalize_diff, top_1_diff, normalize_diff);
+					top_1_diff += norm_offset;
+				}
+				normalize_diff += norm_offset;
+			}
+			//nomralize_top_vec[0]->ShareDiff(*top[1]);
+			normalize_layer->Backward(normalize_top_vec, propagate_down_sub, normalize_bottom_vec);
+			split_3_top_vec[1]->ShareDiff(*normalize_bottom_vec[0]);
+			split_layer_3->Backward(split_3_top_vec, propagate_down_sub, split_3_bottom_vec);
 			smooth_threshold_layer->Backward(smooth_top_vec, propagate_down_sub, smooth_bottom_vec);
 
 			caffe_scal(euclidean_top_vec[0]->count(),
 				(Dtype)(1.0 / bottom[0]->channels()), euclidean_top_vec[0]->mutable_cpu_diff());
 
 			euclidean_layer->Backward(euclidean_top_vec, propagate_down_sub, euclidean_bottom_vec);
+			split_1_top_vec[1]->ShareDiff(*euclidean_bottom_vec[0]);
 			split_layer_1->Backward(split_1_top_vec, propagate_down_sub, split_1_bottom_vec);
 
 			for (int n = 0; n < num_; ++n)

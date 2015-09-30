@@ -129,6 +129,7 @@ namespace caffe {
 				kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
 				mask_out_data + mask_out_.offset(n));
 		}
+		caffe_add_scalar(mask_out_.count(), (Dtype)std::numeric_limits<Dtype>::epsilon(), mask_out_data);
 		caffe_div(top[0]->count(), data_out_data, mask_out_data, top_data);
 	}
 

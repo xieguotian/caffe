@@ -23,8 +23,11 @@ namespace caffe
 		const vector<Blob<Dtype>*>& top)
 	{
 		top[0]->ReshapeLike(*bottom[0]);
-		sign_x.ReshapeLike(*bottom[0]);
-		cache_.Reshape(1, bottom[0]->num(), bottom[0]->height(), bottom[0]->width());
+
+		sign_x.Reshape(bottom[0]->channels(), bottom[0]->num(),
+			bottom[0]->height(), bottom[0]->width());
+		ones.Reshape(1, bottom[0]->num(), bottom[0]->height(), bottom[0]->width());
+		caffe_set(ones.count(), (Dtype)1, ones.mutable_cpu_data());
 	}
 
 	template <typename Dtype>
@@ -77,18 +80,19 @@ namespace caffe
 						if (bottom_data[i]>threshold[ch])
 						{
 							bottom_diff[i] = top_diff[i];
-							threshold_diff[ch] += top_diff[i];
+							threshold_diff[ch] -= top_diff[i];
 						}
 						else if (bottom_data[i] < -threshold[ch])
 						{
 							bottom_diff[i] = top_diff[i];
-							threshold_diff[ch] += -top_diff[i];
+							threshold_diff[ch] += top_diff[i];
 						}
 
-						bottom_data += tmp_offset;
-						top_diff += tmp_offset;
-						bottom_diff += tmp_offset;
+						
 					}
+					bottom_data += tmp_offset;
+					top_diff += tmp_offset;
+					bottom_diff += tmp_offset;
 				}
 			}
 		}
