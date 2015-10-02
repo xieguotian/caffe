@@ -49,6 +49,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\log_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\lrn_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\mvn_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\non_local_2_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\non_local_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\normalize_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\pooling_layer.cu" />
@@ -121,6 +122,7 @@
     <ClCompile Include="..\..\src\caffe\layers\multinomial_logistic_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\mvn_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\neuron_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\non_local_2_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\non_local_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\normalize_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\pooling_layer.cpp" />
@@ -193,6 +195,7 @@
     <ClCompile Include="..\..\src\caffe\test\test_mvn_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_net.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_neuron_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_non_local_2_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_non_local_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_normalize_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_platform.cpp" />
