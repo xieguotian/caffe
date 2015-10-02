@@ -118,3 +118,5 @@ caffe/gtest_caffe/*.pdb
 caffe/matcaffe/src
 caffe/matcaffe/x64
 caffe/matcaffe/*.pdb
+
+src/caffe/test/test_data/my_test/*
