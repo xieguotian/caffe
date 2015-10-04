@@ -52,9 +52,12 @@ namespace caffe {
 		sm_param->mutable_threshold_filler()->set_type("constant");
 		sm_param->mutable_threshold_filler()->set_value(5);
 		ConvolutionParameter* conv_param = layer_param.mutable_convolution_param();
-		conv_param->set_kernel_size(3);
-		conv_param->set_stride(1);
-		conv_param->set_pad(1);
+		//conv_param->set_kernel_size(0,3);
+		//conv_param->set_stride(0,1);
+		//conv_param->set_pad(0,1);
+		conv_param->add_kernel_size(3);
+		conv_param->add_stride(1);
+		conv_param->add_pad(1);
 		NonLocal2Layer<Dtype> layer(layer_param);
 		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
 		EXPECT_EQ(this->blob_top_0->num(), 2)
@@ -97,9 +100,12 @@ namespace caffe {
 		sm_param->mutable_threshold_filler()->set_value(0.3);
 
 		ConvolutionParameter* conv_param = layer_param.mutable_convolution_param();
-		conv_param->set_kernel_size(3);
-		conv_param->set_stride(2);
-		conv_param->set_pad(1);
+		//conv_param->set_kernel_size(0,3);
+		//conv_param->set_stride(0,2);
+		//conv_param->set_pad(0,1);
+		conv_param->add_kernel_size(3);
+		conv_param->add_stride(2);
+		conv_param->add_pad(1);
 		NonLocal2Layer<Dtype> layer(layer_param);
 		GradientChecker<Dtype> checker(1e-3, 1e-2, 1701);
 		checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,

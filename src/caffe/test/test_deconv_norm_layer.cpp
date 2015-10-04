@@ -51,8 +51,8 @@ TYPED_TEST(DeconvNormLayerTest, TestSetup) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
+  convolution_param->set_kernel_size(0,3);
+  convolution_param->set_stride(0,2);
   convolution_param->set_num_output(4);
   shared_ptr<Layer<Dtype> > layer(
       new DeconvNormLayer<Dtype>(layer_param));
@@ -68,8 +68,8 @@ TYPED_TEST(DeconvNormLayerTest, TestSimpleDeconvolution) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(3);
-  convolution_param->set_stride(2);
+  convolution_param->set_kernel_size(0,3);
+  convolution_param->set_stride(0,2);
   convolution_param->set_num_output(4);
   convolution_param->mutable_weight_filler()->set_type("constant");
   convolution_param->mutable_weight_filler()->set_value(1);
@@ -104,8 +104,8 @@ TYPED_TEST(DeconvNormLayerTest, TestGradient) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
-  convolution_param->set_kernel_size(2);
-  convolution_param->set_stride(1);
+  convolution_param->set_kernel_size(0,2);
+  convolution_param->set_stride(0,1);
   convolution_param->set_num_output(1);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");

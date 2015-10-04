@@ -12,7 +12,7 @@ namespace caffe {
 		const vector<Blob<Dtype>*>& top) 
 	{
 		ConvolutionParameter conv_param = this->layer_param_.convolution_param();
-		CHECK(!conv_param.has_kernel_size() !=
+		/*CHECK(!conv_param.has_kernel_size() !=
 			!(conv_param.has_kernel_h() && conv_param.has_kernel_w()))
 			<< "Filter size is kernel_size OR kernel_h and kernel_w; not both";
 		CHECK(conv_param.has_kernel_size() ||
@@ -48,6 +48,53 @@ namespace caffe {
 		else {
 			stride_h_ = conv_param.stride_h();
 			stride_w_ = conv_param.stride_w();
+		}*/
+		//kernel
+		if (conv_param.has_kernel_h() || conv_param.has_kernel_w()) {
+			CHECK_EQ(0, conv_param.kernel_size_size())
+				<< "Either kernel_size or kernel_h/w should be specified; not both.";
+			kernel_h_ = conv_param.kernel_h();
+			kernel_w_ = conv_param.kernel_w();
+		}
+		else {
+			const int num_kernel_dims = conv_param.kernel_size_size();
+			CHECK(num_kernel_dims == 1)
+				<< "kernel_size must be specified once, or once per spatial dimension "
+				<< "(kernel_size specified " << num_kernel_dims << " times; ";
+
+			kernel_h_ = kernel_w_ = conv_param.kernel_size(0);
+		}
+		CHECK_GT(kernel_h_, 0) << "Filter dimensions cannot be zero.";
+		CHECK_GT(kernel_w_, 0) << "Filter dimensions cannot be zero.";
+		//stride
+		if (conv_param.has_stride_h() || conv_param.has_stride_w()) {
+			CHECK_EQ(0, conv_param.stride_size())
+				<< "Either stride or stride_h/w should be specified; not both.";
+			stride_h_ = conv_param.stride_h();
+			stride_w_ = conv_param.stride_w();
+		}
+		else {
+			const int num_stride_dims = conv_param.stride_size();
+			CHECK(num_stride_dims == 0 || num_stride_dims == 1 )
+				<< "stride must be specified once, or once per spatial dimension "
+				<< "(stride specified " << num_stride_dims << " times; ";
+			const int kDefaultStride = 1;
+			stride_h_ = stride_w_ = (num_stride_dims == 0) ? kDefaultStride : conv_param.stride(0);
+		}
+		//pad
+		if (conv_param.has_pad_h() || conv_param.has_pad_w()) {
+			CHECK_EQ(0, conv_param.pad_size())
+				<< "Either pad or pad_h/w should be specified; not both.";
+			pad_h_ = conv_param.pad_h();
+			pad_w_ = conv_param.pad_w();
+		}
+		else {
+			const int num_pad_dims = conv_param.pad_size();
+			CHECK(num_pad_dims == 0 || num_pad_dims == 1 )
+				<< "pad must be specified once, or once per spatial dimension "
+				<< "(pad specified " << num_pad_dims << " times; ";
+			const int kDefaultPad = 0;
+			pad_h_ = pad_w_ = (num_pad_dims == 0) ? kDefaultPad : conv_param.pad(0);
 		}
 
 		LayerParameter split_param;

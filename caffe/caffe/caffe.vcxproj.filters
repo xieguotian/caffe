@@ -294,6 +294,30 @@
     <ClCompile Include="..\..\src\caffe\layers\non_local_2_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\data_reader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\parallel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\util\blocking_queue.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\util\hdf5.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\util\signal_handler.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\embed_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\tile_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\blob.hpp">
@@ -399,6 +423,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\caffe\fast_rcnn_layers.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\util\blocking_queue.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\util\gpu_util.cuh">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\util\hdf5.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\util\signal_handler.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\data_reader.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\parallel.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -565,5 +607,16 @@
     <CudaCompile Include="..\..\src\caffe\layers\non_local_2_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\embed_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\tile_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\caffe\proto\caffe.proto">
+      <Filter>protobuf</Filter>
+    </None>
   </ItemGroup>
 </Project>

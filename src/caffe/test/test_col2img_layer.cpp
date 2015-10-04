@@ -40,8 +40,10 @@ namespace caffe {
 		LayerParameter layer_param;
 		ConvolutionParameter* convolution_param =
 			layer_param.mutable_convolution_param();
-		convolution_param->set_kernel_size(3);
-		convolution_param->set_stride(2);
+		//convolution_param->set_kernel_size(0,3);
+		//convolution_param->set_stride(0,2);
+		convolution_param->add_kernel_size(3);
+		convolution_param->add_stride(2);
 		caffe_set(blob_bottom_->count(), (Dtype)3, blob_bottom_->mutable_cpu_data());
 		Col2imgMaskLayer<Dtype> layer(layer_param);
 		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
@@ -62,8 +64,10 @@ namespace caffe {
 		LayerParameter layer_param;
 		ConvolutionParameter* convolution_param =
 			layer_param.mutable_convolution_param();
-		convolution_param->set_kernel_size(3);
-		convolution_param->set_stride(2);
+		//convolution_param->set_kernel_size(0,3);
+		//convolution_param->set_stride(0,2);
+		convolution_param->add_kernel_size(3);
+		convolution_param->add_stride(2);
 		caffe_set(blob_bottom_->count(), (Dtype)2, blob_bottom_->mutable_cpu_data());
 
 		Blob<Dtype> mask;
@@ -94,7 +98,8 @@ namespace caffe {
 			layer_param.mutable_convolution_param();
 		convolution_param->set_kernel_h(3);
 		convolution_param->set_kernel_w(3);
-		convolution_param->set_stride(2);
+		//convolution_param->set_stride(0,2);
+		convolution_param->add_stride(2);
 		Col2imgMaskLayer<Dtype> layer(layer_param);
 		GradientChecker<Dtype> checker(1e-2, 1e-2);
 		checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,

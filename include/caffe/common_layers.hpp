@@ -21,7 +21,8 @@ namespace caffe {
  *
  * Intended for use after a classification layer to produce a prediction.
  * If parameter out_max_val is set to true, output is a vector of pairs
- * (max_ind, max_val) for each image.
+ * (max_ind, max_val) for each image. The axis parameter specifies an axis
+ * along which to maximise.
  *
  * NOTE: does not implement Backwards operation.
  */
@@ -34,7 +35,11 @@ class ArgMaxLayer : public Layer<Dtype> {
    *   - top_k (\b optional uint, default 1).
    *     the number @f$ K @f$ of maximal items to output.
    *   - out_max_val (\b optional bool, default false).
-   *     if set, output a vector of pairs (max_ind, max_val) for each image.
+   *     if set, output a vector of pairs (max_ind, max_val) unless axis is set then
+   *     output max_val along the specified axis.
+   *   - axis (\b optional int).
+   *     if set, maximise along the specified axis else maximise the flattened
+   *     trailing dimensions for each index of the first / num dimension.
    */
   explicit ArgMaxLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
@@ -54,7 +59,8 @@ class ArgMaxLayer : public Layer<Dtype> {
    *      the inputs @f$ x @f$
    * @param top output Blob vector (length 1)
    *   -# @f$ (N \times 1 \times K \times 1) @f$ or, if out_max_val
-   *      @f$ (N \times 2 \times K \times 1) @f$
+   *      @f$ (N \times 2 \times K \times 1) @f$ unless axis set than e.g.
+   *      @f$ (N \times K \times H \times W) @f$ if axis == 1
    *      the computed outputs @f$
    *       y_n = \arg\max\limits_i x_{ni}
    *      @f$ (for @f$ K = 1 @f$).
@@ -70,6 +76,8 @@ class ArgMaxLayer : public Layer<Dtype> {
   }
   bool out_max_val_;
   size_t top_k_;
+  bool has_axis_;
+  int axis_;
 };
 
 /**
@@ -87,7 +95,7 @@ class ConcatLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "Concat"; }
-  virtual inline int MinBottomBlobs() const { return 2; }
+  virtual inline int MinBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
@@ -180,6 +188,44 @@ class EltwiseLayer : public Layer<Dtype> {
   Blob<int> max_idx_;
 
   bool stable_prod_grad_;
+};
+
+/**
+ * @brief A layer for learning "embeddings" of one-hot vector input.
+ *        Equivalent to an InnerProductLayer with one-hot vectors as input, but
+ *        for efficiency the input is the "hot" index of each column itself.
+ *
+ * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+ */
+template <typename Dtype>
+class EmbedLayer : public Layer<Dtype> {
+ public:
+  explicit EmbedLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Embed"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  int M_;
+  int K_;
+  int N_;
+  bool bias_term_;
+  Blob<Dtype> bias_multiplier_;
 };
 
 /**
@@ -589,7 +635,7 @@ class SliceLayer : public Layer<Dtype> {
 
   virtual inline const char* type() const { return "Slice"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int MinTopBlobs() const { return 2; }
+  virtual inline int MinTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -606,6 +652,35 @@ class SliceLayer : public Layer<Dtype> {
   int slice_size_;
   int slice_axis_;
   vector<int> slice_point_;
+};
+
+/**
+ * @brief Copy a Blob along specified dimensions.
+ */
+template <typename Dtype>
+class TileLayer : public Layer<Dtype> {
+ public:
+  explicit TileLayer(const LayerParameter& param)
+      : Layer<Dtype>(param) {}
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual inline const char* type() const { return "Tile"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
+  virtual inline int ExactNumTopBlobs() const { return 1; }
+
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+  unsigned int axis_, tiles_, outer_dim_, inner_dim_;
 };
 
 }  // namespace caffe

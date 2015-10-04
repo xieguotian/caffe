@@ -1,3 +1,4 @@
+#ifdef USE_LMDB
 #include "caffe/util/db_lmdb.hpp"
 
 #include <sys/stat.h>
@@ -51,3 +52,4 @@ void LMDBTransaction::Put(const string& key, const string& value) {
 
 }  // namespace db
 }  // namespace caffe
+#endif  // USE_LMDB
