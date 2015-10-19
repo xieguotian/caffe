@@ -1098,6 +1098,157 @@ protected:
 	shared_ptr<SplitLayer<Dtype>> split_layer_0;
 	shared_ptr<NormalizeLayer<Dtype>> normalize_layer;
 };
+
+template <typename Dtype>
+class AmplitudeLayer : public Layer<Dtype>
+{
+public:
+	explicit AmplitudeLayer(const LayerParameter& param)
+		: Layer<Dtype>(param) {}
+
+	virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+
+	virtual inline const char* type() const { return "AmplitudeLayer"; }
+	virtual inline int ExactNumBottomBlobs() const { return 1; }
+	virtual inline int MinTopBlobs() const { return 1; }
+
+	virtual inline int MaxTopBlobs() const { return 1; }
+
+protected:
+	virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+	virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+	Blob<Dtype> square;
+	Blob<Dtype> const_one;
+};
+
+template <typename Dtype>
+class NeighborDistLayer : public Layer<Dtype> {
+public:
+	explicit NeighborDistLayer(const LayerParameter& param)
+		: Layer<Dtype>(param) {}
+	virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+
+	virtual inline const char* type() const { return "NeighborDistLayer"; }
+	virtual inline int ExactNumBottomBlobs() const { return 1; }
+	virtual inline int ExactNumTopBlobs() const { return 1; }
+
+protected:
+	virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+	virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+	int kernel_h_, kernel_w_;
+	int stride_h_, stride_w_;
+	int num_;
+	int channels_;
+	int pad_h_, pad_w_;
+	int height_, width_;
+	int height_out_, width_out_;
+	int num_output_;
+
+};
+
+template <typename Dtype>
+class SelectSortedLayer : public Layer<Dtype> {
+public:
+	explicit SelectSortedLayer(const LayerParameter& param)
+		: Layer<Dtype>(param) {}
+	virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+
+	virtual inline const char* type() const { return "SelectSortedLayer"; }
+	virtual inline int MinBottomBlobs() const { return 1; }
+	virtual inline int MaxBottomBlobs() const { return 2; }
+	virtual inline int MinNumTopBlobs() const { return 1; }
+	virtual inline int MaxNumTopBlobs() const { return 2; }
+
+protected:
+	virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+	virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+	int kernel_h_, kernel_w_;
+	int stride_h_, stride_w_;
+	int num_;
+	int channels_;
+	int pad_h_, pad_w_;
+	int height_, width_;
+	int height_out_, width_out_;
+	int num_output_;
+	int top_N_;
+	shared_ptr<NeighborDistLayer<Dtype>> nei_dist_layer;
+	vector<Blob<Dtype>*> nei_dist_top_vec;
+	vector<Blob<Dtype>*> nei_dist_bottom_vec;
+
+	Blob<Dtype> dist;
+	Blob<Dtype> key;
+	Blob<Dtype> index;
+};
+
+template <typename Dtype>
+class SelectReplaceLayer : public Layer<Dtype> {
+public:
+	explicit SelectReplaceLayer(const LayerParameter& param)
+		: Layer<Dtype>(param) {}
+	virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+
+	virtual inline const char* type() const { return "SelectReplaceLayer"; }
+	virtual inline int ExactNumBottomBlobs() const { return 2; }
+	virtual inline int ExactNumTopBlobs() const { return 1; }
+
+protected:
+	virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top);
+	virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+	virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+
+	int kernel_h_, kernel_w_;
+	int stride_h_, stride_w_;
+	int num_;
+	int channels_;
+	int pad_h_, pad_w_;
+	int height_, width_;
+	int height_out_, width_out_;
+	int num_output_;
+	int top_N_;
+
+	Blob<Dtype> count_coef_;
+	Blob<Dtype> idx_trans_cache_;
+
+};
+
 }  // namespace caffe
 
 #endif  // CAFFE_VISION_LAYERS_HPP_

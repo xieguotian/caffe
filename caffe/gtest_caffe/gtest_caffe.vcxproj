@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\amplitude_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\base_data_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\bnll_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\col2img_mask_layer.cu" />
@@ -51,6 +52,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\log_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\lrn_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\mvn_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\neighbor_dist_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\non_local_2_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\non_local_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\normalize_layer.cu" />
@@ -60,6 +62,8 @@
     <CudaCompile Include="..\..\src\caffe\layers\reduction_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\relu_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\select_replace_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\select_sorted_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\shrinkage_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\sigmoid_cross_entropy_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\sigmoid_layer.cu" />
@@ -86,6 +90,7 @@
     <ClCompile Include="..\..\src\caffe\layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\absval_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\accuracy_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\amplitude_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\argmax_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\base_conv_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\base_data_layer.cpp" />
@@ -128,6 +133,7 @@
     <ClCompile Include="..\..\src\caffe\layers\memory_data_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\multinomial_logistic_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\mvn_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\neighbor_dist_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\neuron_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\non_local_2_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\non_local_layer.cpp" />
@@ -139,6 +145,8 @@
     <ClCompile Include="..\..\src\caffe\layers\relu_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\reshape_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\select_replace_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\select_sorted_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\shrinkage_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\sigmoid_cross_entropy_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\sigmoid_layer.cpp" />
@@ -162,6 +170,7 @@
     <ClCompile Include="..\..\src\caffe\solver.cpp" />
     <ClCompile Include="..\..\src\caffe\syncedmem.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_accuracy_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_amplitude_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_argmax_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_benchmark.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_blob.cpp" />
@@ -203,6 +212,7 @@
     <ClCompile Include="..\..\src\caffe\test\test_memory_data_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_multinomial_logistic_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_mvn_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_neighbor_dist_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_net.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_neuron_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_non_local_2_layer.cpp" />
@@ -215,6 +225,8 @@
     <ClCompile Include="..\..\src\caffe\test\test_random_number_generator.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_reduction_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_reshape_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_select_replace_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_select_sort_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_shrinkage_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_sigmoid_cross_entropy_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_slice_layer.cpp" />
@@ -422,6 +434,9 @@
       <AdditionalLibraryDirectories>E:\v-guoxie\lib\boost_1_58_0\lib;E:\v-guoxie\lib\opencv\build\x64\vc12\lib;../../3rdparty/lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0\lib\x64;</AdditionalLibraryDirectories>
       <AdditionalDependencies>opencv_core2410.lib;opencv_flann2410.lib;opencv_imgproc2410.lib;opencv_highgui2410.lib;opencv_legacy2410.lib;opencv_video2410.lib;opencv_ml2410.lib;opencv_calib3d2410.lib;opencv_objdetect2410.lib;opencv_stitching2410.lib;opencv_gpu2410.lib;opencv_nonfree2410.lib;opencv_features2d2410.lib;cudart.lib;cuda.lib;nppi.lib;cufft.lib;cublas.lib;curand.lib;gflags.lib;libglog.lib;libopenblas.dll.a;libprotobuf.lib;libprotoc.lib;leveldb.lib;lmdb.lib;hdf5.lib;hdf5_hl.lib;Shlwapi.lib;cudnn64_65.lib;cudnn.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CudaCompile>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

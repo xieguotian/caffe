@@ -219,8 +219,7 @@ namespace caffe {
 		propagate_down_sub.push_back(propagate_down[0]);
 		if (bottom.size() == 2)
 			propagate_down_sub.push_back(propagate_down[1]);
-		else
-			propagate_down_sub.push_back(propagate_down[0]);
+
 		eltwise_layer->Backward(eltwise_top_vec, propagate_down_sub, eltwise_bottom_vec);
 		split_layer->Backward(split_top_vec, propagate_down_sub, split_bottom_vec);
 	}

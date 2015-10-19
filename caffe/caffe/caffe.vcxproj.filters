@@ -318,6 +318,18 @@
     <ClCompile Include="..\..\src\caffe\layers\tile_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\amplitude_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\neighbor_dist_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\select_sorted_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\select_replace_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\blob.hpp">
@@ -611,6 +623,18 @@
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\tile_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\amplitude_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\neighbor_dist_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\select_sorted_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\select_replace_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>
