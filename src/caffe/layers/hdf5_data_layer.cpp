@@ -17,6 +17,7 @@ TODO:
 #include "caffe/data_layers.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/hdf5.hpp"
+#include <ctime>
 
 namespace caffe {
 
@@ -61,6 +62,7 @@ void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 
   // Shuffle if needed.
   if (this->layer_param_.hdf5_data_param().shuffle()) {
+	  std::srand(std::time(0));
     std::random_shuffle(data_permutation_.begin(), data_permutation_.end());
     DLOG(INFO) << "Successully loaded " << hdf_blobs_[0]->shape(0)
                << " rows (shuffled)";

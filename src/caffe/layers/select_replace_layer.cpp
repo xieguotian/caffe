@@ -140,6 +140,14 @@ namespace caffe{
 		top[0]->Reshape(num_, channels_, height_, width_);
 		//count_coef_.ReshapeLike(*bottom[1]);
 		count_coef_.Reshape(num_, 1, height_, width_);
+		if (stride_h_ != 1 || stride_w_ != 1)
+		{
+			CHECK_EQ(2, top.size())
+				<< "stride is not 1, top size must be 2.";
+
+			top[1]->Reshape(num_, channels_, height_, width_);
+		}
+
 		idx_trans_cache_.ReshapeLike(*bottom[1]);
 	}
 
@@ -215,6 +223,18 @@ namespace caffe{
 				height_out_, width_out_, top_N_,
 				top[0]->mutable_cpu_data()+top[0]->offset(n),
 				count_coef_.mutable_cpu_data() + count_coef_.offset(n));
+
+			if (top.size() == 2)
+			{
+				Dtype* top_1_data = top[1]->mutable_cpu_data() + top[1]->offset(n);
+				const Dtype* count_coef_data = count_coef_.cpu_data() + count_coef_.offset(n);
+				int tmp_offset = count_coef_.offset(1);
+				for (int i = 0; i < tmp_offset; ++i)
+					top_1_data[i] = (count_coef_data[i]>0) ? 1 : 0;
+
+				for (int ch = 1; ch < channels_; ++ch)
+					caffe_copy(tmp_offset, top_1_data, top_1_data + ch*tmp_offset);
+			}
 		}
 	}
 

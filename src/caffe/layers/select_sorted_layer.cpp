@@ -254,6 +254,13 @@ namespace caffe{
 		const vector<Blob<Dtype>*>& top)
 	{
 		nei_dist_layer->Forward(nei_dist_bottom_vec, nei_dist_top_vec);
+		Dtype* dist_data = dist.mutable_cpu_data();
+		
+		for (int i = 0; i < dist.count(); ++i)
+		{
+			if (dist_data[i] < 0)
+				dist_data[i] = std::numeric_limits<Dtype>::max();
+		}
 
 		for (int n = 0; n < num_; ++n)
 		{

@@ -15,7 +15,7 @@ namespace caffe
 		const int height, const int width, const int kernel_h, const int kernel_w,
 		const int pad_h, const int pad_w, const int stride_h, const int stride_w,
 		const int height_col, const int width_col, const int channels, const int top_N, 
-		Dtype* out_data,Dtype* count_coef)
+		Dtype* out_data,Dtype* count_coef,Dtype* top_1_data=NULL)
 	{
 		CUDA_KERNEL_LOOP(index, n) {
 			Dtype val = 0;
@@ -59,14 +59,17 @@ namespace caffe
 							count += 1;
 						}
 					}
-				}
+				} 
 			}
 
 			if (c == 0)
 			{
 				count_coef[d_idx] = (Dtype)count;
 			}
-			
+			if (top_1_data != NULL)
+			{
+				top_1_data[index] = (count > 0) ? 1 : 0;
+			}
 			out_data[index] = val;
 			if (count != 0)
 				out_data[index] /= count;
@@ -117,8 +120,14 @@ namespace caffe
 			height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
 			stride_h_, stride_w_, height_out_, width_out_, channels_, top_N_,
 			idx_trans_cache_.mutable_gpu_data());
+
+
 		for (int n = 0; n < num_; ++n)
 		{
+			Dtype* top_1_data = NULL;
+			if (top.size() == 2)
+				top_1_data = top[1]->mutable_gpu_data()+top[1]->offset(n);
+
 			select_replace_kernel<Dtype> << <CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS >> >(
 				num_kernels,bottom[0]->gpu_data()+bottom[0]->offset(n),
 				//bottom[1]->gpu_data()+bottom[1]->offset(n),
@@ -126,7 +135,8 @@ namespace caffe
 				height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_,
 				stride_h_, stride_w_, height_out_, width_out_, channels_, top_N_,
 				top[0]->mutable_gpu_data()+top[0]->offset(n), 
-				count_coef_.mutable_gpu_data()+count_coef_.offset(n));
+				count_coef_.mutable_gpu_data()+count_coef_.offset(n),
+				top_1_data);
 
 			CUDA_POST_KERNEL_CHECK;
 		}

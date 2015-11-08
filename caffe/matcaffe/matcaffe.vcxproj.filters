@@ -330,6 +330,9 @@
     <ClCompile Include="..\..\src\caffe\layers\select_sorted_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\argmaxmin_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\util\im2col.cu">
@@ -510,6 +513,9 @@
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\select_sorted_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\argmaxmin_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>

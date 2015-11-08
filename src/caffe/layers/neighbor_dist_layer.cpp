@@ -181,6 +181,7 @@ namespace caffe{
 							data_im_ptr += tmp_offset;
 							data_im_center_ptr += tmp_offset;
 						}
+						data_col_ptr[0] = std::sqrt(data_col_ptr[0]);
 					}
 					else
 					{
@@ -197,7 +198,7 @@ namespace caffe{
 	void NeighborDistLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 		const vector<Blob<Dtype>*>& top)
 	{
-		Dtype max_num = std::numeric_limits<Dtype>::max();
+		Dtype max_num = -1;//std::numeric_limits<Dtype>::max() - 1;
 		caffe_set(top[0]->count(), (Dtype)0, top[0]->mutable_cpu_data());
 		for (int n = 0; n < bottom[0]->num(); ++n)
 		{

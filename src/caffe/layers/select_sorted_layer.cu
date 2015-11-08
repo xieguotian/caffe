@@ -11,10 +11,10 @@
 namespace caffe 
 {
 	template <typename Dtype>
-	__global__ void init_key_kernel(const int n, Dtype* key_data, Dtype* index_data,
+	__global__ void init_key_kernel(const int n, Dtype* key_data, Dtype* index_data, Dtype* dist_data,
 		const int num,const int height, const int width, const int kernel_h, const int kernel_w,
 		const int pad_h, const int pad_w,const int stride_h, const int stride_w,
-		const int height_col, const int width_col, const int channels )
+		const int height_col, const int width_col, const int channels ,Dtype fill_data)
 	{
 		CUDA_KERNEL_LOOP(index, n) {
 			int w_out = index % width_col;
@@ -31,6 +31,8 @@ namespace caffe
 
 			key_data[index] = h_out*width_col + w_out;
 			index_data[index] = h_in*kernel_w + w_in;
+			if (dist_data[index] < 0)
+				dist_data[index] = fill_data;
 			//if (h_in >= 0 && w_in >= 0 && h_in < height&&w_in < width)
 			//{
 			//	index_data[index] = h_in*width + w_in;
@@ -115,9 +117,9 @@ namespace caffe
 		//initial key and index
 		int num_kernels = key.count();
 		init_key_kernel<Dtype> << <CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS >> >(
-			num_kernels, key.mutable_gpu_data(), index.mutable_gpu_data(),
-			num_,height_,width_,kernel_h_,kernel_w_,pad_h_,pad_w_,stride_h_,stride_w_,
-			height_out_,width_out_,channels_);
+			num_kernels, key.mutable_gpu_data(), index.mutable_gpu_data(), dist.mutable_gpu_data(),
+			num_, height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+			height_out_, width_out_, channels_, std::numeric_limits<Dtype>::max());
 		CUDA_POST_KERNEL_CHECK;
 
 		//sort distance
