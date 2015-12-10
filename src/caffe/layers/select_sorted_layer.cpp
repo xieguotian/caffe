@@ -155,9 +155,10 @@ namespace caffe{
 		index.ReshapeLike(dist);
 
 		top[0]->Reshape(num_, top_N_, height_out_, width_out_);
-		if (top.size() == 2)
+		if (top.size() >= 2)
 		{
-			top[1]->Reshape(num_, channels_*top_N_, height_out_, width_out_);
+			for (int i = 1; i < top.size(); ++i)
+				top[i]->Reshape(num_, channels_*top_N_, height_out_, width_out_);
 		}
 	}
 

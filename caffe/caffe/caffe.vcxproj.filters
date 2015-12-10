@@ -258,9 +258,6 @@
     <ClCompile Include="..\..\src\caffe\layers\k_sparse_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\tools\caffe.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\caffe\layers\deconv_norm_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
@@ -335,6 +332,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\caffe\layers\softmax_loss_rw_layer.cpp">
       <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\crop_pad_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\tools\caffe.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -647,6 +650,9 @@
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\softmax_loss_rw_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\crop_pad_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>

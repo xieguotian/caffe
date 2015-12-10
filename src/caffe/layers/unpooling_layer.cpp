@@ -9,6 +9,7 @@
 #include "caffe/vision_layers.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
+#include <ctime>
 
 using std::max;
 using std::min;
@@ -85,6 +86,7 @@ void UnPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 	  CHECK_LT(pad_h_, kernel_h_);
 	  CHECK_LT(pad_w_, kernel_w_);
   }
+  std::srand(std::time(0));
   
 }
 
@@ -101,6 +103,15 @@ void UnPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 	height_ = static_cast<int>(ceil(static_cast<float>((pooled_height_ - 1) * stride_h_))) - 2 * pad_h_ + kernel_h_;
 	width_ = static_cast<int>(ceil(static_cast<float>((pooled_width_ - 1) * stride_w_))) - 2 * pad_w_ + kernel_w_;
 
+	if (bottom.size() == 3)
+	{
+		if (bottom[2]->height() - height_ < kernel_h_ &&
+			bottom[2]->width() - width_ < kernel_w_)
+		{
+			height_ = bottom[2]->height();
+			width_ = bottom[2]->width();
+		}
+	}
 	if (global_pooling_)
 	{
 		kernel_h_ = height_;
@@ -111,7 +122,7 @@ void UnPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 		CHECK_LT((pooled_height_ - 1) * stride_h_, height_ + pad_h_);
 		CHECK_LT((pooled_width_ - 1) * stride_w_, width_ + pad_w_);
 	}
-	top[0]->Reshape(bottom[1]->num(), channels_, height_,
+	top[0]->Reshape(bottom[0]->num(), channels_, height_,
 		width_);
 }
 
@@ -179,7 +190,31 @@ void UnPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
-    NOT_IMPLEMENTED;
+	  // The main loop
+	  for (int n = 0; n < bottom[0]->num(); ++n) {
+		  for (int c = 0; c < channels_; ++c) {
+			  for (int ph = 0; ph < pooled_height_; ++ph) {
+				  for (int pw = 0; pw < pooled_width_; ++pw) {
+					  int hstart = ph * stride_h_ - pad_h_;
+					  int wstart = pw * stride_w_ - pad_w_;
+					  int hend = min(hstart + kernel_h_, height_);
+					  int wend = min(wstart + kernel_w_, width_);
+					  hstart = max(hstart, 0);
+					  wstart = max(wstart, 0);
+					  const int pool_index = ph * pooled_width_ + pw;
+					  int h = std::rand() % (hend - hstart) + hstart;
+					  int w = std::rand() % (wend - wstart) + wstart;
+					  const int bottom_index = h*width_ + w;
+					  //const int index = ph * pooled_width_ + pw;
+					  //const int bottom_index = bottom_mask[index];
+					  top_data[bottom_index] += bottom_data[pool_index];
+					  //std::cout << "midx = " << bottom_index << " val: " << bottom_data[index] << " == " << top_data[bottom_index] << std::endl;
+				  }
+			  }
+			  top_data += top[0]->offset(0, 1);
+			  bottom_data += bottom[0]->offset(0, 1);
+		  }
+	  }
     break;
   default:
     LOG(FATAL) << "Unknown pooling method.";

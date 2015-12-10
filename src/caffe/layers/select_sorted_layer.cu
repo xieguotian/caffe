@@ -148,13 +148,14 @@ namespace caffe
 		CUDA_POST_KERNEL_CHECK;
 
 		// get top N data
-		if (top.size() == 2)
+		if (top.size() >= 2)
 		{
 			num_kernels = top[1]->count();
-			get_top_N_data_kernel<Dtype> << < CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS >> >(
-				num_kernels, bottom[1]->gpu_data(), top[0]->gpu_data(),
+			for (int i = 1; i < top.size(); ++i)
+				get_top_N_data_kernel<Dtype> << < CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS >> >(
+				num_kernels, bottom[i]->gpu_data(), top[0]->gpu_data(),
 				num_, height_, width_, kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
-				height_out_, width_out_, channels_, top_N_, top[1]->mutable_gpu_data());
+				height_out_, width_out_, channels_, top_N_, top[i]->mutable_gpu_data());
 			CUDA_POST_KERNEL_CHECK;
 		}
 	}

@@ -139,7 +139,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;USE_CUDNN;USE_LEVELDB;USE_LMDB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;USE_CUDNN;USE_LEVELDB;USE_LMDB;USE_OPENCV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../../include;../../src;E:\v-guoxie\lib\opencv\build\include;E:\v-guoxie\lib\opencv\build\include\opencv;E:\v-guoxie\lib\boost_1_58_0;../../3rdparty/include;../../3rdparty/include/openblas;../../3rdparty/include/hdf5;../../3rdparty/include/lmdb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0\include;../../include/caffe;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>-D_SCL_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
@@ -183,6 +183,7 @@
     <ClCompile Include="..\..\src\caffe\layers\contrastive_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\conv_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\conv_norm_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\crop_pad_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\cudnn_conv_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\cudnn_pooling_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\cudnn_relu_layer.cpp" />
@@ -279,6 +280,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\contrastive_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\conv_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\conv_norm_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\crop_pad_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\cudnn_conv_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\cudnn_pooling_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\cudnn_relu_layer.cu" />

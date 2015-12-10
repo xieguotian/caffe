@@ -605,7 +605,7 @@ public:
 	virtual inline int ExactNumBottomBlobs() const 
 	{
 		return (this->layer_param_.pooling_param().pool() ==
-			PoolingParameter_PoolMethod_MAX ? 2 : 1);
+			PoolingParameter_PoolMethod_MAX ? 3 : 1);
 	}
 	virtual inline int MinTopBlobs() const { return 1; }
 	virtual inline int MaxTopBlobs() const { return 1; }
@@ -1178,9 +1178,9 @@ public:
 
 	virtual inline const char* type() const { return "SelectSortedLayer"; }
 	virtual inline int MinBottomBlobs() const { return 1; }
-	virtual inline int MaxBottomBlobs() const { return 2; }
+	//virtual inline int MaxBottomBlobs() const { return 2; }
 	virtual inline int MinNumTopBlobs() const { return 1; }
-	virtual inline int MaxNumTopBlobs() const { return 2; }
+	//virtual inline int MaxNumTopBlobs() const { return 2; }
 
 protected:
 	virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
