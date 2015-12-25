@@ -86,6 +86,45 @@ def main(argv):
         help="Image file extension to take as input when a directory " +
              "is given as the input file."
     )
+
+    parser.add_argument(
+        "--nimg_per_iter",
+        type=int,
+        default=100,
+        help="number of images to be processd per iteration."
+    )
+
+    parser.add_argument(
+        "--device_id",
+        type=int,
+        default=0,
+        help="device id of GPU"
+    )
+    parser.add_argument(
+        "--root_path",
+        default="./",
+        help="root path of image if input_file is a txt list."
+    )
+    parser.add_argument(
+        "--pre_fetch",
+        action='store_true',
+        help="pre-fetech image data with a new thread."
+    )
+    parser.add_argument(
+        "--not_resize_image",
+        action='store_true',
+        help='not to resize image, only crop from the origin image.'
+    )
+    parser.add_argument(
+        "--dense",
+        action='store_true',
+        help='use dense prediction'
+    )
+    parser.add_argument(
+        "--preserve_ratio",
+        action='store_true',
+        help='presrve_ratio when resize image'
+    )
     args = parser.parse_args()
 
     image_dims = [int(s) for s in args.images_dim.split(',')]
@@ -98,22 +137,45 @@ def main(argv):
 
     if args.gpu:
         caffe.set_mode_gpu()
+        caffe.set_device(args.device_id)
         print("GPU mode")
     else:
         caffe.set_mode_cpu()
         print("CPU mode")
 
-    # Make classifier.
-    classifier = caffe.Classifier(args.model_def, args.pretrained_model,
-            image_dims=image_dims, mean=mean,
-            input_scale=args.input_scale, raw_scale=args.raw_scale,
-            channel_swap=channel_swap)
+    if args.dense:
+        classifier = caffe.Classifier_dense(args.model_def, args.pretrained_model,
+                    image_dims=image_dims, mean=mean,
+                    input_scale=args.input_scale, raw_scale=args.raw_scale,
+                    channel_swap=channel_swap,preserve_ratio=args.preserve_ratio)
+    else:
+        if args.pre_fetch:
+            # Make classifier.
+            if args.not_resize_image:
+                resize_img = False
+            else:
+                resize_img = True
+            classifier = caffe.Classifier_parallel(args.model_def, args.pretrained_model,
+                    image_dims=image_dims, mean=mean,
+                    input_scale=args.input_scale, raw_scale=args.raw_scale,resize_image=not args.not_resize_image,
+                    channel_swap=channel_swap,preserve_ratio=args.preserve_ratio)
+        else:
+            # Make classifier.
+            classifier = caffe.Classifier(args.model_def, args.pretrained_model,
+                    image_dims=image_dims, mean=mean,
+                    input_scale=args.input_scale, raw_scale=args.raw_scale,
+                    channel_swap=channel_swap)
 
     # Load numpy array (.npy), directory glob (*.jpg), or image file.
     args.input_file = os.path.expanduser(args.input_file)
     if args.input_file.endswith('npy'):
         print("Loading file: %s" % args.input_file)
         inputs = np.load(args.input_file)
+    elif args.input_file.endswith('txt'):
+        print("Loading txt file: %s" % args.input_file)
+        fid = open(args.input_file,'r')
+        list = [args.root_path+'/'+name[:-1] for name in fid]
+        inputs = list
     elif os.path.isdir(args.input_file):
         print("Loading folder: %s" % args.input_file)
         #inputs =[caffe.io.load_image(im_f)
@@ -129,12 +191,23 @@ def main(argv):
     # Classify.
     start = time.time()
     if len(list)!=0:
-        predictions = []
-        for idx in range(0,len(list),100):
-            inputs = [caffe.io.load_image(im_f)
-                    for im_f in list[idx:idx+100]]
-            predictions.extend(classifier.predict(inputs, not args.center_only))
-            print 'process {} images'.format(idx+100)
+        if args.dense:
+            n_p_iter = args.nimg_per_iter
+            predictions = classifier.predict(list,nimg_per_iter=n_p_iter)
+        else:
+            if args.pre_fetch:
+                n_p_iter = args.nimg_per_iter
+                predictions = classifier.predict(list,oversample=not args.center_only,nimg_per_iter=n_p_iter)
+            else:
+                predictions = []
+                total_num_images = len(list)
+                n_p_iter = args.nimg_per_iter
+                for idx in range(0,total_num_images,n_p_iter):
+                    end_idx = min(total_num_images,idx+n_p_iter)
+                    inputs = [caffe.io.load_image(im_f)
+                            for im_f in list[idx:end_idx]]
+                    predictions.extend(classifier.predict(inputs, not args.center_only))
+                    print 'process {} images'.format(end_idx)
     else:
         predictions = classifier.predict(inputs, not args.center_only)
     print("Done in %.2f s." % (time.time() - start))

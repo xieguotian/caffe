@@ -88,9 +88,25 @@ cv::Mat ReadImageToCVMat(const string& filename,
     LOG(ERROR) << "Could not open or find file " << filename;
     return cv_img_origin;
   }
-  if (height > 0 && width > 0) {
+  if (height > 0 && width > 0) { // resize image by fixed height and width
     cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
-  } else {
+  }
+  else if (height > 0 && width == 0){	// resize preserve ratio
+	  int org_height = cv_img_origin.rows;
+	  int org_width = cv_img_origin.cols;
+	  if (org_height < org_width){
+		  float ratio = float(height) / float(org_height);
+		  org_height = height;
+		  org_width = ratio*org_width;
+	  }
+	  else{
+		  float ratio = float(height) / float(org_width);
+		  org_height = ratio*org_height;
+		  org_width = height;
+	  }
+	  cv::resize(cv_img_origin, cv_img, cv::Size(org_width, org_height));
+  }
+  else{
     cv_img = cv_img_origin;
   }
   return cv_img;
