@@ -4,6 +4,7 @@
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/vision_layers.hpp"
+#include "caffe/layers/euclidean_loss_norm_layer.hpp"
 
 namespace caffe {
 

@@ -1,4 +1,3 @@
-#include <stdio.h>  // for snprintf
 #include <string>
 #include <vector>
 
@@ -10,8 +9,8 @@
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
+#include "caffe/util/format.hpp"
 #include "caffe/util/io.hpp"
-#include "caffe/vision_layers.hpp"
 
 typedef unsigned int uint;
 #define snprintf sprintf_s
@@ -19,7 +18,6 @@ using caffe::Blob;
 using caffe::Caffe;
 using caffe::Datum;
 using caffe::Net;
-//using boost::shared_ptr;
 using std::string;
 namespace db = caffe::db;
 
@@ -54,7 +52,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   arg_pos = num_required_args;
   if (argc > arg_pos && strcmp(argv[arg_pos], "GPU") == 0) {
     LOG(ERROR)<< "Using GPU";
-    uint device_id = 0;
+    int device_id = 0;
     if (argc > arg_pos + 1) {
       device_id = atoi(argv[arg_pos + 1]);
       CHECK_GE(device_id, 0);
@@ -137,15 +135,13 @@ int feature_extraction_pipeline(int argc, char** argv) {
   LOG(ERROR)<< "Extacting Features";
 
   Datum datum;
-  const int kMaxKeyStrLength = 100;
-  char key_str[kMaxKeyStrLength];
   std::vector<Blob<float>*> input_vec;
   std::vector<int> image_indices(num_features, 0);
   for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
     feature_extraction_net->Forward(input_vec);
     for (int i = 0; i < num_features; ++i) {
-      const boost::shared_ptr<Blob<Dtype> > feature_blob = feature_extraction_net
-          ->blob_by_name(blob_names[i]);
+      const boost::shared_ptr<Blob<Dtype> > feature_blob =
+        feature_extraction_net->blob_by_name(blob_names[i]);
       int batch_size = feature_blob->num();
       int dim_features = feature_blob->count() / batch_size;
       const Dtype* feature_blob_data;
@@ -160,11 +156,11 @@ int feature_extraction_pipeline(int argc, char** argv) {
         for (int d = 0; d < dim_features; ++d) {
           datum.add_float_data(feature_blob_data[d]);
         }
-        int length = snprintf(key_str, kMaxKeyStrLength, "%010d",
-            image_indices[i]);
+        string key_str = caffe::format_int(image_indices[i], 10);
+
         string out;
         CHECK(datum.SerializeToString(&out));
-        txns.at(i)->Put(std::string(key_str, length), out);
+        txns.at(i)->Put(key_str, out);
         ++image_indices[i];
         if (image_indices[i] % 1000 == 0) {
           txns.at(i)->Commit();
@@ -188,4 +184,3 @@ int feature_extraction_pipeline(int argc, char** argv) {
   LOG(ERROR)<< "Successfully extracted the features!";
   return 0;
 }
-
