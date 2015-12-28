@@ -5,11 +5,10 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
-#include "caffe/common_layers.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/vision_layers.hpp"
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
+#include "caffe/layers/amplitude_layer.hpp"
 
 namespace caffe {
 	template <typename TypeParam>
@@ -37,35 +36,6 @@ namespace caffe {
 
 	TYPED_TEST_CASE(AmplitudeTest, TestDtypesAndDevices);
 
-	TYPED_TEST(AmplitudeTest, TestForward)
-	{
-		typedef typename TypeParam::Dtype Dtype;
-		caffe_set(blob_bottom_vec_[0]->count(), (Dtype)1, blob_bottom_vec_[0]->mutable_cpu_data());
-
-		LayerParameter layer_param;
-		AmplitudeLayer<Dtype> layer(layer_param);
-		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
-		EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num())
-			<< "(top_num,bottom_num)=" << this->blob_top_->num() << ","
-			<< this->blob_bottom_->num();
-		EXPECT_EQ(this->blob_top_->channels(), 1)
-			<< "(top_channels,bottom_channels)=" << this->blob_top_->channels() << ","
-			<< this->blob_bottom_->channels();
-		EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_->height())
-			<< "(top_height,bottom_height)=" << this->blob_top_->height() << ","
-			<< this->blob_bottom_->height();
-		EXPECT_EQ(this->blob_top_->width(), this->blob_bottom_->width())
-			<< "(top_width,bottom_width)=" << this->blob_top_->width() << ","
-			<< this->blob_bottom_->width();
-
-		layer.Forward(blob_bottom_vec_, blob_top_vec_);
-		for (int i = 0; i < blob_top_->count(); i++)
-		{
-			EXPECT_EQ(this->blob_top_->cpu_data()[i], 2)
-				<< "(top_data,gt_data)=" << this->blob_top_->cpu_data()[i] << ","
-				<< 2;
-		}
-	}
 	TYPED_TEST(AmplitudeTest, TestForward2)
 	{
 		typedef typename TypeParam::Dtype Dtype;

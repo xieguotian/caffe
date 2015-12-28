@@ -6,7 +6,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/k_sparse_layer.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
@@ -89,6 +89,7 @@ namespace caffe {
 		KSparseParameter* ksparse_param = layer_param.mutable_k_sparse_param();
 		ksparse_param->set_sparse_k(2);
 		ksparse_param->set_sparse_type(KSparseParameter_SparseMethod_CHANNEL);
+		ksparse_param->set_type(KSparseParameter_SparseType_KSPARSE);
 		KSparseLayer<Dtype> layer(layer_param);
 		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 		EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num()) 
@@ -112,6 +113,7 @@ namespace caffe {
 		KSparseParameter* ksparse_param = layer_param.mutable_k_sparse_param();
 		ksparse_param->set_sparse_k(1);
 		ksparse_param->set_sparse_type(KSparseParameter_SparseMethod_CHANNEL);
+		ksparse_param->set_type(KSparseParameter_SparseType_KSPARSE);
 		KSparseLayer<Dtype> layer(layer_param);
 		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
@@ -132,6 +134,7 @@ namespace caffe {
 		KSparseParameter* ksparse_param = layer_param.mutable_k_sparse_param();
 		ksparse_param->set_sparse_k(3);
 		ksparse_param->set_sparse_type(KSparseParameter_SparseMethod_CHANNEL);
+		ksparse_param->set_type(KSparseParameter_SparseType_KSPARSE);
 		KSparseLayer<Dtype> layer(layer_param);
 		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
@@ -152,6 +155,7 @@ namespace caffe {
 		KSparseParameter* ksparse_param = layer_param.mutable_k_sparse_param();
 		ksparse_param->set_sparse_k(5);
 		ksparse_param->set_sparse_type(KSparseParameter_SparseMethod_CHANNEL);
+		ksparse_param->set_type(KSparseParameter_SparseType_KSPARSE);
 		KSparseLayer<Dtype> layer(layer_param);
 		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
@@ -172,6 +176,7 @@ namespace caffe {
 		KSparseParameter* ksparse_param = layer_param.mutable_k_sparse_param();
 		ksparse_param->set_sparse_k(3);
 		ksparse_param->set_sparse_type(KSparseParameter_SparseMethod_CHANNEL);
+		ksparse_param->set_type(KSparseParameter_SparseType_KSPARSE);
 		KSparseLayer<Dtype> layer(layer_param);
 		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 

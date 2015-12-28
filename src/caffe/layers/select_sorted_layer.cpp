@@ -3,7 +3,7 @@
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/im2col.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/select_sorted_layer.hpp"
 
 #include "boost\iterator\zip_iterator.hpp"
 #include "boost\tuple\tuple.hpp"

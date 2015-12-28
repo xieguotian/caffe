@@ -330,12 +330,6 @@
     <ClCompile Include="..\..\src\caffe\test\test_gradient_based_solver.cpp">
       <Filter>test</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\caffe\test\test_hdf5_output_layer.cpp">
-      <Filter>test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\caffe\test\test_hdf5data_layer.cpp">
-      <Filter>test</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\caffe\test\test_hinge_loss_layer.cpp">
       <Filter>test</Filter>
     </ClCompile>
@@ -444,9 +438,6 @@
     <ClCompile Include="..\..\src\gtest\gtest-all.cpp">
       <Filter>gtest</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\caffe\test\test_benchmark.cpp">
-      <Filter>test</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\caffe\layers\k_sparse_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
@@ -540,9 +531,6 @@
     <ClCompile Include="..\..\src\caffe\test\test_tile_layer.cpp">
       <Filter>test</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\caffe\test\test_amplitude_layer.cpp">
-      <Filter>test</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\caffe\layers\amplitude_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
@@ -622,6 +610,21 @@
       <Filter>solvers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\caffe\test\test_lrn_layer.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\cudnn_highway_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\test\test_highway_convolution_layer.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\test\test_amplitude_layer.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\test\test_hdf5_output_layer.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\test\test_hdf5data_layer.cpp">
       <Filter>test</Filter>
     </ClCompile>
   </ItemGroup>
@@ -831,6 +834,9 @@
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\filter_elt_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\cudnn_highway_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>
@@ -1164,6 +1170,63 @@
     </ClInclude>
     <ClInclude Include="..\..\include\caffe\util\format.hpp">
       <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\cudnn_highway_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\amplitude_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\argmaxmin_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\col2img_mask_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\conv_norm_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\crop_pad_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\deconv_norm_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\euclidean_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\filter_elt_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\k_sparse_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\neighbor_dist_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\non_local_2_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\non_local_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\normalize_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\select_replace_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\select_sorted_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\shrinkage_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\smooth_threshold_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\unpooling_layer.hpp">
+      <Filter>Header Files\layers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -3,7 +3,7 @@
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/util/im2col.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/select_sorted_layer.hpp"
 
 #include "thrust\sort.h"
 #include "thrust\device_vector.h"

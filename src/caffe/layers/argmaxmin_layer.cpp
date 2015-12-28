@@ -2,7 +2,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/common_layers.hpp"
+#include "caffe/layers/argmaxmin_layer.hpp"
 
 namespace caffe {
 	template <typename Dtype>

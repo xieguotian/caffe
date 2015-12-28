@@ -396,6 +396,7 @@ message LayerParameter {
   optional DeconvolutionParameter deconvolution_param = 8266713;
   optional SmoothThresholdParameter smooth_threshold_param = 8266714;
   optional ShrinkageParameter shrinkage_param = 8266715;
+  optional HighwayConvolutionParameter highway_conv_param = 8266716;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1304,4 +1305,35 @@ message SmoothThresholdParameter{
 message ShrinkageParameter
 {
 	optional FillerParameter threshold_filler = 3;
+}
+
+// Message that stores parameters used by ConvolutionLayer
+message HighwayConvolutionParameter {
+  optional uint32 num_output = 1; // The number of outputs for the layer
+  optional bool bias_term = 2 [default = true]; // whether to have bias terms
+  // Pad, kernel size, and stride are all given as a single value for equal
+  // dimensions in height and width or as Y, X pairs.
+  optional uint32 pad = 3 [default = 0]; // The padding size (equal in Y, X)
+  optional uint32 pad_h = 9 [default = 0]; // The padding height
+  optional uint32 pad_w = 10 [default = 0]; // The padding width
+  optional uint32 kernel_size = 4; // The kernel size (square)
+  optional uint32 kernel_h = 11; // The kernel height
+  optional uint32 kernel_w = 12; // The kernel width
+  optional uint32 group = 5 [default = 1]; // The group size for group conv
+  optional uint32 stride = 6 [default = 1]; // The stride (equal in Y, X)
+  optional uint32 stride_h = 13; // The stride height
+  optional uint32 stride_w = 14; // The stride width
+  optional FillerParameter weight_filler = 7; // The filler for the weight
+  optional FillerParameter bias_filler = 8; // The filler for the bias
+  optional FillerParameter transform_weight_filler = 16; // The filler for the input gate weights
+  optional FillerParameter transform_bias_filler = 17; // The filler for the input gate bias
+  optional uint32 transform_kernel_size = 18; // The transform gate kernel size (square)
+  optional uint32 transform_pad = 19 [default = 0]; // The transform gate padding size (equal in Y, X)
+
+  enum Engine {
+    DEFAULT = 0;
+    CAFFE = 1;
+    CUDNN = 2;
+  }
+  optional Engine engine = 15 [default = CUDNN];
 }

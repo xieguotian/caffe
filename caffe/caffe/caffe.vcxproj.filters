@@ -378,6 +378,9 @@
     <ClCompile Include="..\..\src\caffe\solvers\sgd_solver.cpp">
       <Filter>solvers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\cudnn_highway_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\blob.hpp">
@@ -707,6 +710,60 @@
     <ClInclude Include="..\..\include\caffe\layers\filter_elt_layer.hpp">
       <Filter>Header Files\layers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\cudnn_highway_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\amplitude_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\col2img_mask_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\conv_norm_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\deconv_norm_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\euclidean_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\k_sparse_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\neighbor_dist_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\non_local_2_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\non_local_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\normalize_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\select_replace_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\select_sorted_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\shrinkage_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\smooth_threshold_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\unpooling_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\argmaxmin_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\crop_pad_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu">
@@ -911,6 +968,9 @@
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\filter_elt_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\cudnn_highway_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>

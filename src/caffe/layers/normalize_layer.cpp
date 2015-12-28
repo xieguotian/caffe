@@ -2,7 +2,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/layers/normalize_layer.hpp"
 
 namespace caffe{
 	template <typename Dtype>

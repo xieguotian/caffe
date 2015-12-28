@@ -177,6 +177,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       proto << "momentum: " << momentum << " ";
     }
     MakeTempDir(&snapshot_prefix_);
+	std::replace(snapshot_prefix_.begin(), snapshot_prefix_.end(), '\\', '/');
     proto << "snapshot_prefix: '" << snapshot_prefix_ << "/' ";
     if (snapshot) {
       proto << "snapshot: " << num_iters << " ";

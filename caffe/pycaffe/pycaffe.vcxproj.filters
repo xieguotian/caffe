@@ -378,6 +378,9 @@
     <ClCompile Include="..\..\src\caffe\solvers\sgd_solver.cpp">
       <Filter>solvers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\cudnn_highway_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\blob.hpp">
@@ -704,6 +707,9 @@
     <ClInclude Include="..\..\include\caffe\solver_factory.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\cudnn_highway_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\base_data_layer.cu">
@@ -908,6 +914,9 @@
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\softmax_loss_rw_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\cudnn_highway_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>

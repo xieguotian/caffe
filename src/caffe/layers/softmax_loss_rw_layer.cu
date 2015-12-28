@@ -4,7 +4,6 @@
 
 #include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/vision_layers.hpp"
 #include "caffe/layers/softmax_with_loss_rw_layer.hpp"
 
 namespace caffe {
