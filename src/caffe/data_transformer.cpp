@@ -1,5 +1,6 @@
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #endif  // USE_OPENCV
 
 #include <string>
@@ -151,6 +152,21 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     if (param_.force_color() || param_.force_gray()) {
       LOG(ERROR) << "force_color and force_gray only for encoded datum";
     }
+
+	int min_scale = param_.multi_scale_param().min_scale();
+	int max_scale = param_.multi_scale_param().max_scale();
+	if (phase_ == TRAIN && param_.has_multi_scale_param() &&
+		param_.multi_scale_param().is_multi_scale() &&
+		max_scale > min_scale){
+#ifdef USE_OPENCV
+		cv::Mat cv_img;
+		DatumToCVMat(&datum, cv_img);
+		return Transform(cv_img, transformed_blob);
+#else
+		LOG(FATAL) << "resize image requires OpenCV; compile with USE_OPENCV.";
+#endif  // USE_OPENCV
+	}
+
   }
 
   const int crop_size = param_.crop_size();
@@ -225,10 +241,34 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        Blob<Dtype>* transformed_blob) {
+	cv::Mat tmp_cv_img;
+	// random scale image
+	int min_scale = param_.multi_scale_param().min_scale();
+	int max_scale = param_.multi_scale_param().max_scale();
+	if (phase_ == TRAIN && param_.has_multi_scale_param() &&
+		param_.multi_scale_param().is_multi_scale() &&
+		max_scale > min_scale){
+
+		int org_height = cv_img.rows;
+		int org_width = cv_img.cols;
+		//get random scale
+		int small_side = std::min(org_height, org_width);
+		int min_side = small_side*min_scale;
+		int max_side = small_side*max_scale;
+		float scale = float(Rand(max_side - min_side + 1) + min_side) / float(small_side);
+		//scale image
+		int resize_height = org_height*scale;
+		int resize_width = org_width*scale;
+
+		cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+	}
+	else
+		tmp_cv_img = cv_img;
+
   const int crop_size = param_.crop_size();
-  const int img_channels = cv_img.channels();
-  const int img_height = cv_img.rows;
-  const int img_width = cv_img.cols;
+  const int img_channels = tmp_cv_img.channels();
+  const int img_height = tmp_cv_img.rows;
+  const int img_width = tmp_cv_img.cols;
 
   // Check dimensions.
   const int channels = transformed_blob->channels();
@@ -241,7 +281,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   CHECK_LE(width, img_width);
   CHECK_GE(num, 1);
 
-  CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
+  CHECK(tmp_cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
 
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror() && Rand(2);
@@ -272,7 +312,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 
   int h_off = 0;
   int w_off = 0;
-  cv::Mat cv_cropped_img = cv_img;
+  cv::Mat cv_cropped_img = tmp_cv_img;
   if (crop_size) {
     CHECK_EQ(crop_size, height);
     CHECK_EQ(crop_size, width);
@@ -285,7 +325,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
       w_off = (img_width - crop_size) / 2;
     }
     cv::Rect roi(w_off, h_off, crop_size, crop_size);
-    cv_cropped_img = cv_img(roi);
+    cv_cropped_img = tmp_cv_img(roi);
   } else {
     CHECK_EQ(img_height, height);
     CHECK_EQ(img_width, width);
@@ -522,7 +562,8 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
 template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
-      (phase_ == TRAIN && param_.crop_size());
+      (phase_ == TRAIN && param_.crop_size()) || 
+	  (phase_ == TRAIN && param_.multi_scale_param().is_multi_scale());
   if (needs_rand) {
     const unsigned int rng_seed = caffe_rng_rand();
     rng_.reset(new Caffe::RNG(rng_seed));

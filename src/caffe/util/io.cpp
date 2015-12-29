@@ -258,5 +258,33 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
   }
   datum->set_data(buffer);
 }
+
+void DatumToCVMat(const Datum* datum, cv::Mat& cv_img)
+{
+	int height = datum->height();
+	int width = datum->width();
+	int channel = datum->channels();
+
+	if (channel == 3)
+		cv_img = cv::Mat(height, width, CV_8UC3);
+	else if (channel == 1)
+		cv_img = cv::Mat(height, width, CV_8UC1);
+	else
+		LOG(ERROR) << "only color image or gray image allow. (channels=="
+		<< channel << ")";
+
+	std::string buffer = datum->data();
+	for (int h = 0; h < height; ++h){
+		uchar* ptr = cv_img.ptr<uchar>(h);
+		int img_index = 0;
+		for (int w = 0; w < width; ++w){
+			for (int c = 0; c < channel; ++c){
+				int datum_index = (c * height + h) * width + w;
+				ptr[img_index] = static_cast<uchar>(buffer[datum_index]);
+				img_index++;
+			}
+		}
+	}
+}
 #endif  // USE_OPENCV
 }  // namespace caffe

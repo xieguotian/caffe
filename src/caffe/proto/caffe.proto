@@ -399,6 +399,13 @@ message LayerParameter {
   optional HighwayConvolutionParameter highway_conv_param = 8266716;
 }
 
+// message for multi-scale image argumentation
+message ScaleRange{
+	optional bool is_multi_scale = 1 [default = false];
+	optional float min_scale = 2 [default = 1];
+	optional float max_scale = 3 [default = 1];
+}
+
 // Message that stores parameters used to apply transformation
 // to the data layer's data
 message TransformationParameter {
@@ -420,6 +427,7 @@ message TransformationParameter {
   optional bool force_color = 6 [default = false];
   // Force the decoded image to have 1 color channels.
   optional bool force_gray = 7 [default = false];
+  optional ScaleRange multi_scale_param = 8;
 }
 
 // Message that stores parameters shared by loss layers
