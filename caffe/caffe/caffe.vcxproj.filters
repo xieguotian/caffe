@@ -357,9 +357,6 @@
     <ClCompile Include="..\..\src\caffe\layers\filter_elt_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\tools\caffe.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\caffe\solvers\adadelta_solver.cpp">
       <Filter>solvers</Filter>
     </ClCompile>
@@ -380,6 +377,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\caffe\layers\cudnn_highway_layer.cpp">
       <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\scale_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\tools\convert_imageset.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -764,6 +767,9 @@
     <ClInclude Include="..\..\include\caffe\layers\crop_pad_layer.hpp">
       <Filter>Header Files\layers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\scale_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu">
@@ -971,6 +977,9 @@
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\cudnn_highway_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\scale_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>
