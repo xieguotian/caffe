@@ -48,6 +48,9 @@ int64_t cluster_seedgen(void) {
   return seed;
 }
 
+DEFINE_string(log_name, "log",
+	"name of log file.");
+
 void initGlog()
 {
 	FLAGS_log_dir = ".\\log\\";
@@ -56,16 +59,16 @@ void initGlog()
 	std::string LOG_WARNING_FILE;
 	std::string LOG_ERROR_FILE;
 	std::string LOG_FATAL_FILE;
-	std::string now_time = boost::posix_time::to_iso_extended_string(boost::posix_time::second_clock::local_time());
-	now_time[13] = '-';
-	now_time[16] = '-';
-	LOG_INFO_FILE = FLAGS_log_dir + "INFO";
+	//std::string now_time = boost::posix_time::to_iso_extended_string(boost::posix_time::second_clock::local_time());
+	//now_time[13] = '-';
+	//now_time[16] = '-';
+	LOG_INFO_FILE = FLAGS_log_dir + FLAGS_log_name + ".";
 	google::SetLogDestination(google::GLOG_INFO, LOG_INFO_FILE.c_str());
-	LOG_WARNING_FILE = FLAGS_log_dir + "WARNING" + now_time + ".txt";
+	LOG_WARNING_FILE = FLAGS_log_dir + FLAGS_log_name + "_WARNING.";
 	google::SetLogDestination(google::GLOG_WARNING, LOG_WARNING_FILE.c_str());
-	LOG_ERROR_FILE = FLAGS_log_dir + "ERROR" + now_time + ".txt";
+	LOG_ERROR_FILE = FLAGS_log_dir + FLAGS_log_name + "_ERROR.";
 	google::SetLogDestination(google::GLOG_ERROR, LOG_ERROR_FILE.c_str());
-	LOG_FATAL_FILE = FLAGS_log_dir + "FATAL" + now_time + ".txt";
+	LOG_FATAL_FILE = FLAGS_log_dir +  FLAGS_log_name +"_FATAL.";
 	google::SetLogDestination(google::GLOG_FATAL, LOG_FATAL_FILE.c_str());
 }
 
