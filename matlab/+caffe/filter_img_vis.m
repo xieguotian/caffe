@@ -13,11 +13,11 @@ pad = net_info(layer_idx,3);
 
 % image visualizations size
 top_num = size(samp_idx,2)/3.0;
-if kernel > 100
+% if kernel > 100
     img_size = 100;
-else
-    img_size = kernel;
-end
+% else
+%     img_size = kernel;
+% end
 
 % get images
 top_imgs = zeros(img_size,img_size,3,top_num,size(samp_idx,1));

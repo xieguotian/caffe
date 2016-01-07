@@ -62,7 +62,7 @@ if size(A,4)>1
     for i=1:ch
         nA2 = reshape(nA(:,:,:,i),sq_len*sq_len,(p_h+pad)*(p_w+pad))';
         nA2 = col2im(nA2,[p_h+pad,p_w+pad],[(p_h+pad)*sq_len,(p_w+pad)*sq_len],'distinct');
-        out=cat(3,out,nA2');
+        out=cat(3,out,nA2);
     end
     nA=out;
 else
