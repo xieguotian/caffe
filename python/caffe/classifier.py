@@ -178,12 +178,15 @@ class Image_Data(Process):
                                 ratio = self.image_dims[0] / float(height)
                                 height = self.image_dims[0]
                                 width = int(ratio*width)
-                            else:
+                            elif width<height:
                                 ratio = self.image_dims[0] / float(width)
                                 height = int(ratio*height)
                                 width = self.image_dims[0]
+                            else:
+                                height = self.image_dims[0]
+                                width = self.image_dims[0]
                             #tmp_in_ = caffe.io.resize_image(in_, [height,width],interp_order=3)
-                            tmp_in_ = resize_img(in_,[height,width],Image.BICUBIC)
+                            tmp_in_ = resize_img(in_,[width,height],Image.BICUBIC)
 
                         input_[ix*10:(ix+1)*10] = caffe.io.oversample(tmp_in_[np.newaxis,:,:,:],self.crop_dims)
                 else:
@@ -204,12 +207,16 @@ class Image_Data(Process):
                                 ratio = self.image_dims[0] / float(height)
                                 height = self.image_dims[0]
                                 width = int(ratio*width)
-                            else:
+                            elif width<height:
                                 ratio = self.image_dims[0] / float(width)
                                 height = int(ratio*height)
                                 width = self.image_dims[0]
+                            else:
+                                height = self.image_dims[0]
+                                width = self.image_dims[0]
+
                             #tmp_in_ = caffe.io.resize_image(in_, [height,width],interp_order=3)
-                            tmp_in_ = resize_img(in_,[height,width],Image.BICUBIC)
+                            tmp_in_ = resize_img(in_,[width,height],Image.BICUBIC)
                         # Take center crop.
                         center = np.array(tmp_in_.shape[:2]) / 2.0
                         crop = np.tile(center, (1, 2))[0] + np.concatenate([
@@ -281,7 +288,7 @@ class Classifier_parallel(caffe.Net):
             classes.
         """
         # Scale to standardize input dimensions.
-        num_cores = max(cpu_count()-1,1)
+        num_cores = min(max(cpu_count()-1,1),10)
         fetch_sets = []
         step = num_cores*nimg_per_iter
         for i in range(num_cores):
@@ -361,13 +368,16 @@ def process_images(img_queue,img_list,data_mean,img_dims,preserve_ratio,raw_scal
                 ratio = img_dims[0] / float(height)
                 height = img_dims[0]
                 width = int(ratio*width)
-            else:
+            elif width < height:
                 ratio = img_dims[0] / float(width)
                 height = int(ratio*height)
                 width = img_dims[0]
+            else:
+                height = img_dims[0]
+                width = img_dims[0]
 
             #img = caffe.io.resize_image(img,[height,width],interp_order=3)
-            img = resize_img(img,[height,width],Image.BICUBIC)
+            img = resize_img(img,[width,height],Image.BICUBIC)
 
         caffe_in = preprocess(img,data_mean,raw_scale,input_scale)
         caffe_in = caffe_in[np.newaxis,:,:,:]
@@ -424,16 +434,19 @@ class Classifier_dense(caffe.Net):
         img_processor.start()
         time_pred_st = time.clock()
         for idx,img_name in enumerate(img_list):
+            '''
             flag = False
             if img_queue.empty():
                 time_st = time.clock()
                 flag = True
                 print 'image queue is empty'
+            '''
 
             caffe_in = img_queue.get()
+            '''
             if flag:
                 print 'time for pre_read images: %fs' % (time.clock()-time_st)
-
+            '''
             self.blobs[self.inputs[0]].reshape(caffe_in.shape[0],
                                                caffe_in.shape[1],
                                                caffe_in.shape[2],
@@ -444,10 +457,12 @@ class Classifier_dense(caffe.Net):
                 print '%d process,time for predicting %d images: %fs'%(idx,nimg_per_iter,time.clock()-time_pred_st)
                 time_pred_st = time.clock()
 
-            prediction = np.squeeze(out[self.outputs[0]],axis=(2,3))
+            prediction = out[self.outputs[0]].mean(2).mean(2)
             predictions.extend(prediction)
 
         if not img_queue.empty():
             print 'some images left.'
+        if img_processor.is_alive():
+            img_processor.terminate()
         return predictions
 

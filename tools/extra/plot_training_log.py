@@ -54,6 +54,11 @@ def get_chart_type_description(chart_type):
     supported_chart_types = get_supported_chart_types()
     chart_type_description = supported_chart_types[chart_type]
     return chart_type_description
+def get_chart_type_descriptions(chart_types):
+    chart_type_descriptions = []
+    for ch_type in chart_types:
+        chart_type_descriptions.append(get_chart_type_description(ch_type))
+    return ' & '.join(chart_type_descriptions)
 
 def get_data_file_type(chart_type):
     description = get_chart_type_description(chart_type)
@@ -70,7 +75,7 @@ def get_field_descriptions(chart_type):
     x_axis_field = description[1]
     return x_axis_field, y_axis_field    
 
-def get_field_indecies(x_axis_field, y_axis_field):    
+def get_field_indecies(x_axis_field, y_axis_field,chart_type):
     data_file_type = get_data_file_type(chart_type)
     fields = create_field_index()[0][data_file_type]
     return fields[x_axis_field], fields[y_axis_field]
@@ -94,9 +99,10 @@ def random_marker():
     idx = random.randint(0, num - 1)
     return markers.values()[idx]
 
-def get_data_label(path_to_log):
+def get_data_label(path_to_log,chart_type):
+    post_fix = get_chart_type_description(chart_type).split(get_chart_type_description_separator())[0].replace(' ','_')
     label = path_to_log[path_to_log.rfind('/')+1 : path_to_log.rfind(
-        get_log_file_suffix())]
+        get_log_file_suffix())] + '_' + post_fix
     return label
 
 def get_legend_loc(chart_type):
@@ -111,34 +117,35 @@ def get_legend_loc(chart_type):
 def plot_chart(chart_type, path_to_png, path_to_log_list):
     for path_to_log in path_to_log_list:
         os.system('python %s %s %s' % (get_log_parsing_script(), path_to_log,os.path.dirname(os.path.abspath(path_to_png))))
-        data_file = get_data_file(chart_type, path_to_log)
-        x_axis_field, y_axis_field = get_field_descriptions(chart_type)
-        x, y = get_field_indecies(x_axis_field, y_axis_field)
-        data = load_data(data_file, x, y)
-        ## TODO: more systematic color cycle for lines
-        color = [random.random(), random.random(), random.random()]
-        label = get_data_label(path_to_log)
-        linewidth = 0.75
-        ## If there too many datapoints, do not use marker.
-##        use_marker = False
-        use_marker = True
-        if not use_marker:
-            plt.plot(data[0], data[1], label = label, color = color,
-                     linewidth = linewidth)
-        else:
-            ok = False
-            ## Some markers throw ValueError: Unrecognized marker style
-            while not ok:
-                try:
-                    marker = random_marker()
-                    plt.plot(data[0], data[1], label = label, color = color,
-                             marker = marker, linewidth = linewidth)
-                    ok = True
-                except:
-                    pass
-    legend_loc = get_legend_loc(chart_type)
+        for ch_type in chart_type:
+            data_file = get_data_file(ch_type, path_to_log)
+            x_axis_field, y_axis_field = get_field_descriptions(ch_type)
+            x, y = get_field_indecies(x_axis_field, y_axis_field,ch_type)
+            data = load_data(data_file, x, y)
+            ## TODO: more systematic color cycle for lines
+            color = [random.random(), random.random(), random.random()]
+            label = get_data_label(path_to_log,ch_type)
+            linewidth = 0.75
+            ## If there too many datapoints, do not use marker.
+    ##        use_marker = False
+            use_marker = True
+            if not use_marker:
+                plt.plot(data[0], data[1], label = label, color = color,
+                         linewidth = linewidth)
+            else:
+                ok = False
+                ## Some markers throw ValueError: Unrecognized marker style
+                while not ok:
+                    try:
+                        marker = random_marker()
+                        plt.plot(data[0], data[1], label = label, color = color,
+                                 marker = marker, linewidth = linewidth)
+                        ok = True
+                    except:
+                        pass
+    legend_loc = get_legend_loc(chart_type[0])
     plt.legend(loc = legend_loc, ncol = 1) # ajust ncol to fit the space
-    plt.title(get_chart_type_description(chart_type))
+    plt.title(get_chart_type_descriptions(chart_type))
     plt.xlabel(x_axis_field)
     plt.ylabel(y_axis_field)  
     plt.savefig(path_to_png)     
@@ -165,13 +172,17 @@ Supported chart types:""" % (len(get_supported_chart_types()) - 1,
     exit
 
 def is_valid_chart_type(chart_type):
-    return chart_type >= 0 and chart_type < len(get_supported_chart_types())
+    flag = True
+    for ct in chart_type:
+        flag = flag and (ct >= 0 and ct < len(get_supported_chart_types()))
+
+    return flag
   
 if __name__ == '__main__':
     if len(sys.argv) < 4:
         print_help()
     else:
-        chart_type = int(sys.argv[1])
+        chart_type = [int(ct) for ct in sys.argv[1].split(',')]
         if not is_valid_chart_type(chart_type):
             print_help()
         path_to_png = sys.argv[2]

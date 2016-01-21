@@ -153,11 +153,11 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
       LOG(ERROR) << "force_color and force_gray only for encoded datum";
     }
 
-	int min_scale = param_.multi_scale_param().min_scale();
-	int max_scale = param_.multi_scale_param().max_scale();
-	if (phase_ == TRAIN && param_.has_multi_scale_param() &&
+	float min_scale = param_.multi_scale_param().min_scale();
+	float max_scale = param_.multi_scale_param().max_scale();
+	if (param_.has_multi_scale_param() &&
 		param_.multi_scale_param().is_multi_scale() &&
-		max_scale > min_scale){
+		max_scale >= min_scale){
 #ifdef USE_OPENCV
 		cv::Mat cv_img;
 		DatumToCVMat(&datum, cv_img);
@@ -243,24 +243,34 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        Blob<Dtype>* transformed_blob) {
 	cv::Mat tmp_cv_img;
 	// random scale image
-	int min_scale = param_.multi_scale_param().min_scale();
-	int max_scale = param_.multi_scale_param().max_scale();
-	if (phase_ == TRAIN && param_.has_multi_scale_param() &&
+	float min_scale = param_.multi_scale_param().min_scale();
+	float max_scale = param_.multi_scale_param().max_scale();
+	if (param_.has_multi_scale_param() &&
 		param_.multi_scale_param().is_multi_scale() &&
-		max_scale > min_scale){
+		max_scale >= min_scale){
+		if (phase_ == TRAIN)
+		{
+			int org_height = cv_img.rows;
+			int org_width = cv_img.cols;
+			//get random scale
+			int small_side = std::min(org_height, org_width);
+			int min_side = small_side*min_scale;
+			int max_side = small_side*max_scale;
+			float scale = float(Rand(max_side - min_side + 1) + min_side) / float(small_side);
+			//scale image
+			int resize_height = org_height*scale;
+			int resize_width = org_width*scale;
 
-		int org_height = cv_img.rows;
-		int org_width = cv_img.cols;
-		//get random scale
-		int small_side = std::min(org_height, org_width);
-		int min_side = small_side*min_scale;
-		int max_side = small_side*max_scale;
-		float scale = float(Rand(max_side - min_side + 1) + min_side) / float(small_side);
-		//scale image
-		int resize_height = org_height*scale;
-		int resize_width = org_width*scale;
-
-		cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+			cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+		}
+		else if (phase_ == TEST)
+		{
+			int org_height = cv_img.rows;
+			int org_width = cv_img.cols;
+			int resize_height = org_height*min_scale;
+			int resize_width = org_width*min_scale;
+			cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+		}
 	}
 	else
 		tmp_cv_img = cv_img;

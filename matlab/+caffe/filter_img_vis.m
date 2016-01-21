@@ -1,10 +1,15 @@
-function top_imgs = filter_img_vis(net_param,layer_idx,samp_idx,img_list,img_root)
+function top_imgs = filter_img_vis(net_param,layer_idx,samp_idx,img_list,img_root,varargin)
 % net_param: a matrix contain net layer info
 % layer_idx: index of layer in the net_param
 % samp_idx: index of neuron that to visualize
 % img_list: name of images
 % img_root: root path of images set.
 
+if length(varargin)==0
+    smallest = 0;
+else
+    smallest = varargin{1};
+end
 % get net info
 net_info = caffe.receptive_field_info(net_param);
 kernel = net_info(layer_idx,1);
@@ -28,6 +33,11 @@ for i=1:size(samp_idx,1)
         im_name = [img_root '/' img_list{img_idx}];
         img = imread(im_name);
         im_size = [size(img,1),size(img,2)];
+        if smallest~=0 
+            ratio = smallest / min(im_size);
+            img = imresize(img,ratio);
+            im_size = [size(img,1),size(img,2)];
+        end
         % receptive field
         w_idx = samp_idx(i,j+2);
         h_idx = samp_idx(i,j+1);

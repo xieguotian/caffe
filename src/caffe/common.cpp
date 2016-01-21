@@ -9,6 +9,7 @@
 #include <process.h>
 #include <direct.h>
 #include <boost\date_time.hpp>
+#include <boost\filesystem.hpp>
 
 namespace caffe {
 
@@ -50,11 +51,16 @@ int64_t cluster_seedgen(void) {
 
 DEFINE_string(log_name, "log",
 	"name of log file.");
+DEFINE_string(log_dir, "log",
+	"directory of log file.");
 
 void initGlog()
 {
-	FLAGS_log_dir = ".\\log\\";
-	_mkdir(FLAGS_log_dir.c_str());
+	FLAGS_log_dir = FLAGS_log_dir + "\\";
+	//FLAGS_log_dir = ".\\log\\";
+	if (!boost::filesystem::exists(FLAGS_log_dir))
+		_mkdir(FLAGS_log_dir.c_str());
+
 	std::string LOG_INFO_FILE;
 	std::string LOG_WARNING_FILE;
 	std::string LOG_ERROR_FILE;
