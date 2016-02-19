@@ -31,7 +31,11 @@ for i=1:size(samp_idx,1)
         % read image
         img_idx = samp_idx(i,j);
         im_name = [img_root '/' img_list{img_idx}];
+        try
         img = imread(im_name);
+        catch
+            continue;
+        end
         im_size = [size(img,1),size(img,2)];
         if smallest~=0 
             ratio = smallest / min(im_size);

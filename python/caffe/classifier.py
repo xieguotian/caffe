@@ -356,32 +356,58 @@ def preprocess(img,data_mean,raw_scale,input_scale):
 def deprocess(img,mean):
     return np.dstack((img + mean)[::-1])
 
-def process_images(img_queue,img_list,data_mean,img_dims,preserve_ratio,raw_scale=None,input_scale=None):
+def process_images(img_queue,img_list,data_mean,img_dims,preserve_ratio,raw_scale=None,input_scale=None,ms_flag=False):
     for img_name in img_list:
         img = caffe.io.load_image(img_name)
-        if not preserve_ratio:
-            #img = caffe.io.resize_image(img,img_dims,interp_order=3)
-            img = resize_img(img,img_dims,Image.BICUBIC)
-        else:
-            height,width = img.shape[:2]
-            if height<width:
-                ratio = img_dims[0] / float(height)
-                height = img_dims[0]
-                width = int(ratio*width)
-            elif width < height:
-                ratio = img_dims[0] / float(width)
-                height = int(ratio*height)
-                width = img_dims[0]
+        if not ms_flag:
+            if not preserve_ratio:
+                #img = caffe.io.resize_image(img,img_dims,interp_order=3)
+                img = resize_img(img,img_dims,Image.BICUBIC)
             else:
-                height = img_dims[0]
-                width = img_dims[0]
+                height,width = img.shape[:2]
+                if height<width:
+                    ratio = img_dims[0] / float(height)
+                    height = img_dims[0]
+                    width = int(ratio*width)
+                elif width < height:
+                    ratio = img_dims[0] / float(width)
+                    height = int(ratio*height)
+                    width = img_dims[0]
+                else:
+                    height = img_dims[0]
+                    width = img_dims[0]
 
-            #img = caffe.io.resize_image(img,[height,width],interp_order=3)
-            img = resize_img(img,[width,height],Image.BICUBIC)
+                #img = caffe.io.resize_image(img,[height,width],interp_order=3)
+                img = resize_img(img,[width,height],Image.BICUBIC)
 
-        caffe_in = preprocess(img,data_mean,raw_scale,input_scale)
-        caffe_in = caffe_in[np.newaxis,:,:,:]
-        img_queue.put(caffe_in)
+            caffe_in = preprocess(img,data_mean,raw_scale,input_scale)
+            caffe_in = caffe_in[np.newaxis,:,:,:]
+            img_queue.put(caffe_in)
+        else:
+            for scale in img_dims:
+                if not preserve_ratio:
+                    #img = caffe.io.resize_image(img,img_dims,interp_order=3)
+                    img_tmp = resize_img(img,(scale,scale),Image.BICUBIC)
+                else:
+                    height,width = img.shape[:2]
+                    if height<width:
+                        ratio = scale / float(height)
+                        height = scale
+                        width = int(ratio*width)
+                    elif width < height:
+                        ratio = scale / float(width)
+                        height = int(ratio*height)
+                        width = scale
+                    else:
+                        height = scale
+                        width = scale
+
+                    #img = caffe.io.resize_image(img,[height,width],interp_order=3)
+                    img_tmp = resize_img(img,[width,height],Image.BICUBIC)
+
+                caffe_in = preprocess(img_tmp,data_mean,raw_scale,input_scale)
+                caffe_in = caffe_in[np.newaxis,:,:,:]
+                img_queue.put(caffe_in)
 
 class Classifier_dense(caffe.Net):
     """
@@ -466,3 +492,56 @@ class Classifier_dense(caffe.Net):
             img_processor.terminate()
         return predictions
 
+# predict multiscale
+    def predict_ms(self, img_list,nimg_per_iter=100):
+        predictions = []
+        img_queue = Queue(5)
+        img_processor = Process(target=process_images,
+                                args=(img_queue,
+                                      img_list,
+                                      self.transformer.mean.get(self.inputs[0]),
+                                      self.image_dims,
+                                      self.preserve_ratio,
+                                      self.transformer.raw_scale.get(self.inputs[0]),
+                                      self.transformer.input_scale.get(self.inputs[0]),
+                                      True))
+        img_processor.start()
+        time_pred_st = time.clock()
+        for idx,img_name in enumerate(img_list):
+            '''
+            flag = False
+            if img_queue.empty():
+                time_st = time.clock()
+                flag = True
+                print 'image queue is empty'
+            '''
+            prediction = None
+            for ix,scale in enumerate(self.image_dims):
+                caffe_in = img_queue.get()
+                '''
+                if flag:
+                    print 'time for pre_read images: %fs' % (time.clock()-time_st)
+                '''
+                self.blobs[self.inputs[0]].reshape(caffe_in.shape[0],
+                                                   caffe_in.shape[1],
+                                                   caffe_in.shape[2],
+                                                   caffe_in.shape[3])
+                out = self.forward_all(**{self.inputs[0]: caffe_in})
+
+                if ix==0:
+                    shape = out[self.outputs[0]].shape
+                    prediction = out[self.outputs[0]].reshape((shape[0],shape[1],shape[2]*shape[3]))
+                else:
+                    shape = out[self.outputs[0]].shape
+                    prediction = np.concatenate((prediction,out[self.outputs[0]].reshape((shape[0],shape[1],shape[2]*shape[3]))),axis=2)
+            if idx % nimg_per_iter == 0:
+                print '%d process,time for predicting %d images: %fs'%(idx,nimg_per_iter,time.clock()-time_pred_st)
+                time_pred_st = time.clock()
+            prediction = prediction.mean(2)
+            predictions.extend(prediction)
+
+        if not img_queue.empty():
+            print 'some images left.'
+        if img_processor.is_alive():
+            img_processor.terminate()
+        return predictions

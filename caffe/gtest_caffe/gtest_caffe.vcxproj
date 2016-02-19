@@ -73,6 +73,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\relu_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\scalar_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\scale_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\select_replace_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\select_sorted_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\shrinkage_layer.cu" />
@@ -170,6 +171,7 @@
     <ClCompile Include="..\..\src\caffe\layers\rnn_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\scalar_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\scale_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\select_replace_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\select_sorted_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\shrinkage_layer.cpp" />
@@ -262,6 +264,7 @@
     <ClCompile Include="..\..\src\caffe\test\test_reduction_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_reshape_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_rnn_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_scale_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_select_replace_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_select_sort_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_shrinkage_layer.cpp" />

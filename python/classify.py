@@ -125,6 +125,11 @@ def main(argv):
         action='store_true',
         help='presrve_ratio when resize image'
     )
+    parser.add_argument(
+        "--multi_scale",
+        action='store_true',
+        help='multi scale test'
+    )
     args = parser.parse_args()
 
     image_dims = [int(s) for s in args.images_dim.split(',')]
@@ -193,7 +198,10 @@ def main(argv):
     if len(list)!=0:
         if args.dense:
             n_p_iter = args.nimg_per_iter
-            predictions = classifier.predict(list,nimg_per_iter=n_p_iter)
+            if args.multi_scale:
+                predictions = classifier.predict_ms(list,nimg_per_iter=n_p_iter)
+            else:
+                predictions = classifier.predict(list,nimg_per_iter=n_p_iter)
         else:
             if args.pre_fetch:
                 n_p_iter = args.nimg_per_iter
