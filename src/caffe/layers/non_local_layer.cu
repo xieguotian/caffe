@@ -17,6 +17,7 @@ namespace caffe
 		{
 			im2col_gpu(split_0_top_vec[0]->gpu_data() + split_0_top_vec[0]->offset(n), channels_, height_, width_,
 				kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+				1,1,
 				img2col_0_top.mutable_gpu_data() + img2col_0_top.offset(n));
 
 			im2col_center_gpu(split_0_top_vec[1]->gpu_data() + split_0_top_vec[1]->offset(n),
@@ -156,6 +157,7 @@ namespace caffe
 
 				col2im_gpu(img2col_0_top.gpu_diff() + img2col_0_top.offset(n), channels_, height_, width_,
 					kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+					1,1,
 					split_0_top_vec[0]->mutable_gpu_diff() + split_0_top_vec[0]->offset(n));
 			}
 			split_layer_0->Backward(split_0_top_vec, propagate_down_sub, bottom);

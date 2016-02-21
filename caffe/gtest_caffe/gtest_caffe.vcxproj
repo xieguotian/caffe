@@ -25,6 +25,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\base_data_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\batch_norm_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\batch_reindex_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\bias_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\bnll_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\col2img_mask_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\concat_layer.cu" />
@@ -45,6 +46,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\deconv_norm_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\dropout_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\eltwise_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\elu_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\embed_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\euclidean_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\euclidean_loss_layer.cu" />
@@ -74,6 +76,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\scalar_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\scale_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\scale_layer2.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\select_replace_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\select_sorted_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\shrinkage_layer.cu" />
@@ -90,6 +93,12 @@
     <CudaCompile Include="..\..\src\caffe\layers\threshold_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\tile_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\unpooling_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\solvers\adadelta_solver.cu" />
+    <CudaCompile Include="..\..\src\caffe\solvers\adagrad_solver.cu" />
+    <CudaCompile Include="..\..\src\caffe\solvers\adam_solver.cu" />
+    <CudaCompile Include="..\..\src\caffe\solvers\nesterov_solver.cu" />
+    <CudaCompile Include="..\..\src\caffe\solvers\rmsprop_solver.cu" />
+    <CudaCompile Include="..\..\src\caffe\solvers\sgd_solver.cu" />
     <CudaCompile Include="..\..\src\caffe\test\test_im2col_kernel.cu" />
     <CudaCompile Include="..\..\src\caffe\util\im2col.cu" />
     <CudaCompile Include="..\..\src\caffe\util\math_functions.cu" />
@@ -110,6 +119,7 @@
     <ClCompile Include="..\..\src\caffe\layers\base_data_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\batch_norm_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\batch_reindex_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\bias_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\bnll_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\col2img_mask_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\concat_layer.cpp" />
@@ -132,6 +142,7 @@
     <ClCompile Include="..\..\src\caffe\layers\dropout_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\dummy_data_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\eltwise_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\elu_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\embed_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\euclidean_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\euclidean_loss_layer.cpp" />
@@ -172,6 +183,7 @@
     <ClCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\scalar_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\scale_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\scale_layer2.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\select_replace_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\select_sorted_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\shrinkage_layer.cpp" />
@@ -209,6 +221,7 @@
     <ClCompile Include="..\..\src\caffe\test\test_argmax_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_batch_norm_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_batch_reindex_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_bias_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_blob.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_caffe_main.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_col2img_layer.cpp" />
@@ -265,6 +278,7 @@
     <ClCompile Include="..\..\src\caffe\test\test_reshape_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_rnn_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_scale_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_scale_layer2.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_select_replace_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_select_sort_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_shrinkage_layer.cpp" />
@@ -321,6 +335,7 @@
     <ClInclude Include="..\..\include\caffe\layers\base_data_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\batch_norm_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\batch_reindex_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\bias_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\bnll_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\col2img_mask_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\concat_layer.hpp" />
@@ -343,6 +358,7 @@
     <ClInclude Include="..\..\include\caffe\layers\dropout_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\dummy_data_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\eltwise_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\elu_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\embed_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\euclidean_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\euclidean_loss_layer.hpp" />
@@ -382,6 +398,7 @@
     <ClInclude Include="..\..\include\caffe\layers\reshape_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\rnn_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\scalar_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\scale_layer2.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\select_replace_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\select_sorted_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\shrinkage_layer.hpp" />

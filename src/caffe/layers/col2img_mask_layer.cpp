@@ -171,9 +171,11 @@ namespace caffe {
 		for (int n = 0; n < bottom[0]->num(); ++n) {
 			col2im_cpu(eltwise_top_data + eltwise_top_vec[0]->offset(n), channels_, height_, width_,
 				kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+				1,1,
 				data_out_data + data_out_.offset(n));
 			col2im_cpu(mask_in_data + split_top_vec[1]->offset(n), channels_, height_, width_,
 				kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+				1,1,
 				mask_out_data + mask_out_.offset(n));
 		}
 		caffe_add_scalar(mask_out_.count(), (Dtype)std::numeric_limits<Dtype>::epsilon(), mask_out_data);
@@ -209,9 +211,11 @@ namespace caffe {
 		{
 			im2col_cpu(data_out_diff + data_out_.offset(n), channels_, height_, width_,
 				kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+				1,1,
 				eltwise_top_diff + eltwise_top_vec[0]->offset(n));
 			im2col_cpu(mask_out_diff + mask_out_.offset(n), channels_, height_, width_,
 				kernel_h_, kernel_w_, pad_h_, pad_w_, stride_h_, stride_w_,
+				1,1,
 				mask_in_diff + split_top_vec[1]->offset(n));
 		}
 
