@@ -288,7 +288,7 @@ class Classifier_parallel(caffe.Net):
             classes.
         """
         # Scale to standardize input dimensions.
-        num_cores = min(max(cpu_count()-1,1),10)
+        num_cores = min(max(cpu_count()-1,1),4)
         fetch_sets = []
         step = num_cores*nimg_per_iter
         for i in range(num_cores):
@@ -298,7 +298,7 @@ class Classifier_parallel(caffe.Net):
                 tmp_list.extend(img_list[idx:idx+nimg_per_iter])
             print i, len(tmp_list),step
             fetch_sets.append(Image_Data(tmp_list,self.image_dims,self.crop_dims,self.transformer,self.inputs
-                                         ,self.resize_image,oversample,nimg_per_iter,queue_size=3,preserve_ratio=self.preserve_ratio))
+                                         ,self.resize_image,oversample,nimg_per_iter,queue_size=5,preserve_ratio=self.preserve_ratio))
             fetch_sets[i].start()
 
         print 'start thread to read images'

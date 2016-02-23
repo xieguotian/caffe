@@ -18,7 +18,7 @@ else
     for i=1:size(img_sets,5)
         tmpA = img_sets(:,:,:,:,i);
         tmpA = permute(tmpA,[4,1,2,3]);
-        tmpA = show_sub_tiles(tmpA,pad);
+        tmpA = show_sub_tiles(tmpA,pad,isscale);
         A = cat(4,A,tmpA);
     end
     A = permute(A,[4,1,2,3]);
