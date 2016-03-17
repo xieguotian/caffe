@@ -2,7 +2,9 @@ import numpy as np
 import skimage.io
 from scipy.ndimage import zoom
 from skimage.transform import resize
-
+skimage.io.use_plugin('matplotlib')
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 try:
     # Python3 will most likely not be able to load protobuf
     from caffe.proto import caffe_pb2

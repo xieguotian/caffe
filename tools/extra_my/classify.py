@@ -4,29 +4,26 @@ classify.py is an out-of-the-box image classifer callable from the command line.
 
 By default it configures and runs the Caffe reference ImageNet model.
 """
+import time
+st = time.clock()
 import numpy as np
 import os
 import sys
 import argparse
 import glob
-import time
+import socket
+from collections import OrderedDict
+print time.clock()-st
 
+st = time.clock()
 import caffe
-
+print time.clock()-st
 
 def main(argv):
     pycaffe_dir = os.path.dirname(__file__)
 
     parser = argparse.ArgumentParser()
-    # Required arguments: input and output files.
-    parser.add_argument(
-        "input_file",
-        help="Input image, directory, or npy."
-    )
-    parser.add_argument(
-        "output_file",
-        help="Output npy filename."
-    )
+
     # Optional arguments.
     parser.add_argument(
         "--model_def",
@@ -157,10 +154,15 @@ def main(argv):
         print("CPU mode")
 
     if args.dense:
-        classifier = caffe.Classifier_dense(args.model_def, args.pretrained_model,
-                    image_dims=image_dims, mean=mean,
-                    input_scale=args.input_scale, raw_scale=args.raw_scale,
-                    channel_swap=channel_swap,preserve_ratio=args.preserve_ratio)
+        all_model_def = args.model_def.strip().split(',')
+        all_pretrained_model = args.pretrained_model.strip().split(',')
+        all_classifier = []
+        for model_def,pretrained_model in zip(all_model_def,all_pretrained_model):
+            classifier = caffe.Classifier_dense(model_def, pretrained_model,
+                        image_dims=image_dims, mean=mean,
+                        input_scale=args.input_scale, raw_scale=args.raw_scale,
+                        channel_swap=channel_swap,preserve_ratio=args.preserve_ratio)
+            all_classifier.append(classifier)
     else:
         if args.pre_fetch:
             # Make classifier.
@@ -168,10 +170,15 @@ def main(argv):
                 resize_img = False
             else:
                 resize_img = True
-            classifier = caffe.Classifier_parallel(args.model_def, args.pretrained_model,
-                    image_dims=image_dims, mean=mean,
-                    input_scale=args.input_scale, raw_scale=args.raw_scale,resize_image=not args.not_resize_image,
-                    channel_swap=channel_swap,preserve_ratio=args.preserve_ratio)
+            all_model_def = args.model_def.strip().split(',')
+            all_pretrained_model = args.pretrained_model.strip().split(',')
+            all_classifier = []
+            for model_def,pretrained_model in zip(all_model_def,all_pretrained_model):
+                classifier = caffe.Classifier_parallel(model_def, pretrained_model,
+                        image_dims=image_dims, mean=mean,
+                        input_scale=args.input_scale, raw_scale=args.raw_scale,resize_image=not args.not_resize_image,
+                        channel_swap=channel_swap,preserve_ratio=args.preserve_ratio)
+                all_classifier.append(classifier)
         else:
             # Make classifier.
             classifier = caffe.Classifier(args.model_def, args.pretrained_model,
@@ -179,28 +186,75 @@ def main(argv):
                     input_scale=args.input_scale, raw_scale=args.raw_scale,
                     channel_swap=channel_swap)
 
-    # Load numpy array (.npy), directory glob (*.jpg), or image file.
-    args.input_file = os.path.expanduser(args.input_file)
-    if args.input_file.endswith('npy'):
-        print("Loading file: %s" % args.input_file)
-        inputs = np.load(args.input_file)
-    elif args.input_file.endswith('txt'):
-        print("Loading txt file: %s" % args.input_file)
-        fid = open(args.input_file,'r')
-        list = [args.root_path+'/'+name.split()[0] for name in fid]
-        inputs = list
-    elif os.path.isdir(args.input_file):
-        print("Loading folder: %s" % args.input_file)
-        #inputs =[caffe.io.load_image(im_f)
-        #         for im_f in glob.glob(args.input_file + '/*.' + args.ext)]
-        list = glob.glob(args.input_file + '/*.' + args.ext)
-        inputs = list
-    else:
-        print("Loading file: %s" % args.input_file)
-        inputs = [caffe.io.load_image(args.input_file)]
+    tag_dict = OrderedDict()
+    with open('clickture_dog_name_label.txt') as fid:
+        for line in fid:
+            str = line.strip().split('\t')
+            tag_dict[np.int(str[1].strip())] = str[0].strip()
 
-    print("Classifying %d inputs." % len(inputs))
+    localAdrr = '127.0.0.1'
+    port = 13000
 
+    data = ''
+    sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    sock.bind((localAdrr,port))
+    sock.listen(1)
+    print 'begin listen'
+    while True:
+        conn,addr = sock.accept()
+        data = conn.recv(1024)
+        if data:
+            print data
+            list = [data]
+            if args.dense:
+                n_p_iter = args.nimg_per_iter
+                if args.multi_scale:
+                    predictions = classifier.predict_ms_single(list,nimg_per_iter=n_p_iter)
+                else:
+                    all_predictions = None
+                    for classifier in all_classifier:
+                        predictions = classifier.predict_single(list,nimg_per_iter=n_p_iter)
+                        if all_predictions is None:
+                            all_predictions = predictions[0]
+                        else:
+                            all_predictions += predictions[0]
+                    predictions = [all_predictions / np.float32(len(all_classifier))]
+                    #print predictions[0].shape
+            else:
+                if args.pre_fetch:
+                    n_p_iter = args.nimg_per_iter
+                    all_predictions = None
+                    for classifier in all_classifier:
+                        predictions = classifier.predict_single(list,oversample=not args.center_only,nimg_per_iter=n_p_iter)
+                        if all_predictions is None:
+                            all_predictions = np.squeeze(predictions[0])
+                        else:
+                            all_predictions += np.squeeze(predictions[0])
+                    predictions = [all_predictions / np.float32(len(all_classifier))]
+                    #print predictions[0].shape
+                else:
+                    predictions = []
+                    total_num_images = len(list)
+                    n_p_iter = args.nimg_per_iter
+                    for idx in range(0,total_num_images,n_p_iter):
+                        end_idx = min(total_num_images,idx+n_p_iter)
+                        inputs = [caffe.io.load_image(im_f)
+                                for im_f in list[idx:end_idx]]
+                        predictions.extend(classifier.predict(inputs, not args.center_only))
+                        print 'process {} images'.format(end_idx)
+            predictions = predictions[0]
+            predict = predictions.argsort()[::-1][:5]
+
+
+            conn.sendall(bytes('%s:%0.2f;%s:%0.2f;%s:%0.2f;%s:%0.2f;%s:%0.2f'%(
+                tag_dict[predict[0]],predictions[predict[0]],
+                tag_dict[predict[1]],predictions[predict[1]],
+                tag_dict[predict[2]],predictions[predict[2]],
+                tag_dict[predict[3]],predictions[predict[3]],
+                tag_dict[predict[4]],predictions[predict[4]],
+            )))
+            conn.close()
+    '''
     # Classify.
     start = time.time()
     if len(list)!=0:
@@ -226,11 +280,12 @@ def main(argv):
                     print 'process {} images'.format(end_idx)
     else:
         predictions = classifier.predict(inputs, not args.center_only)
-    print("Done in %.2f s." % (time.time() - start))
+    print("Done in %.2f s." % (time.time() - start)
 
     # Save
     print("Saving results into %s" % args.output_file)
     np.save(args.output_file, predictions)
+    '''
 
 
 if __name__ == '__main__':

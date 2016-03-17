@@ -11,6 +11,7 @@ import time
 from PIL import Image
 import matplotlib.pyplot as plt
 import sys
+import cv2
 
 class Classifier(caffe.Net):
     """
@@ -101,9 +102,140 @@ class Classifier(caffe.Net):
         return predictions
 
 def resize_img(img,img_dims,interp_order=Image.BICUBIC):
-    tmp_img = Image.fromarray(np.uint8(img*255))
-    tmp_img = tmp_img.resize(img_dims,interp_order)
+    #tmp_img = Image.fromarray(np.uint8(img*255))
+    tmp_img = np.uint8(img*255)
+    tmp_img = tmp_img[:,:,[2,1,0]]
+    #tmp_img = tmp_img.resize(img_dims,interp_order)
+    tmp_img = cv2.resize(tmp_img,tuple(img_dims))
+    tmp_img = tmp_img[:,:,[2,1,0]]
     return np.array(tmp_img)/255.0
+
+class Image_Data2:
+    def __init__(self,img_list,image_dims,crop_dims,transformer,inputs,resize_image=True,
+                 oversample=True,nimg_per_iter=200,queue_size=10,preserve_ratio=False):
+
+        self.oversample=oversample
+        self.resize_image=resize_image
+        self.queue_size=queue_size
+        self.n_p_iter = nimg_per_iter
+        self.img_list = img_list
+
+        self.image_dims = image_dims
+        self.crop_dims = crop_dims
+        self.transformer = transformer
+        self.inputs = inputs
+        self.preserve_ratio = preserve_ratio
+
+    def get_data(self):
+        total_num_images = len(self.img_list)
+        #n_p_iter = self.n_p_iter
+        n_p_iter = 1
+        for idx in range(0,total_num_images,n_p_iter):
+            end_idx = min(total_num_images,idx+n_p_iter)
+            #read images
+            inputs = [caffe.io.load_image(im_f)
+                    for im_f in self.img_list[idx:end_idx]]
+
+            if not self.preserve_ratio:
+                input_ = np.zeros((len(inputs),
+                           self.image_dims[0],
+                           self.image_dims[1],
+                           inputs[0].shape[2]),
+                          dtype=np.float32)
+                #resize images
+                for ix,in_ in enumerate(inputs):
+                    #input_[ix] = caffe.io.resize_image(in_, self.image_dims,interp_order=3)
+                    if not self.resize_image:
+                        input_[ix] = in_
+                    else:
+                        input_[ix] = resize_img(in_,self.image_dims,Image.BICUBIC)
+                #crop image
+                if self.oversample:
+                    # Generate center, corner, and mirrored crops.
+                    input_ = caffe.io.oversample(input_, self.crop_dims)
+                else:
+                    # Take center crop.
+                    center = np.array(self.image_dims) / 2.0
+                    crop = np.tile(center, (1, 2))[0] + np.concatenate([
+                        -self.crop_dims / 2.0,
+                        self.crop_dims / 2.0
+                    ])
+                    input_ = input_[:, crop[0]:crop[2], crop[1]:crop[3], :]
+            else:
+                #crop images
+                if self.oversample:
+                    # oversample 10 views,Generate center, corner, and mirrored crops.
+                    input_ = np.zeros((len(inputs)*10,
+                                       self.crop_dims[0],
+                                       self.crop_dims[1],
+                                       inputs[0].shape[2]),
+                                      dtype=np.float32)
+
+                    for ix,in_ in enumerate(inputs):
+                        # resize by preserving image ratio
+                        if not self.resize_image:
+                            tmp_in_ = in_
+                        else:
+                            height,width = in_.shape[:2]
+                            if height<width:
+                                ratio = self.image_dims[0] / float(height)
+                                height = self.image_dims[0]
+                                width = int(ratio*width)
+                            elif width<height:
+                                ratio = self.image_dims[0] / float(width)
+                                height = int(ratio*height)
+                                width = self.image_dims[0]
+                            else:
+                                height = self.image_dims[0]
+                                width = self.image_dims[0]
+                            #tmp_in_ = caffe.io.resize_image(in_, [height,width],interp_order=3)
+                            tmp_in_ = resize_img(in_,[width,height],Image.BICUBIC)
+
+                        input_[ix*10:(ix+1)*10] = caffe.io.oversample(tmp_in_[np.newaxis,:,:,:],self.crop_dims)
+                else:
+                    # center only
+                    input_ = np.zeros((len(inputs),
+                                       self.crop_dims[0],
+                                       self.crop_dims[1],
+                                       inputs[0].shape[2]),
+                                      dtype=np.float32)
+
+                    for ix,in_ in enumerate(inputs):
+                        # resize by preserving image ratio
+                        if not self.resize_image:
+                            tmp_in_ = in_
+                        else:
+                            height,width = in_.shape[:2]
+                            if height<width:
+                                ratio = self.image_dims[0] / float(height)
+                                height = self.image_dims[0]
+                                width = int(ratio*width)
+                            elif width<height:
+                                ratio = self.image_dims[0] / float(width)
+                                height = int(ratio*height)
+                                width = self.image_dims[0]
+                            else:
+                                height = self.image_dims[0]
+                                width = self.image_dims[0]
+
+                            #tmp_in_ = caffe.io.resize_image(in_, [height,width],interp_order=3)
+                            tmp_in_ = resize_img(in_,[width,height],Image.BICUBIC)
+                        # Take center crop.
+                        center = np.array(tmp_in_.shape[:2]) / 2.0
+                        crop = np.tile(center, (1, 2))[0] + np.concatenate([
+                            -self.crop_dims / 2.0,
+                            self.crop_dims / 2.0
+                            ])
+                        input_[ix] = tmp_in_[crop[0]:crop[2], crop[1]:crop[3], :]
+
+            # preprocess
+            caffe_in = np.zeros(np.array(input_.shape)[[0, 3, 1, 2]],
+                        dtype=np.float32)
+            for ix, in_ in enumerate(input_):
+                caffe_in[ix] = self.transformer.preprocess(self.inputs[0], in_)
+
+            return caffe_in
+            #self.img_queue.put(caffe_in)
 
 class Image_Data(Process):
     def __init__(self,img_list,image_dims,crop_dims,transformer,inputs,resize_image=True,
@@ -345,6 +477,54 @@ class Classifier_parallel(caffe.Net):
                 count += caffe_in.shape[0]
             print '%d images processed' % count
         return predictions
+    def predict_single(self, img_list,nimg_per_iter=1, oversample=True):
+        """
+        Predict classification probabilities of inputs.
+
+        Parameters
+        ----------
+        inputs : iterable of (H x W x K) input ndarrays.
+        oversample : boolean
+            average predictions across center, corners, and mirrors
+            when True (default). Center-only prediction when False.
+
+        Returns
+        -------
+        predictions: (N x C) ndarray of class probabilities for N images and C
+            classes.
+        """
+        # Scale to standardize input dimensions.
+        data_input = Image_Data2(img_list,self.image_dims,self.crop_dims,self.transformer,self.inputs
+                                         ,self.resize_image,oversample,nimg_per_iter,queue_size=3,preserve_ratio=self.preserve_ratio)
+        predictions = []
+        count = 0
+        total_num_images = len(img_list)
+        n_p_iter = nimg_per_iter
+        for ix,idx in enumerate(range(0,total_num_images,n_p_iter)):
+            time_st = time.clock()
+            caffe_in = data_input.get_data()
+            print 'time for process image: %fs' % (time.clock()-time_st)
+            # classify
+            time_st = time.clock()
+            out = self.forward_all(**{self.inputs[0]: caffe_in})
+            print 'time for predition: %fs' % (time.clock()-time_st)
+
+
+            predictions_ = out[self.outputs[0]]
+
+            # For oversampling, average predictions across crops.
+            if oversample:
+                predictions_ = predictions_.reshape((len(predictions_) / 10, 10, -1))
+                predictions_ = predictions_.mean(1)
+
+            predictions.extend(predictions_)
+
+            if oversample:
+                count += caffe_in.shape[0] / 10.0
+            else:
+                count += caffe_in.shape[0]
+            print '%d images processed' % count
+        return predictions
 
 def preprocess(img,data_mean,raw_scale,input_scale):
     if raw_scale is not None:
@@ -409,6 +589,60 @@ def process_images(img_queue,img_list,data_mean,img_dims,preserve_ratio,raw_scal
                 caffe_in = caffe_in[np.newaxis,:,:,:]
                 img_queue.put(caffe_in)
 
+def process_images2(img_list,data_mean,img_dims,preserve_ratio,raw_scale=None,input_scale=None,ms_flag=False):
+    for img_name in img_list:
+        img = caffe.io.load_image(img_name)
+        if not ms_flag:
+            if not preserve_ratio:
+                #img = caffe.io.resize_image(img,img_dims,interp_order=3)
+                img = resize_img(img,img_dims,Image.BICUBIC)
+            else:
+                height,width = img.shape[:2]
+                if height<width:
+                    ratio = img_dims[0] / float(height)
+                    height = img_dims[0]
+                    width = int(ratio*width)
+                elif width < height:
+                    ratio = img_dims[0] / float(width)
+                    height = int(ratio*height)
+                    width = img_dims[0]
+                else:
+                    height = img_dims[0]
+                    width = img_dims[0]
+
+                #img = caffe.io.resize_image(img,[height,width],interp_order=3)
+                img = resize_img(img,[width,height],Image.BICUBIC)
+
+            caffe_in = preprocess(img,data_mean,raw_scale,input_scale)
+            caffe_in = caffe_in[np.newaxis,:,:,:]
+            return caffe_in
+        else:
+            caffe_in_output=[]
+            for scale in img_dims:
+                if not preserve_ratio:
+                    #img = caffe.io.resize_image(img,img_dims,interp_order=3)
+                    img_tmp = resize_img(img,(scale,scale),Image.BICUBIC)
+                else:
+                    height,width = img.shape[:2]
+                    if height<width:
+                        ratio = scale / float(height)
+                        height = scale
+                        width = int(ratio*width)
+                    elif width < height:
+                        ratio = scale / float(width)
+                        height = int(ratio*height)
+                        width = scale
+                    else:
+                        height = scale
+                        width = scale
+
+                    #img = caffe.io.resize_image(img,[height,width],interp_order=3)
+                    img_tmp = resize_img(img,[width,height],Image.BICUBIC)
+
+                caffe_in = preprocess(img_tmp,data_mean,raw_scale,input_scale)
+                caffe_in = caffe_in[np.newaxis,:,:,:]
+                caffe_in_output.append(caffe_in)
+            return caffe_in_output
 class Classifier_dense(caffe.Net):
     """
     Classifier extends Net for image class prediction
@@ -495,7 +729,7 @@ class Classifier_dense(caffe.Net):
 # predict multiscale
     def predict_ms(self, img_list,nimg_per_iter=100):
         predictions = []
-        img_queue = Queue(5)
+        img_queue = Queue(2)
         img_processor = Process(target=process_images,
                                 args=(img_queue,
                                       img_list,
@@ -544,4 +778,99 @@ class Classifier_dense(caffe.Net):
             print 'some images left.'
         if img_processor.is_alive():
             img_processor.terminate()
+        return predictions
+
+    def predict_single(self, img_list,nimg_per_iter=1):
+        predictions = []
+        #img_queue = Queue(20)
+        #img_processor = Process(target=process_images,
+        #                        args=(img_queue,
+        #                              img_list,
+        #                              self.transformer.mean.get(self.inputs[0]),
+        #                              self.image_dims,
+        #                              self.preserve_ratio,
+        #                              self.transformer.raw_scale.get(self.inputs[0]),
+        #                              self.transformer.input_scale.get(self.inputs[0])))
+        #img_processor.start()
+        time_pred_st = time.clock()
+        for idx,img_name in enumerate(img_list):
+            '''
+            flag = False
+            if img_queue.empty():
+                time_st = time.clock()
+                flag = True
+                print 'image queue is empty'
+            '''
+
+            #caffe_in = img_queue.get()
+            time_pred_st = time.clock()
+            caffe_in = process_images2(img_list,
+                                      self.transformer.mean.get(self.inputs[0]),
+                                      self.image_dims,
+                                      self.preserve_ratio,
+                                      self.transformer.raw_scale.get(self.inputs[0]),
+                                      self.transformer.input_scale.get(self.inputs[0]))
+            print 'time for load image: %f'%(time.clock()-time_pred_st)
+
+            time_pred_st = time.clock()
+            self.blobs[self.inputs[0]].reshape(caffe_in.shape[0],
+                                               caffe_in.shape[1],
+                                               caffe_in.shape[2],
+                                               caffe_in.shape[3])
+            out = self.forward_all(**{self.inputs[0]: caffe_in})
+            print 'time for predict: %f'%(time.clock()-time_pred_st)
+
+            prediction = out[self.outputs[0]].mean(2).mean(2)
+            predictions.extend(prediction)
+
+        return predictions
+# predict multiscale
+    def predict_ms_single(self, img_list,nimg_per_iter=1):
+        predictions = []
+        #img_queue = Queue(5)
+        #img_processor = Process(target=process_images,
+        #                        args=(img_queue,
+        #                              img_list,
+        #                              self.transformer.mean.get(self.inputs[0]),
+        #                              self.image_dims,
+        #                              self.preserve_ratio,
+        #                              self.transformer.raw_scale.get(self.inputs[0]),
+        #                              self.transformer.input_scale.get(self.inputs[0]),
+        #                              True))
+        #img_processor.start()
+        time_pred_st = time.clock()
+
+        for idx,img_name in enumerate(img_list):
+
+            prediction = None
+            time_pred_st = time.clock()
+            caffe_in_all = process_images2(img_list,
+                                      self.transformer.mean.get(self.inputs[0]),
+                                      self.image_dims,
+                                      self.preserve_ratio,
+                                      self.transformer.raw_scale.get(self.inputs[0]),
+                                      self.transformer.input_scale.get(self.inputs[0]),
+                                      True)
+            print 'time for load image: %f'%(time.clock()-time_pred_st)
+            for ix,scale in enumerate(self.image_dims):
+                #caffe_in = img_queue.get()
+                caffe_in = caffe_in_all[ix]
+
+                time_pred_st = time.clock()
+                self.blobs[self.inputs[0]].reshape(caffe_in.shape[0],
+                                                   caffe_in.shape[1],
+                                                   caffe_in.shape[2],
+                                                   caffe_in.shape[3])
+                out = self.forward_all(**{self.inputs[0]: caffe_in})
+                print 'time for predict: %f'%(time.clock()-time_pred_st)
+
+                if ix==0:
+                    shape = out[self.outputs[0]].shape
+                    prediction = out[self.outputs[0]].reshape((shape[0],shape[1],shape[2]*shape[3]))
+                else:
+                    shape = out[self.outputs[0]].shape
+                    prediction = np.concatenate((prediction,out[self.outputs[0]].reshape((shape[0],shape[1],shape[2]*shape[3]))),axis=2)
+
+            prediction = prediction.mean(2)
+            predictions.extend(prediction)
         return predictions

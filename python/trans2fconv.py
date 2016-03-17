@@ -5,6 +5,7 @@ import os
 if not len(sys.argv)==5:
     print 'Usage: python trans2fconv.py net_origin net_fconv net_param layers_set'
 
+caffe.set_device(0)
 net_org = sys.argv[1]
 net_fconv = sys.argv[2]
 net_param = sys.argv[3]
