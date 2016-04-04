@@ -93,6 +93,8 @@ message NetParameter {
 
   // DEPRECATED: use 'layer' instead.
   repeated V1LayerParameter layers = 2;
+  
+  optional bool opt_memory = 200 [default = false];
 }
 
 // NOTE

@@ -144,6 +144,12 @@ void Blob<Dtype>::ShareDiff(const Blob& other) {
   diff_ = other.diff();
 }
 
+template <typename Dtype>
+void Blob<Dtype>::ShareDiff_LE(const Blob& other) {
+	CHECK_LE(count_, other.count());
+	diff_ = other.diff();
+}
+
 // The "update" method is used for parameter blobs in a Net, which are stored
 // as Blob<float> or Blob<double> -- hence we do not define it for
 // Blob<int> or Blob<unsigned int>.

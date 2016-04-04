@@ -103,6 +103,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       layers_.push_back(LayerRegistry<Dtype>::CreateLayer(layer_param));
     }
     layer_names_.push_back(layer_param.name());
+	layer_types_.push_back(layer_param.type());
     LOG_IF(INFO, Caffe::root_solver())
         << "Creating Layer " << layer_param.name();
     bool need_backward = false;
@@ -280,6 +281,128 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
   ShareWeights();
   debug_info_ = param.debug_info();
+
+  // init mem optimization
+  for (int type_id = 0; type_id < layer_types_.size(); ++type_id)
+  {
+	  if (layer_types_[type_id] == "Convolution" || layer_types_[type_id] == "BatchNorm" 
+		  || layer_types_[type_id] == "BatchNormOpt"
+		  || layer_types_[type_id] == "Pooling" || layer_types_[type_id] == "Eltwise"
+		  || layer_types_[type_id] == "Split" || layer_types_[type_id] == "Scale")
+	  {
+		  if (diff_caches_.find(layer_types_[type_id]) == diff_caches_.end())
+		  {
+			  diff_caches_[layer_types_[type_id]] = vector<Blob<Dtype>*>();
+			  diff_caches_used_[layer_types_[type_id]] = vector<int>();
+		  }
+	  }
+  }
+  used_cache_record_.resize(blobs_.size(), -1);
+  layer_type_record_.resize(blobs_.size(), "");
+
+  opt_memory_ = param.opt_memory();
+  if (opt_memory_)
+  {
+	  // init cache shape
+	  for (int i = layers_.size() - 1; i >= 0; i--)
+	  {
+		  if (layer_need_backward_[i])
+		  {
+			  if (diff_caches_.find(layer_types_[i]) != diff_caches_.end() && bottom_need_backward_[i][0]
+				  && bottom_vecs_[i][0] != top_vecs_[i][0])
+			  {
+				  int find_cache_id = -1;
+				  //vector<int> cache_used;
+				  // get cache according to layer type.
+				  //vector<Blob<Dtype>*> diff_cache = diff_caches_[layer_types_[i]];
+				  //cache_used = diff_caches_used_[layer_types_[i]];
+
+				  int share_bottom_id = -1;
+				  if (layer_types_[i] == "Eltwise")
+				  {
+					  share_bottom_id = 1;
+				  }
+				  else
+				  {
+					  share_bottom_id = 0;
+				  }
+				  //search free cache
+				  for (int ch_id = 0; ch_id < diff_caches_[layer_types_[i]].size(); ch_id++)
+				  {
+					  if (diff_caches_used_[layer_types_[i]][ch_id] < 0)
+					  {
+						  find_cache_id = ch_id;
+					  }
+
+				  }
+				  if (find_cache_id >= 0 && find_cache_id < diff_caches_[layer_types_[i]].size())
+				  {
+					  //get cache and resize it if it's smaller
+					  Blob<Dtype>* cache = diff_caches_[layer_types_[i]][find_cache_id];
+					  if (cache->count() < bottom_vecs_[i][share_bottom_id]->count())
+					  {
+						  cache->ReshapeLike(*bottom_vecs_[i][share_bottom_id]);
+						  LOG_IF(INFO, Caffe::root_solver()) << "reshape " << layer_types_[i] << " " << cache->count();
+					  }
+					  //bottom_vecs_[i][share_bottom_id]->ShareDiff_LE(*cache);
+
+					  //cache_used[find_cache_id] = bottom_id_vecs_[i][share_bottom_id];
+					  diff_caches_used_[layer_types_[i]][find_cache_id] = bottom_id_vecs_[i][share_bottom_id];
+					  used_cache_record_[bottom_id_vecs_[i][share_bottom_id]] = find_cache_id;
+					  layer_type_record_[bottom_id_vecs_[i][share_bottom_id]] = layer_types_[i];
+					  //LOG(INFO) << "cache resued " << layer_types_[i] << " id " << find_cache_id;
+				  }
+				  else
+				  {
+					  //create cache.
+					  Blob<Dtype>* cache = new Blob<Dtype>(
+						  bottom_vecs_[i][share_bottom_id]->num(),
+						  bottom_vecs_[i][share_bottom_id]->channels(),
+						  bottom_vecs_[i][share_bottom_id]->height(),
+						  bottom_vecs_[i][share_bottom_id]->width());
+
+					  diff_caches_[layer_types_[i]].push_back(cache);
+					  diff_caches_used_[layer_types_[i]].push_back(bottom_id_vecs_[i][share_bottom_id]);
+					  //LOG(INFO) << "create cache " << layer_types_[i] << " size " << diff_caches_[layer_types_[i]].size();
+					  //bottom_vecs_[i][share_bottom_id]->ShareDiff_LE(*cache);
+
+					  find_cache_id = diff_caches_used_[layer_types_[i]].size() - 1;
+					  used_cache_record_[bottom_id_vecs_[i][share_bottom_id]] = find_cache_id;
+					  layer_type_record_[bottom_id_vecs_[i][share_bottom_id]] = layer_types_[i];
+				  }
+			  }
+
+			  int share_bottom_id = -1;
+			  if (layer_type_record_[top_id_vecs_[i][0]] == "Eltwise")
+			  {
+				  share_bottom_id = 1;
+			  }
+			  else
+			  {
+				  share_bottom_id = 0;
+			  }
+			  if (bottom_vecs_[i][share_bottom_id] != top_vecs_[i][0])
+			  {
+				  for (int top_id = 0; top_id < top_vecs_[i].size(); ++top_id)
+				  {
+
+					  string layer_type = layer_type_record_[top_id_vecs_[i][top_id]];
+					  int used_id = used_cache_record_[top_id_vecs_[i][top_id]];
+					  //LOG(INFO) << "release " << layer_type << " at " << used_id;
+					  if (diff_caches_.find(layer_type) != diff_caches_.end() && used_id >= 0)
+					  {
+						  //if (diff_caches_used_.find(layer_type) != diff_caches_used_.end())
+						  //LOG(INFO) << "layer used " << layer_type;
+						  LOG(INFO) << "used cache_size " << diff_caches_used_[layer_type].size();
+						  diff_caches_used_[layer_type][used_id] = -1;
+					  }
+					  layer_type_record_[top_id_vecs_[i][top_id]] = "";
+					  used_cache_record_[top_id_vecs_[i][top_id]] = -1;
+				  }
+			  }
+		  }
+	  }
+  }
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
 }
 
@@ -636,12 +759,115 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
   CHECK_GE(end, 0);
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
-    if (layer_need_backward_[i]) {
-      layers_[i]->Backward(
-          top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
-      if (debug_info_) { BackwardDebugInfo(i); }
-    }
+	  if (layer_need_backward_[i]) {
+		  if (opt_memory_)
+		  {
+			  // find cache for bottom vector.
+			  if (diff_caches_.find(layer_types_[i]) != diff_caches_.end() && bottom_need_backward_[i][0]
+				  && bottom_vecs_[i][0]!=top_vecs_[i][0])
+			  {
+				  int find_cache_id = -1;
+				  //vector<int> cache_used;
+				  // get cache according to layer type.
+				  //vector<Blob<Dtype>*> diff_cache = diff_caches_[layer_types_[i]];
+				  //cache_used = diff_caches_used_[layer_types_[i]];
+
+				  int share_bottom_id = -1;
+				  if (layer_types_[i] == "Eltwise")
+				  {
+					  share_bottom_id = 1;
+				  }
+				  else
+				  {
+					  share_bottom_id = 0;
+				  }
+				  //search free cache
+				  for (int ch_id = 0; ch_id < diff_caches_[layer_types_[i]].size(); ch_id++)
+				  {
+					  if (diff_caches_used_[layer_types_[i]][ch_id] < 0)
+					  {
+						  find_cache_id = ch_id;
+					  }
+
+				  }
+				  if (find_cache_id >= 0 && find_cache_id < diff_caches_[layer_types_[i]].size())
+				  {
+					  //get cache and resize it if it's smaller
+					  Blob<Dtype>* cache = diff_caches_[layer_types_[i]][find_cache_id];
+					  if (cache->count() < bottom_vecs_[i][share_bottom_id]->count())
+					  {
+						  cache->ReshapeLike(*bottom_vecs_[i][share_bottom_id]);
+						  LOG_IF(INFO, Caffe::root_solver()) << "reshape2 " << layer_types_[i] << " " << cache->count();
+					  }
+					  bottom_vecs_[i][share_bottom_id]->ShareDiff_LE(*cache);
+
+					  //cache_used[find_cache_id] = bottom_id_vecs_[i][share_bottom_id];
+					  diff_caches_used_[layer_types_[i]][find_cache_id] = bottom_id_vecs_[i][share_bottom_id];
+					  used_cache_record_[bottom_id_vecs_[i][share_bottom_id]] = find_cache_id;
+					  layer_type_record_[bottom_id_vecs_[i][share_bottom_id]] = layer_types_[i];
+					  //LOG(INFO) << "cache resued " << layer_types_[i] << " id " << find_cache_id;
+				  }
+				  else
+				  {
+					  //create cache.
+					  Blob<Dtype>* cache = new Blob<Dtype>(
+						  bottom_vecs_[i][share_bottom_id]->num(),
+						  bottom_vecs_[i][share_bottom_id]->channels(),
+						  bottom_vecs_[i][share_bottom_id]->height(),
+						  bottom_vecs_[i][share_bottom_id]->width());
+
+					  diff_caches_[layer_types_[i]].push_back(cache);
+					  diff_caches_used_[layer_types_[i]].push_back(bottom_id_vecs_[i][share_bottom_id]);
+					  //LOG(INFO) << "create cache " << layer_types_[i] << " size " << diff_caches_[layer_types_[i]].size();
+					  bottom_vecs_[i][share_bottom_id]->ShareDiff_LE(*cache);
+
+					  find_cache_id = diff_caches_used_[layer_types_[i]].size() - 1;
+					  used_cache_record_[bottom_id_vecs_[i][share_bottom_id]] = find_cache_id;
+					  layer_type_record_[bottom_id_vecs_[i][share_bottom_id]] = layer_types_[i];
+				  }
+			  }
+		  }
+
+		  layers_[i]->Backward(
+			  top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
+		  if (debug_info_) { BackwardDebugInfo(i); }
+		  // release cache
+
+		  if (opt_memory_)
+		  {
+			  int share_bottom_id = -1;
+			  if (layer_type_record_[top_id_vecs_[i][0]] == "Eltwise")
+			  {
+				  share_bottom_id = 1;
+			  }
+			  else
+			  {
+				  share_bottom_id = 0;
+			  }
+			  if (bottom_vecs_[i][share_bottom_id] != top_vecs_[i][0])
+			  {
+				  for (int top_id = 0; top_id < top_vecs_[i].size(); ++top_id)
+				  {
+
+					  string layer_type = layer_type_record_[top_id_vecs_[i][top_id]];
+					  int used_id = used_cache_record_[top_id_vecs_[i][top_id]];
+					  //LOG(INFO) << "release " << layer_type << " at " << used_id;
+					  if (diff_caches_.find(layer_type) != diff_caches_.end() && used_id >= 0)
+					  {
+						  //if (diff_caches_used_.find(layer_type) != diff_caches_used_.end())
+						  //LOG(INFO) << "layer used " << layer_type;
+						  //LOG(INFO) << "used cache_size " << diff_caches_used_[layer_type].size();
+						  diff_caches_used_[layer_type][used_id] = -1;
+					  }
+					  layer_type_record_[top_id_vecs_[i][top_id]] = "";
+					  used_cache_record_[top_id_vecs_[i][top_id]] = -1;
+				  }
+			  }
+		  }
+	  }
   }
+
+
 }
 
 template <typename Dtype>

@@ -309,6 +309,14 @@ class Net {
   bool debug_info_;
   /// The root net that actually holds the shared layers in data parallelism
   const Net* const root_net_;
+
+  // allocate diff cache according to layer types.
+  vector<string> layer_types_;
+  map<string, vector<Blob<Dtype>*>> diff_caches_;
+  map<string, vector<int>> diff_caches_used_;
+  vector<string> layer_type_record_;
+  vector<int> used_cache_record_;
+  bool opt_memory_;
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 
