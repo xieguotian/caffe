@@ -44,6 +44,10 @@ DEFINE_bool(encoded, false,
     "When this option is on, the encoded image will be save in datum");
 DEFINE_string(encode_type, "",
     "Optional: What type should we encode the image as ('png','jpg',...).");
+DEFINE_string(region_info_file, "",
+	"Optional: region info for attention");
+DEFINE_bool(attention, false,
+	"when this option is on, the attention region will be read in.");
 
 int main(int argc, char** argv) {
 #ifdef USE_OPENCV
@@ -72,19 +76,75 @@ int main(int argc, char** argv) {
   const bool check_size = FLAGS_check_size;
   const bool encoded = FLAGS_encoded;
   const string encode_type = FLAGS_encode_type;
-
   std::ifstream infile(argv[2]);
   std::vector<std::pair<std::string, int> > lines;
   std::string filename;
   int label;
   while (infile >> filename >> label) {
-    lines.push_back(std::make_pair(filename, label));
+	  lines.push_back(std::make_pair(filename, label));
   }
+
+  std::vector<std::pair<std::string, std::vector<int>>> region_lines;
+  std::vector<std::pair<std::pair<std::string, int>, std::pair<std::string, std::vector<int>>>> zip_vec;
+  if (FLAGS_attention)
+  {
+	  std::string region_info_file = FLAGS_region_info_file;
+	  std::ifstream regionfile(region_info_file);
+	  string line_re;
+	  int idx = 0;
+	  while (std::getline(regionfile, line_re))
+	  {
+		  std::stringstream ss(line_re);
+		  string num;
+		  std::vector<int> region_info;
+		  ss >> filename;
+		  if (filename != lines[idx].first)
+			  LOG(ERROR) << "file_name not corresponding " << filename
+			  << " vs " << lines[idx].first;
+		  idx++;
+
+		  while (std::getline(ss, num, ' '))
+		  {
+			  if (num != "")
+			  {
+				  region_info.push_back(atoi(num.c_str()));
+			  }
+		  }
+		  if (region_info.size() % 4 != 0)
+			  LOG(ERROR) << "region information error." << region_info.size(); 
+		  region_lines.push_back(std::make_pair(filename, region_info));
+	  }
+
+	  CHECK_EQ(region_lines.size(), lines.size()) << "region files not equal to images label files. "
+		  << region_lines.size() << " vs " << lines.size();
+	  for (int idx = 0; idx < region_lines.size(); ++idx)
+	  {
+		  zip_vec.push_back(std::make_pair(lines[idx], region_lines[idx]));
+	  }
+  }
+
   if (FLAGS_shuffle) {
-    // randomly shuffle data
-    LOG(INFO) << "Shuffling data";
-    shuffle(lines.begin(), lines.end());
+	  if (FLAGS_attention)
+	  {
+		  LOG(INFO) << "Shuffling data (images label and images region)";
+		  shuffle(zip_vec.begin(), zip_vec.end());
+		  lines = std::vector<std::pair<std::string, int> >();
+		  region_lines = std::vector<std::pair<std::string, std::vector<int>>>();
+		  for (int idx = 0; idx < zip_vec.size(); ++idx)
+		  {
+			  //lines.push_back(std::make_pair(zip_vec[idx].first.first, zip_vec[idx].first.second));
+			  //region_lines.push_back(std::make_pair(zip_vec[idx].second.first,zip_vec[idx].second.second));
+			  lines.push_back(zip_vec[idx].first);
+			  region_lines.push_back(zip_vec[idx].second);
+		  }
+	  }
+	  else{
+		  // randomly shuffle data 
+		  LOG(INFO) << "Shuffling data";
+		  shuffle(lines.begin(), lines.end());
+	  }
   }
+
   LOG(INFO) << "A total of " << lines.size() << " images.";
 
   if (encode_type.size() && !encoded)
@@ -121,6 +181,17 @@ int main(int argc, char** argv) {
         lines[line_id].second, resize_height, resize_width, is_color,
         enc, &datum);
     if (status == false) continue;
+
+	//add region information
+	if (FLAGS_attention)
+	{
+		vector<int> region_set = region_lines[line_id].second;
+		datum.mutable_float_data()->Resize(region_set.size(), 0);
+		for (int ix_re = 0; ix_re < region_set.size(); ++ix_re)
+			datum.set_float_data(ix_re, (float)region_set[ix_re]);
+		datum.set_attention(true);
+	}
+	
     if (check_size) {
       if (!data_size_initialized) {
         data_size = datum.channels() * datum.height() * datum.width();

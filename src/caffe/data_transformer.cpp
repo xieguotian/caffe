@@ -132,6 +132,17 @@ template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Blob<Dtype>* transformed_blob) {
   // If datum is encoded, decoded and transform the cv::image.
+	vector<int> region_info;
+	if (datum.attention())
+	{
+		int num_region = datum.float_data_size() / 4;
+		int sel_idx = Rand(num_region);
+		for (int idx = sel_idx * 4; idx < (sel_idx+1) * 4; ++idx)
+			region_info.push_back((int)datum.float_data(idx));
+		//LOG(INFO) << "num of region " << num_region << " " << "sel_idx " << sel_idx << " rect " 
+		//	<< region_info[0]<<" " << region_info[1] << " " << region_info[2] << " " <<region_info[3];
+	}
+
   if (datum.encoded()) {
 #ifdef USE_OPENCV
     CHECK(!(param_.force_color() && param_.force_gray()))
@@ -144,7 +155,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
       cv_img = DecodeDatumToCVMatNative(datum);
     }
     // Transform the cv::image into blob.
-    return Transform(cv_img, transformed_blob);
+    return Transform(cv_img, transformed_blob,region_info);
 #else
     LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
 #endif  // USE_OPENCV
@@ -161,7 +172,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 #ifdef USE_OPENCV
 		cv::Mat cv_img;
 		DatumToCVMat(&datum, cv_img);
-		return Transform(cv_img, transformed_blob);
+		return Transform(cv_img, transformed_blob,region_info);
 #else
 		LOG(FATAL) << "resize image requires OpenCV; compile with USE_OPENCV.";
 #endif  // USE_OPENCV
@@ -240,7 +251,7 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
-                                       Blob<Dtype>* transformed_blob) {
+                                       Blob<Dtype>* transformed_blob,vector<int> region_info) {
 	cv::Mat tmp_cv_img;
 	// random scale image
 	float min_scale = param_.multi_scale_param().min_scale();
@@ -287,8 +298,11 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const int num = transformed_blob->num();
 
   CHECK_EQ(channels, img_channels);
-  CHECK_LE(height, img_height);
-  CHECK_LE(width, img_width);
+  if (region_info.size() == 0)
+  {
+	  CHECK_LE(height, img_height);
+	  CHECK_LE(width, img_width);
+  }
   CHECK_GE(num, 1);
 
   CHECK(tmp_cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
@@ -299,8 +313,11 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const bool has_mean_values = mean_values_.size() > 0;
 
   CHECK_GT(img_channels, 0);
-  CHECK_GE(img_height, crop_size);
-  CHECK_GE(img_width, crop_size);
+  if(region_info.size() == 0)
+  {
+	  CHECK_GE(img_height, crop_size);
+	  CHECK_GE(img_width, crop_size);
+  }
 
   Dtype* mean = NULL;
   if (has_mean_file) {
@@ -326,16 +343,35 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   if (crop_size) {
     CHECK_EQ(crop_size, height);
     CHECK_EQ(crop_size, width);
-    // We only do random crop when we do training.
-    if (phase_ == TRAIN) {
-      h_off = Rand(img_height - crop_size + 1);
-      w_off = Rand(img_width - crop_size + 1);
-    } else {
-      h_off = (img_height - crop_size) / 2;
-      w_off = (img_width - crop_size) / 2;
-    }
-    cv::Rect roi(w_off, h_off, crop_size, crop_size);
-    cv_cropped_img = tmp_cv_img(roi);
+	if (region_info.size() > 0)
+	{
+		h_off = region_info[1];
+		w_off = region_info[0];
+		int width = region_info[2] - region_info[0];
+		int height = region_info[3] - region_info[1];
+		if (width < 10 || height < 10)
+		{
+			h_off = 0;
+			w_off = 0;
+			width = img_width;
+			height = img_height;
+		}
+		cv::Rect roi(w_off, h_off, width, height);
+		cv::resize(tmp_cv_img(roi), cv_cropped_img,cv::Size(crop_size,crop_size));
+	}
+	else{
+		// We only do random crop when we do training.
+		if (phase_ == TRAIN) {
+			h_off = Rand(img_height - crop_size + 1);
+			w_off = Rand(img_width - crop_size + 1);
+		}
+		else {
+			h_off = (img_height - crop_size) / 2;
+			w_off = (img_width - crop_size) / 2;
+		}
+		cv::Rect roi(w_off, h_off, crop_size, crop_size);
+		cv_cropped_img = tmp_cv_img(roi);
+	}
   } else {
     CHECK_EQ(img_height, height);
     CHECK_EQ(img_width, width);
@@ -545,8 +581,8 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
   const int img_width = cv_img.cols;
   // Check dimensions.
   CHECK_GT(img_channels, 0);
-  CHECK_GE(img_height, crop_size);
-  CHECK_GE(img_width, crop_size);
+  //CHECK_GE(img_height, crop_size);
+  //CHECK_GE(img_width, crop_size);
   // Build BlobShape.
   vector<int> shape(4);
   shape[0] = 1;

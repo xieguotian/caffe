@@ -38,6 +38,7 @@ message Datum {
   repeated float float_data = 6;
   // If true data contains an encoded image that need to be decoded
   optional bool encoded = 7 [default = false];
+  optional bool attention = 8 [default = false];
 }
 
 message FillerParameter {
