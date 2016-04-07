@@ -405,6 +405,9 @@
     <ClCompile Include="..\..\src\caffe\layers\elu_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\smooth_L1_loss_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\blob.hpp">
@@ -755,6 +758,9 @@
     <ClInclude Include="..\..\include\caffe\layers\elu_layer.hpp">
       <Filter>Header Files\layers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\smooth_L1_loss_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\base_data_layer.cu">
@@ -999,6 +1005,9 @@
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\solvers\sgd_solver.cu">
       <Filter>solvers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\smooth_L1_loss_layer.cu">
+      <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

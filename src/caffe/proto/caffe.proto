@@ -404,6 +404,7 @@ message LayerParameter {
   optional HighwayConvolutionParameter highway_conv_param = 8266716;
   optional RecurrentParameter recurrent_param = 8266717;
   optional ScalarParameter scalar_param = 8266718;
+  optional SmoothL1LossParameter smooth_l1_loss_param = 8266719;
 }
 
 // message for multi-scale image argumentation
@@ -1462,4 +1463,11 @@ message ScalarParameter {
   // Furthermore, bottom[1] may have the empty shape (regardless of the value of
   // "axis") -- a literal scalar.
   optional int32 axis = 1 [default = 0];
+}
+
+message SmoothL1LossParameter {
+  // SmoothL1Loss(x) =
+  //   0.5 * (sigma * x) ** 2    -- if x < 1.0 / sigma / sigma
+  //   |x| - 0.5 / sigma / sigma -- otherwise
+  optional float sigma = 1 [default = 1];
 }

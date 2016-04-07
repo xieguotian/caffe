@@ -80,7 +80,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>../../bin/</OutDir>
-    <TargetName>$(ProjectName)</TargetName>
+    <TargetName>$(ProjectName)_extract_features_50GB</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -251,6 +251,7 @@
     <ClCompile Include="..\..\src\caffe\layers\sigmoid_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\silence_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\slice_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\smooth_L1_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\smooth_threshold_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\softmax_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\softmax_loss_layer.cpp" />
@@ -288,7 +289,7 @@
     <ClCompile Include="..\..\src\caffe\util\math_functions.cpp" />
     <ClCompile Include="..\..\src\caffe\util\signal_handler.cpp" />
     <ClCompile Include="..\..\src\caffe\util\upgrade_proto.cpp" />
-    <ClCompile Include="..\..\tools\caffe.cpp" />
+    <ClCompile Include="..\..\tools\extract_features.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu" />
@@ -357,6 +358,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\sigmoid_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\silence_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\slice_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\smooth_L1_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\smooth_threshold_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\softmax_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\softmax_loss_layer.cu" />
@@ -470,6 +472,7 @@
     <ClInclude Include="..\..\include\caffe\layers\sigmoid_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\silence_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\slice_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\smooth_L1_loss_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\smooth_threshold_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\softmax_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\softmax_loss_layer.hpp" />
