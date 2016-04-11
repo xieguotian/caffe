@@ -9,13 +9,16 @@ namespace caffe {
 template <typename Dtype>
 void BatchNormOptLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+	top[0]->ShareData(*bottom[0]);
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   int num = bottom[0]->shape(0);
   int spatial_dim = bottom[0]->count()/(channels_*bottom[0]->shape(0));
-
-  if (bottom[0] != top[0]) {
-    caffe_copy(bottom[0]->count(), bottom_data, top_data);
+  
+  if (bottom[0] != top[0] &&
+	  bottom[0]->data() != top[0]->data()) {
+	  LOG(INFO) << "don't share data, waste memory!";
+	  caffe_copy(bottom[0]->count(), bottom_data, top_data);
   }
 
 

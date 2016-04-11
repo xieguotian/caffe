@@ -80,7 +80,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>../../bin/</OutDir>
-    <TargetName>$(ProjectName)_extract_features_50GB</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -289,7 +289,7 @@
     <ClCompile Include="..\..\src\caffe\util\math_functions.cpp" />
     <ClCompile Include="..\..\src\caffe\util\signal_handler.cpp" />
     <ClCompile Include="..\..\src\caffe\util\upgrade_proto.cpp" />
-    <ClCompile Include="..\..\tools\extract_features.cpp" />
+    <ClCompile Include="..\..\tools\caffe.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu" />

@@ -75,12 +75,15 @@ void BatchNormOptLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void BatchNormOptLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+	top[0]->ShareData(*bottom[0]);
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   int num = bottom[0]->shape(0);
   int spatial_dim = bottom[0]->count()/(bottom[0]->shape(0)*channels_);
-
-  if (bottom[0] != top[0]) {
+  
+  if (bottom[0] != top[0] &&
+	  bottom[0]->data() != top[0]->data()) {
+	  LOG(INFO) << "don't share data, waste memory!";
     caffe_copy(bottom[0]->count(), bottom_data, top_data);
   }
 
