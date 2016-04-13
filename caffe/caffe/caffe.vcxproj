@@ -197,6 +197,7 @@
     <ClCompile Include="..\..\src\caffe\layers\cudnn_softmax_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\cudnn_tanh_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\data_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\data_layer_test.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\deconv_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\deconv_norm_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\dropout_layer.cpp" />
@@ -418,6 +419,7 @@
     <ClInclude Include="..\..\include\caffe\layers\cudnn_softmax_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\cudnn_tanh_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\data_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\data_layer_test.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\deconv_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\deconv_norm_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\dropout_layer.hpp" />

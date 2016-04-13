@@ -414,6 +414,9 @@
     <ClCompile Include="..\..\tools\caffe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\data_layer_test.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\blob.hpp">
@@ -828,6 +831,9 @@
       <Filter>Header Files\layers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\caffe\layers\smooth_L1_loss_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\data_layer_test.hpp">
       <Filter>Header Files\layers</Filter>
     </ClInclude>
   </ItemGroup>
