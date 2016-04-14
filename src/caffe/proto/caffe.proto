@@ -405,6 +405,7 @@ message LayerParameter {
   optional RecurrentParameter recurrent_param = 8266717;
   optional ScalarParameter scalar_param = 8266718;
   optional SmoothL1LossParameter smooth_l1_loss_param = 8266719;
+  optional ClusterCentroidParameter cluster_centroid_param = 8266720;
 }
 
 // message for multi-scale image argumentation
@@ -1471,4 +1472,10 @@ message SmoothL1LossParameter {
   //   0.5 * (sigma * x) ** 2    -- if x < 1.0 / sigma / sigma
   //   |x| - 0.5 / sigma / sigma -- otherwise
   optional float sigma = 1 [default = 1];
+}
+
+message ClusterCentroidParameter{
+	optional uint32 dim = 1;
+	optional uint32 num_cluster = 2;
+	optional FillerParameter centroid_filler = 3; // The filler for the weight
 }
