@@ -3,7 +3,7 @@
 Draw a graph of the net architecture.
 """
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from google.protobuf import text_format
+import text_format
 
 import caffe
 import caffe.draw
@@ -36,7 +36,7 @@ def parse_args():
 def main():
     args = parse_args()
     net = caffe_pb2.NetParameter()
-    text_format.Merge(open(args.input_net_proto_file).read(), net)
+    text_format.Merge(open(args.input_net_proto_file).read(), net,allow_unknown_extension=True)
     print('Drawing net to %s' % args.output_image_file)
     caffe.draw.draw_net_to_file(net, args.output_image_file, args.rankdir)
 
