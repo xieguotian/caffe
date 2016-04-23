@@ -8,6 +8,7 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import matplotlib.legend as lgd
 import matplotlib.markers as mks
+import numpy as np
 
 def get_log_parsing_script():
     dirname = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -92,7 +93,39 @@ def load_data(data_file, field_idx0, field_idx1):
                 data[0].append(float(fields[field_idx0].strip()))
                 data[1].append(float(fields[field_idx1].strip()))
     return data
-
+def smooth_data(data,step):
+    num_all = np.int(len(data[0]) / step)
+    new_data=[[],[]]
+    for i in range(num_all):
+        sum_data = 0
+        count = 0
+        for j in range(i*step,min((i+1)*step,len(data[0]))):
+            sum_data += data[0][j]
+            count+=1
+        sum_data /= np.float(count)
+        new_data[0].append(sum_data)
+        new_data[1].append(data[1][min((i+1)*step,len(data[0]))-1])
+    return new_data
+def smooth_data2(data,step):
+    half_step = np.int(step/2.0)
+    len_data = len(data[1])-1
+    new_data=[data[0],[]]
+    for i in range(len(data[1])):
+        #print i
+        if i==0:
+            sum_data = 0
+            for j in range(-half_step,half_step):
+                idx = j+i
+                idx = min(max(idx,0),len_data)
+                sum_data+=data[1][idx]
+        else:
+            idx2 = max(-half_step+i-1,0)
+            idx3 = min(half_step-1+i,len_data)
+            sum_data =sum_data-data[1][idx2]+data[1][idx3]
+        ave_data = sum_data / step
+        #print ave_data,data[1][i]
+        new_data[1].append(ave_data)
+    return new_data
 def random_marker():
     markers = mks.MarkerStyle.markers
     num = len(markers.values())
@@ -122,6 +155,7 @@ def plot_chart(chart_type, path_to_png, path_to_log_list):
             x_axis_field, y_axis_field = get_field_descriptions(ch_type)
             x, y = get_field_indecies(x_axis_field, y_axis_field,ch_type)
             data = load_data(data_file, x, y)
+            data = smooth_data2(data,50)
             ## TODO: more systematic color cycle for lines
             color = [random.random(), random.random(), random.random()]
             label = get_data_label(path_to_log,ch_type)
@@ -147,8 +181,9 @@ def plot_chart(chart_type, path_to_png, path_to_log_list):
     plt.legend(loc = legend_loc, ncol = 1) # ajust ncol to fit the space
     plt.title(get_chart_type_descriptions(chart_type))
     plt.xlabel(x_axis_field)
-    plt.ylabel(y_axis_field)  
-    plt.savefig(path_to_png)     
+    plt.ylabel(y_axis_field)
+    plt.grid()
+    plt.savefig(path_to_png)
     plt.show()
 
 def print_help():

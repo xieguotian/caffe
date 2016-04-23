@@ -417,7 +417,10 @@
     <ClCompile Include="..\..\src\caffe\layers\cluster_centroid_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\tools\caffe.cpp">
+    <ClCompile Include="..\..\src\caffe\layers\cluster_centroid_dist_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\tools\convert_imageset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -842,6 +845,9 @@
     <ClInclude Include="..\..\include\caffe\layers\cluster_centroid_layer.hpp">
       <Filter>Header Files\layers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\cluster_centroid_dist_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu">
@@ -1097,6 +1103,9 @@
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\cluster_centroid_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\cluster_centroid_dist_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>
