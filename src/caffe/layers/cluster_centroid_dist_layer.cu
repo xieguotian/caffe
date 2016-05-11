@@ -55,7 +55,7 @@ namespace caffe{
 		//sum all distance.
 		caffe_gpu_add(top[0]->count(), cache_feat_.gpu_data(), top_data, top_data);
 		caffe_gpu_add(top[0]->count(), cache_cluster_.gpu_data(), top_data, top_data);
-
+		caffe_gpu_scale(top[0]->count(), (Dtype)scale, top_data, top_data);
 		//for (int n = 0; n < bottom[0]->num(); n++)
 		//{
 		//	for (int k = 0; k < num_cluster_; ++k)
@@ -102,7 +102,7 @@ namespace caffe{
 		const Dtype* top_data = top[0]->gpu_data();
 		//sum diff along centroid num
 		caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, top[0]->num(), 1, num_cluster_,
-			(Dtype)1.0, top_diff, ones_.gpu_data(), (Dtype)0.0, column_.mutable_gpu_data());
+			(Dtype)1.0*scale, top_diff, ones_.gpu_data(), (Dtype)0.0, column_.mutable_gpu_data());
 		//span diff along feat dim
 		caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, top[0]->num(), centroid_dim_, 1,
 			(Dtype)1.0, column_.gpu_data(), ones_.gpu_data(), (Dtype)0.0, square_feat_.mutable_gpu_data());
@@ -111,7 +111,7 @@ namespace caffe{
 
 		//sum diff along feat num
 		caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, 1, num_cluster_,top[0]->num(),
-			(Dtype)1.0, ones_.gpu_data(), top_diff,(Dtype)0.0, column_.mutable_gpu_data());
+			(Dtype)1.0*scale, ones_.gpu_data(), top_diff,(Dtype)0.0, column_.mutable_gpu_data());
 		//span diff along centroid dim
 		caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, num_cluster_, centroid_dim_, 1,
 			(Dtype)1.0, column_.gpu_data(), ones_.gpu_data(), (Dtype)0.0, square_cluster_.mutable_gpu_data());
@@ -120,12 +120,12 @@ namespace caffe{
 
 		//dot diff of feat
 		caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, top[0]->num(), centroid_dim_, num_cluster_,
-			(Dtype)-1.0, top_diff, centroid_data, (Dtype)0.0, bottom_diff);
+			(Dtype)-1.0*scale, top_diff, centroid_data, (Dtype)0.0, bottom_diff);
 		caffe_gpu_add(bottom[0]->count(), bottom_diff, square_feat_.gpu_data(), bottom_diff);
 
 		//dot diff of centroid
 		caffe_gpu_gemm(CblasTrans, CblasNoTrans, num_cluster_, centroid_dim_, top[0]->num(),
-			(Dtype)-1.0, top_diff, top_data, (Dtype)0.0, centroid_diff);
+			(Dtype)-1.0*scale, top_diff, top_data, (Dtype)0.0, centroid_diff);
 		caffe_gpu_add(this->blobs_[0]->count(), centroid_diff, square_cluster_.gpu_data(), centroid_diff);
 
 		//// extend n*k top_data into n*k*d temp_data

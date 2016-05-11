@@ -420,7 +420,7 @@
     <ClCompile Include="..\..\src\caffe\layers\cluster_centroid_dist_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\tools\convert_imageset.cpp">
+    <ClCompile Include="..\..\tools\caffe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -432,12 +432,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\caffe\common.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\caffe\common_layers.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\caffe\data_layers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\caffe\data_transformer.hpp">
@@ -455,25 +449,13 @@
     <ClInclude Include="..\..\include\caffe\layer_factory.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\caffe\loss_layers.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\caffe\net.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\caffe\neuron_layers.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\caffe\python_layer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\caffe\solver.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\caffe\syncedmem.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\caffe\vision_layers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\caffe\util\benchmark.hpp">

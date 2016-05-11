@@ -414,6 +414,9 @@
     <ClCompile Include="..\..\src\caffe\layers\cluster_centroid_layer.cpp">
       <Filter>layers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\cluster_centroid_dist_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\blob.hpp">
@@ -1022,6 +1025,9 @@
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\cluster_centroid_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\cluster_centroid_dist_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>

@@ -144,7 +144,8 @@ def get_legend_loc(chart_type):
     if y_axis.find('accuracy') != -1:
         pass
     if y_axis.find('loss') != -1 or y_axis.find('learning rate') != -1:
-        loc = 'upper right'
+        #loc = 'upper right'
+		pass
     return loc
 
 def plot_chart(chart_type, path_to_png, path_to_log_list):
@@ -182,6 +183,7 @@ def plot_chart(chart_type, path_to_png, path_to_log_list):
     plt.title(get_chart_type_descriptions(chart_type))
     plt.xlabel(x_axis_field)
     plt.ylabel(y_axis_field)
+    #plt.ylim((0,7))
     plt.grid()
     plt.savefig(path_to_png)
     plt.show()

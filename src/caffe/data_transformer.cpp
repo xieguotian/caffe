@@ -155,9 +155,11 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 
 	float min_scale = param_.multi_scale_param().min_scale();
 	float max_scale = param_.multi_scale_param().max_scale();
+	int min_length = param_.multi_scale_param().min_length();
+	int max_length = param_.multi_scale_param().max_length();
 	if (param_.has_multi_scale_param() &&
 		param_.multi_scale_param().is_multi_scale() &&
-		max_scale >= min_scale){
+		(max_scale >= min_scale && min_length<=max_length)){
 #ifdef USE_OPENCV
 		cv::Mat cv_img;
 		DatumToCVMat(&datum, cv_img);
@@ -245,31 +247,65 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 	// random scale image
 	float min_scale = param_.multi_scale_param().min_scale();
 	float max_scale = param_.multi_scale_param().max_scale();
+	int min_length = param_.multi_scale_param().min_length();
+	int max_length = param_.multi_scale_param().max_length();
+
 	if (param_.has_multi_scale_param() &&
 		param_.multi_scale_param().is_multi_scale() &&
-		max_scale >= min_scale){
+		(max_scale >= min_scale && min_length<=max_length) ){
 		if (phase_ == TRAIN)
 		{
-			int org_height = cv_img.rows;
-			int org_width = cv_img.cols;
-			//get random scale
-			int small_side = std::min(org_height, org_width);
-			int min_side = small_side*min_scale;
-			int max_side = small_side*max_scale;
-			float scale = float(Rand(max_side - min_side + 1) + min_side) / float(small_side);
-			//scale image
-			int resize_height = org_height*scale;
-			int resize_width = org_width*scale;
+			if (min_length == 0 || max_length == 0)
+			{
+				int org_height = cv_img.rows;
+				int org_width = cv_img.cols;
+				//get random scale
+				int small_side = std::min(org_height, org_width);
+				int min_side = small_side*min_scale;
+				int max_side = small_side*max_scale;
+				float scale = float(Rand(max_side - min_side + 1) + min_side) / float(small_side);
+				//scale image
+				int resize_height = org_height*scale;
+				int resize_width = org_width*scale;
 
-			cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+			}
+			else
+			{
+				int org_height = cv_img.rows;
+				int org_width = cv_img.cols;
+				//get random scale
+				int small_side = std::min(org_height, org_width);
+				//int min_side = small_side*min_scale;
+				//int max_side = small_side*max_scale;
+				float scale = float(Rand(max_length - min_length + 1) + min_length) / float(small_side);
+				//scale image
+				int resize_height = org_height*scale;
+				int resize_width = org_width*scale;
+
+				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+			}
 		}
 		else if (phase_ == TEST)
 		{
-			int org_height = cv_img.rows;
-			int org_width = cv_img.cols;
-			int resize_height = org_height*min_scale;
-			int resize_width = org_width*min_scale;
-			cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+			if (min_length == 0 || max_length == 0)
+			{
+				int org_height = cv_img.rows;
+				int org_width = cv_img.cols;
+				int resize_height = org_height*min_scale;
+				int resize_width = org_width*min_scale;
+				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+			}
+			else
+			{
+				int org_height = cv_img.rows;
+				int org_width = cv_img.cols;
+				int small_side = std::min(org_height, org_width);
+				int scale_ratio = float(min_length) / float(small_side);
+				int resize_height = org_height*scale_ratio;
+				int resize_width = org_width*scale_ratio;
+				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+			}
 		}
 	}
 	else
@@ -304,11 +340,22 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   CHECK_GE(img_width, crop_size);
 
   Dtype* mean = NULL;
+  bool use_crop_mean = false;
   if (has_mean_file) {
-    CHECK_EQ(img_channels, data_mean_.channels());
-    CHECK_EQ(img_height, data_mean_.height());
-    CHECK_EQ(img_width, data_mean_.width());
-    mean = data_mean_.mutable_cpu_data();
+	  if (height == data_mean_.height() &&
+		  width == data_mean_.width() &&
+		  channels == data_mean_.channels())
+	  {
+		  use_crop_mean = true;
+		  mean = data_mean_.mutable_cpu_data();
+	  }
+	  else
+	  {
+		  CHECK_EQ(img_channels, data_mean_.channels());
+		  CHECK_EQ(img_height, data_mean_.height());
+		  CHECK_EQ(img_width, data_mean_.width());
+		  mean = data_mean_.mutable_cpu_data();
+	  }
   }
   if (has_mean_values) {
     CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
@@ -378,8 +425,17 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 					  Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
 					  if (has_mean_file) {
 						  int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
-						  transformed_data[top_index] =
-							  (pixel - mean[mean_index]) * scale;
+						  if (use_crop_mean)
+						  {
+							  transformed_data[top_index] =
+								  (pixel - mean[top_index]) * scale;
+						  }
+						  else
+						  {
+
+							  transformed_data[top_index] =
+								  (pixel - mean[mean_index]) * scale;
+						  }
 					  }
 					  else {
 						  if (has_mean_values) {
@@ -439,8 +495,16 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 				  Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
 				  if (has_mean_file) {
 					  int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
-					  transformed_data[top_index] =
-						  (pixel - mean[mean_index]) * scale;
+					  if (use_crop_mean)
+					  {
+						  transformed_data[top_index] =
+							  (pixel - mean[top_index]) * scale;
+					  }
+					  else
+					  {
+						  transformed_data[top_index] =
+							  (pixel - mean[mean_index]) * scale;
+					  }
 				  }
 				  else {
 					  if (has_mean_values) {
@@ -630,12 +694,35 @@ template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
   const int crop_size = param_.crop_size();
   const int img_channels = cv_img.channels();
-  const int img_height = cv_img.rows;
-  const int img_width = cv_img.cols;
+   int img_height = cv_img.rows;
+   int img_width = cv_img.cols;
   // Check dimensions.
+  if (param_.multi_scale_param().is_multi_scale())
+  {
+	  int min_length = param_.multi_scale_param().min_length();
+	  int max_length = param_.multi_scale_param().max_length();
+	  if (min_length > 0 && max_length > 0)
+	  {
+		  CHECK_GE(max_length, min_length);
+		  int min_side = std::min(img_height, img_width);
+		  float scale = float(min_length)/float(min_side);
+		  img_height = img_height*scale;
+		  img_width = img_width* scale;
+	  }
+	  else
+	  {
+		  float min_scale = param_.multi_scale_param().min_scale();
+		  float max_scale = param_.multi_scale_param().max_scale();
+		  CHECK_GE(max_scale, min_scale);
+		  img_height = img_height*min_scale;
+		  img_width = img_width*min_scale;
+	  }
+  }
+
   CHECK_GT(img_channels, 0);
   CHECK_GE(img_height, crop_size);
   CHECK_GE(img_width, crop_size);
+
   // Build BlobShape.
   vector<int> shape(4);
   if (param_.test10crop())

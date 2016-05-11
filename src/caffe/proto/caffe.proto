@@ -413,6 +413,8 @@ message ScaleRange{
 	optional bool is_multi_scale = 1 [default = false];
 	optional float min_scale = 2 [default = 1];
 	optional float max_scale = 3 [default = 1];
+	optional uint32 min_length = 4 [default = 0];
+	optional uint32 max_length = 5 [default = 0];
 }
 
 // Message that stores parameters used to apply transformation
@@ -1478,4 +1480,5 @@ message ClusterCentroidParameter{
 	optional uint32 dim = 1;
 	optional uint32 num_cluster = 2;
 	optional FillerParameter centroid_filler = 3; // The filler for the weight
+	optional float scale = 4 [default=1];
 }

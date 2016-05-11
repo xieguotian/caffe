@@ -19,6 +19,7 @@ namespace caffe{
 		shared_ptr<Filler<Dtype>> cluster_filler(GetFiller<Dtype>(
 			this->layer_param_.cluster_centroid_param().centroid_filler()));
 		cluster_filler->Fill(this->blobs_[0].get());
+		scale = this->layer_param_.cluster_centroid_param().scale();
 	}
 
 	template <typename Dtype>
@@ -84,6 +85,7 @@ namespace caffe{
 		//sum all distance.
 		caffe_add(top[0]->count(), cache_feat_.cpu_data(), top_data, top_data);
 		caffe_add(top[0]->count(), cache_cluster_.cpu_data(), top_data, top_data);
+		caffe_cpu_scale(top[0]->count(), (Dtype)scale, top_data, top_data);
 		//const Dtype* bottom_data = bottom[0]->cpu_data();
 		//Dtype* top_data = top[0]->mutable_cpu_data();
 		//Dtype* diff_data = diff_.mutable_cpu_data();
