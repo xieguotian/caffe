@@ -423,6 +423,9 @@
     <ClCompile Include="..\..\tools\caffe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\softmax_loss_dust_layer.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\blob.hpp">
@@ -830,6 +833,9 @@
     <ClInclude Include="..\..\include\caffe\layers\cluster_centroid_dist_layer.hpp">
       <Filter>Header Files\layers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\softmax_loss_dust_layer.hpp">
+      <Filter>Header Files\layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu">
@@ -1088,6 +1094,9 @@
       <Filter>layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\cluster_centroid_dist_layer.cu">
+      <Filter>layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\softmax_loss_dust_layer.cu">
       <Filter>layers</Filter>
     </CudaCompile>
   </ItemGroup>
