@@ -21,7 +21,10 @@ class LevelDBCursor : public Cursor {
   virtual string key() { return iter_->key().ToString(); }
   virtual string value() { return iter_->value().ToString(); }
   virtual bool valid() { return iter_->Valid(); }
-
+  virtual void SeekByKey(string key)
+  {
+	  NOT_IMPLEMENTED;
+  }
  private:
   leveldb::Iterator* iter_;
 };

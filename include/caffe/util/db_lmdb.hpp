@@ -35,6 +35,24 @@ class LMDBCursor : public Cursor {
   }
   virtual bool valid() { return valid_; }
 
+  virtual void SeekByKey(string key)
+  {
+	  char* key_char = new char[key.length()+1];
+	  std::strcpy(key_char, key.c_str());
+	  //if (mdb_key_.mv_data != NULL)
+		  //delete mdb_key_.mv_data;
+	  mdb_key_.mv_data = key_char;//key.c_str();
+	  mdb_key_.mv_size = key.length();
+	  int mdb_status = mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_SET_KEY);
+	  if (mdb_status == MDB_NOTFOUND) {
+		  valid_ = false;
+	  }
+	  else {
+		  MDB_CHECK(mdb_status);
+		  valid_ = true;
+	  }
+	  delete[] key_char;
+  }
  private:
   void Seek(MDB_cursor_op op) {
     int mdb_status = mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, op);

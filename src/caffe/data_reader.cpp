@@ -28,6 +28,7 @@ DataReader::DataReader(const LayerParameter& param)
     bodies_[key] = weak_ptr<Body>(body_);
   }
   body_->new_queue_pairs_.push(queue_pair_);
+  body_->shuffle = param.data_param().shuffle();
 }
 
 DataReader::~DataReader() {
@@ -74,6 +75,25 @@ void DataReader::Body::InternalThreadEntry() {
   shared_ptr<db::DB> db(db::GetDB(param_.data_param().backend()));
   db->Open(param_.data_param().source(), db::READ);
   shared_ptr<db::Cursor> cursor(db->NewCursor());
+  if (shuffle)
+  {
+	  key_list.clear();
+	  while (cursor->valid())
+	  {
+		  string key = cursor->key();
+		  key_list.push_back(key);
+		  cursor->Next();
+	  }
+	  cursor->SeekToFirst();
+	  std::srand(std::time(0));
+	  for (int i = 0; i < key_list.size(); ++i)
+	  {
+		  key_index.push_back(i);
+	  }
+	  std::random_shuffle(key_index.begin(), key_index.end());
+	  key_position = 0;
+	  cursor->SeekByKey(key_list[key_index[key_position]]);
+  }
   vector<shared_ptr<QueuePair> > qps;
   try {
     int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
@@ -107,12 +127,28 @@ void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
   // TODO deserialize in-place instead of copy?
   datum->ParseFromString(cursor->value());
   qp->full_.push(datum);
-
+  DLOG(INFO) << key_list[key_index[key_position]] << " vs " << cursor->key() << " label: " << datum->label();
+  if (!cursor->valid())
+	  LOG(INFO) << "invalid key: " << key_list[key_index[key_position]];
   // go to the next iter
-  cursor->Next();
-  if (!cursor->valid()) {
-    DLOG(INFO) << "Restarting data prefetching from start.";
-    cursor->SeekToFirst();
+  if (shuffle)
+  {
+	  key_position++;
+	  if (key_position >= key_index.size())
+	  {
+		  LOG(INFO) << "Restarting data and shuffle.";
+		  std::random_shuffle(key_index.begin(), key_index.end());
+		  key_position = 0;
+	  }
+	  cursor->SeekByKey(key_list[key_index[key_position]]);
+  }
+  else
+  {
+	  cursor->Next();
+	  if (!cursor->valid()) {
+		  DLOG(INFO) << "Restarting data prefetching from start.";
+		  cursor->SeekToFirst();
+	  }
   }
 }
 

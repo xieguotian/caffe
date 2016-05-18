@@ -151,12 +151,13 @@ def get_legend_loc(chart_type):
 def plot_chart(chart_type, path_to_png, path_to_log_list):
     for path_to_log in path_to_log_list:
         os.system('python %s %s %s' % (get_log_parsing_script(), path_to_log,os.path.dirname(os.path.abspath(path_to_png))))
-        for ch_type in chart_type:
+        for ix,ch_type in enumerate(chart_type):
             data_file = get_data_file(ch_type, path_to_log)
             x_axis_field, y_axis_field = get_field_descriptions(ch_type)
             x, y = get_field_indecies(x_axis_field, y_axis_field,ch_type)
             data = load_data(data_file, x, y)
-            data = smooth_data2(data,50)
+            if ix==0:
+                data = smooth_data2(data,50)
             ## TODO: more systematic color cycle for lines
             color = [random.random(), random.random(), random.random()]
             label = get_data_label(path_to_log,ch_type)

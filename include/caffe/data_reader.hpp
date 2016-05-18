@@ -59,7 +59,11 @@ class DataReader {
     BlockingQueue<shared_ptr<QueuePair> > new_queue_pairs_;
 
     friend class DataReader;
-
+	// shuffle each epoch
+	bool shuffle;
+	vector<string> key_list;
+	vector<int> key_index;
+	int key_position;
   DISABLE_COPY_AND_ASSIGN(Body);
   };
 

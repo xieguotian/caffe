@@ -19,7 +19,7 @@ class Cursor {
   virtual string key() = 0;
   virtual string value() = 0;
   virtual bool valid() = 0;
-
+  virtual void SeekByKey(string key) = 0;
   DISABLE_COPY_AND_ASSIGN(Cursor);
 };
 
