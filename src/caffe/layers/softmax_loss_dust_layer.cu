@@ -76,9 +76,9 @@ __global__ void SoftmaxLossBackwardGPU(const int nthreads, const Dtype* top,
     const int label_value = static_cast<int>(label[n * spatial_dim + s]);
 
     if (has_ignore_label_ && label_value == ignore_label_) {
-      for (int c = 0; c < channels; ++c) {
+      //for (int c = 0; c < channels; ++c) {
         //bottom_diff[n * dim + c * spatial_dim + s] = 0;
-      }
+      //}
       counts[index] = 0;
     } else {
       bottom_diff[n * dim + label_value * spatial_dim + s] -= 1;

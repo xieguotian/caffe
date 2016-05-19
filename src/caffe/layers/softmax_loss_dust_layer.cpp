@@ -132,9 +132,9 @@ void SoftmaxDustWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& t
       for (int j = 0; j < inner_num_; ++j) {
         const int label_value = static_cast<int>(label[i * inner_num_ + j]);
         if (has_ignore_label_ && label_value == ignore_label_) {
-          for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
+          //for (int c = 0; c < bottom[0]->shape(softmax_axis_); ++c) {
             //bottom_diff[i * dim + c * inner_num_ + j] = 0;
-          }
+          //}
         } else {
           bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
           ++count;

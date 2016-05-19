@@ -142,7 +142,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;_CRT_SECURE_NO_WARNINGS;USE_CUDNN;USE_LEVELDB;USE_LMDB;USE_OPENCV;WITH_PYTHON_LAYER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Anaconda\Lib\site-packages\numpy\core\include;C:\Anaconda\include;../../include;../../src;../../3rdparty/include;../../3rdparty/include/openblas;../../3rdparty/include/hdf5;../../3rdparty/include/lmdb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0\include;../../include/caffe</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Anaconda\Lib\site-packages\numpy\core\include;D:\Anaconda\include;../../include;../../src;../../3rdparty/include;../../3rdparty/include/openblas;../../3rdparty/include/hdf5;../../3rdparty/include/lmdb;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0\include;../../include/caffe</AdditionalIncludeDirectories>
       <AdditionalOptions>-D_SCL_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -151,7 +151,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>../../3rdparty/lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0\lib\x64;C:\Anaconda\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../3rdparty/lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0\lib\x64;D:\Anaconda\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>python27.lib;opencv_core2410.lib;opencv_imgproc2410.lib;opencv_highgui2410.lib;cudart.lib;cuda.lib;nppi.lib;cufft.lib;cublas.lib;curand.lib;gflags.lib;libglog.lib;libopenblas.dll.a;libprotobuf.lib;libprotoc.lib;leveldb.lib;lmdb.lib;hdf5.lib;hdf5_hl.lib;Shlwapi.lib;cudnn.lib;pthreadVC2_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
