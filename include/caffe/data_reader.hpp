@@ -64,6 +64,12 @@ class DataReader {
 	vector<string> key_list;
 	vector<int> key_index;
 	int key_position;
+
+	vector<vector<string>> key_list_set;
+	vector<vector<int>> key_index_set;
+	vector<int> key_pos_set;
+	vector<int> random_sequence;
+	int cursor_idx;
   DISABLE_COPY_AND_ASSIGN(Body);
   };
 

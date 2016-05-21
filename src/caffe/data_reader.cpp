@@ -72,84 +72,239 @@ DataReader::Body::~Body() {
 }
 
 void DataReader::Body::InternalThreadEntry() {
-  shared_ptr<db::DB> db(db::GetDB(param_.data_param().backend()));
-  db->Open(param_.data_param().source(), db::READ);
-  shared_ptr<db::Cursor> cursor(db->NewCursor());
-  if (shuffle)
-  {
-	  key_list.clear();
-	  while (cursor->valid())
-	  {
-		  string key = cursor->key();
-		  key_list.push_back(key);
-		  cursor->Next();
-	  }
-	  cursor->SeekToFirst();
-	  std::srand(std::time(0));
-	  for (int i = 0; i < key_list.size(); ++i)
-	  {
-		  key_index.push_back(i);
-	  }
-	  std::random_shuffle(key_index.begin(), key_index.end());
-	  key_position = 0;
-	  cursor->SeekByKey(key_list[key_index[key_position]]);
-  }
-  vector<shared_ptr<QueuePair> > qps;
-  try {
-    int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
+	if (param_.data_param().has_source())
+	{
+		shared_ptr<db::DB> db(db::GetDB(param_.data_param().backend()));
+		db->Open(param_.data_param().source(), db::READ);
+		shared_ptr<db::Cursor> cursor(db->NewCursor());
+		if (shuffle)
+		{
+			key_list.clear();
+			while (cursor->valid())
+			{
+				string key = cursor->key();
+				key_list.push_back(key);
+				cursor->Next();
+			}
+			cursor->SeekToFirst();
+			std::srand(std::time(0));
+			for (int i = 0; i < key_list.size(); ++i)
+			{
+				key_index.push_back(i);
+			}
+			std::random_shuffle(key_index.begin(), key_index.end());
+			key_position = 0;
+			cursor->SeekByKey(key_list[key_index[key_position]]);
+		}
+		vector<shared_ptr<QueuePair> > qps;
+		try {
+			int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
 
-    // To ensure deterministic runs, only start running once all solvers
-    // are ready. But solvers need to peek on one item during initialization,
-    // so read one item, then wait for the next solver.
-    for (int i = 0; i < solver_count; ++i) {
-      shared_ptr<QueuePair> qp(new_queue_pairs_.pop());
-      read_one(cursor.get(), qp.get());
-      qps.push_back(qp);
-    }
-    // Main loop
-    while (!must_stop()) {
-      for (int i = 0; i < solver_count; ++i) {
-        read_one(cursor.get(), qps[i].get());
-      }
-      // Check no additional readers have been created. This can happen if
-      // more than one net is trained at a time per process, whether single
-      // or multi solver. It might also happen if two data layers have same
-      // name and same source.
-      CHECK_EQ(new_queue_pairs_.size(), 0);
-    }
-  } catch (boost::thread_interrupted&) {
-    // Interrupted exception is expected on shutdown
-  }
+			// To ensure deterministic runs, only start running once all solvers
+			// are ready. But solvers need to peek on one item during initialization,
+			// so read one item, then wait for the next solver.
+			for (int i = 0; i < solver_count; ++i) {
+				shared_ptr<QueuePair> qp(new_queue_pairs_.pop());
+				read_one(cursor.get(), qp.get());
+				qps.push_back(qp);
+			}
+			// Main loop
+			while (!must_stop()) {
+				for (int i = 0; i < solver_count; ++i) {
+					read_one(cursor.get(), qps[i].get());
+				}
+				// Check no additional readers have been created. This can happen if
+				// more than one net is trained at a time per process, whether single
+				// or multi solver. It might also happen if two data layers have same
+				// name and same source.
+				CHECK_EQ(new_queue_pairs_.size(), 0);
+			}
+		}
+		catch (boost::thread_interrupted&) {
+			// Interrupted exception is expected on shutdown
+		}
+	}
+	else // read multi-source db with specific sample ratio
+	{
+		vector<shared_ptr<db::DB>> db_set;//(db::GetDB(param_.data_param().backend()));
+		vector < shared_ptr<db::Cursor>> cursor_set;
+		for (int i = 0; i < param_.data_param().multi_source_size(); ++i)
+		{
+			shared_ptr<db::DB> db(db::GetDB(param_.data_param().backend()));
+			db->Open(param_.data_param().multi_source(i), db::READ);
+			db_set.push_back(db);
+
+			shared_ptr<db::Cursor> cursor(db->NewCursor());
+			cursor_set.push_back(cursor);
+		}
+		
+		//random sequence.
+		vector<int> coef_set(param_.data_param().ratio_sample_size());
+		float total_sum = 0;
+		for (int i = 0; i < coef_set.size(); ++i)
+		{
+			total_sum += param_.data_param().ratio_sample(i);
+		}
+		for (int i = 0; i < coef_set.size(); ++i)
+		{
+			coef_set[i] = (int)(param_.data_param().ratio_sample(i) / total_sum * 1000);
+		}
+		for (int i = 1; i < coef_set.size(); ++i)
+		{
+			coef_set[i] += coef_set[i - 1];
+		}
+		random_sequence.resize(1000);
+		int cur_idx = 0;
+		for (int i = 0; i < random_sequence.size();++i)
+		{
+			if (i>=coef_set[cur_idx])
+				cur_idx++;
+			random_sequence[i] = cur_idx;
+		}
+		std::random_shuffle(random_sequence.begin(), random_sequence.end());
+
+
+		if (shuffle)
+		{
+			key_index_set.resize(cursor_set.size());
+			key_list_set.resize(cursor_set.size());
+			key_pos_set.resize(cursor_set.size());
+			key_index_set.clear();
+			key_list_set.clear();
+			key_pos_set.clear();
+
+			for (int idx = 0; idx < cursor_set.size(); ++idx)
+			{
+				shared_ptr<db::Cursor> cursor = cursor_set[idx];
+
+				key_list_set[idx].clear();
+				//key_list.clear();
+				while (cursor->valid())
+				{
+					string key = cursor->key();
+					//key_list.push_back(key);
+					key_list_set[idx].push_back(key);
+					cursor->Next();
+				}
+				cursor->SeekToFirst();
+				std::srand(std::time(0));
+				//for (int i = 0; i < key_list.size(); ++i)
+				for (int i = 0; i < key_list_set[idx].size(); ++i)
+				{
+					//key_index.push_back(i);
+					key_index_set[idx].push_back(i);
+				}
+				//std::random_shuffle(key_index.begin(), key_index.end());
+				std::random_shuffle(key_index_set[idx].begin(), key_index_set[idx].end());
+				key_pos_set[idx] = 0;
+				cursor->SeekByKey(key_list[key_index[key_pos_set[idx]]]);
+			}
+		}
+		vector<shared_ptr<QueuePair> > qps;
+		try {
+			cursor_idx = 0;
+			int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
+
+			// To ensure deterministic runs, only start running once all solvers
+			// are ready. But solvers need to peek on one item during initialization,
+			// so read one item, then wait for the next solver.
+			for (int i = 0; i < solver_count; ++i) {
+				shared_ptr<QueuePair> qp(new_queue_pairs_.pop());
+				read_one(cursor_set[random_sequence[cursor_idx]].get(), qp.get());
+				qps.push_back(qp);
+				cur_idx++;
+				if (cur_idx >= random_sequence[cursor_idx])
+				{
+					cur_idx = 0;
+					std::random_shuffle(random_sequence.begin(), random_sequence.end());
+				}
+			}
+			// Main loop
+			while (!must_stop()) {
+				for (int i = 0; i < solver_count; ++i) {
+					read_one(cursor_set[random_sequence[cursor_idx]].get(), qps[i].get());
+					cur_idx++;
+					if (cur_idx >= random_sequence[cursor_idx])
+					{
+						cur_idx = 0;
+						std::random_shuffle(random_sequence.begin(), random_sequence.end());
+					}
+				}
+				// Check no additional readers have been created. This can happen if
+				// more than one net is trained at a time per process, whether single
+				// or multi solver. It might also happen if two data layers have same
+				// name and same source.
+				CHECK_EQ(new_queue_pairs_.size(), 0);
+			}
+		}
+		catch (boost::thread_interrupted&) {
+			// Interrupted exception is expected on shutdown
+		}
+	}
 }
 
 void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
-  Datum* datum = qp->free_.pop();
-  // TODO deserialize in-place instead of copy?
-  datum->ParseFromString(cursor->value());
-  qp->full_.push(datum);
-  DLOG(INFO) << key_list[key_index[key_position]] << " vs " << cursor->key() << " label: " << datum->label();
-  if (!cursor->valid())
-	  LOG(INFO) << "invalid key: " << key_list[key_index[key_position]];
-  // go to the next iter
-  if (shuffle)
-  {
-	  key_position++;
-	  if (key_position >= key_index.size())
-	  {
-		  LOG(INFO) << "Restarting data and shuffle.";
-		  std::random_shuffle(key_index.begin(), key_index.end());
-		  key_position = 0;
-	  }
-	  cursor->SeekByKey(key_list[key_index[key_position]]);
-  }
-  else
-  {
-	  cursor->Next();
-	  if (!cursor->valid()) {
-		  DLOG(INFO) << "Restarting data prefetching from start.";
-		  cursor->SeekToFirst();
-	  }
-  }
+	if (param_.data_param().has_source())
+	{
+
+		Datum* datum = qp->free_.pop();
+		// TODO deserialize in-place instead of copy?
+		datum->ParseFromString(cursor->value());
+		qp->full_.push(datum);
+		DLOG(INFO) << key_list[key_index[key_position]] << " vs " << cursor->key() << " label: " << datum->label();
+		if (!cursor->valid())
+			LOG(INFO) << "invalid key: " << key_list[key_index[key_position]];
+		// go to the next iter
+		if (shuffle)
+		{
+			key_position++;
+			if (key_position >= key_index.size())
+			{
+				LOG(INFO) << "Restarting data and shuffle.";
+				std::random_shuffle(key_index.begin(), key_index.end());
+				key_position = 0;
+			}
+			cursor->SeekByKey(key_list[key_index[key_position]]);
+		}
+		else
+		{
+			cursor->Next();
+			if (!cursor->valid()) {
+				DLOG(INFO) << "Restarting data prefetching from start.";
+				cursor->SeekToFirst();
+			}
+		}
+	}
+	else
+	{
+		Datum* datum = qp->free_.pop();
+		// TODO deserialize in-place instead of copy?
+		datum->ParseFromString(cursor->value());
+		qp->full_.push(datum);
+		DLOG(INFO) << key_list_set[cursor_idx][key_index_set[cursor_idx][key_pos_set[cursor_idx]]] << " vs " << cursor->key() << " label: " << datum->label();
+		if (!cursor->valid())
+			LOG(INFO) << "invalid key: " << key_list_set[cursor_idx][key_index_set[cursor_idx][key_pos_set[cursor_idx]]];
+		// go to the next iter
+		if (shuffle)
+		{
+			key_pos_set[cursor_idx]++;
+			if (key_pos_set[cursor_idx] >= key_index_set[cursor_idx].size())
+			{
+				LOG(INFO) << "Restarting data and shuffle.";
+				std::random_shuffle(key_index_set[cursor_idx].begin(), key_index_set[cursor_idx].end());
+				key_pos_set[cursor_idx] = 0;
+			}
+			cursor->SeekByKey(key_list_set[cursor_idx][key_index_set[cursor_idx][key_pos_set[cursor_idx]]]);
+		}
+		else
+		{
+			cursor->Next();
+			if (!cursor->valid()) {
+				DLOG(INFO) << "Restarting data prefetching from start.";
+				cursor->SeekToFirst();
+			}
+		}
+	}
 }
 
 }  // namespace caffe

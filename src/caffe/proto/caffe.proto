@@ -653,6 +653,8 @@ message DataParameter {
   // data access bandwidth varies).
   optional uint32 prefetch = 10 [default = 4];
   optional bool shuffle = 101 [default = false];
+  repeated string multi_source = 102;
+  repeated float ratio_sample = 103;
 }
 
 message DropoutParameter {
