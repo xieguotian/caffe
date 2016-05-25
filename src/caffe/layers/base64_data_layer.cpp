@@ -108,11 +108,13 @@ namespace caffe {
 		infile.open(source.c_str());
 		string base64string;
 		int label = 0;
+		//string tmp;
 		if (this->layer_param_.base64_data_param().shuffle()) {
 			// randomly shuffle data
 			// To be added
 		}
 		lines_id_ = 0;
+		infile >> label >> base64string;
 		//std::cout << "label: " << tmp << "image: " << base64string << std::endl;
 		string decode_string = base64_decode(base64string);
 		//std::cout << decode_string;
@@ -194,8 +196,10 @@ namespace caffe {
 
 		string base64string;
 		int label = 0;
+		//string tmp;
 		// Reshape according to the first image of each batch
 		// on single input batches allows for inputs of varying dimension.
+		infile >> label >> base64string;
 		string decode_string = base64_decode(base64string);
 		vector<uchar> data(decode_string.begin(), decode_string.end());
 		// Read an image, and use it to initialize the top blob.
