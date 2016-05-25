@@ -301,9 +301,10 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 				int org_height = cv_img.rows;
 				int org_width = cv_img.cols;
 				int small_side = std::min(org_height, org_width);
-				int scale_ratio = float(min_length) / float(small_side);
+				float scale_ratio = float(min_length) / float(small_side);
 				int resize_height = org_height*scale_ratio;
 				int resize_width = org_width*scale_ratio;
+				//std::cout << resize_height << " " << resize_width <<std::endl;
 				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
 			}
 		}

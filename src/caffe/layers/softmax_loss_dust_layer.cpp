@@ -33,6 +33,11 @@ void SoftmaxDustWithLossLayer<Dtype>::LayerSetUp(
   } else {
     normalization_ = this->layer_param_.loss_param().normalization();
   }
+
+  if (this->layer_param_.eltwise_param().coeff_size() > 0)
+	  ratio_inspiration = 1 + this->layer_param_.eltwise_param().coeff(0);
+  else
+	  ratio_inspiration = 1;
 }
 
 template <typename Dtype>
