@@ -51,6 +51,14 @@ void BiasLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       top_diff += dim_;
       accum = true;
     }
+	//caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, outer_dim_*bias_dim_, 1,inner_dim_, Dtype(1),
+	//	      top_diff, bias_multiplier_.gpu_data(), Dtype(accum), num_by_chann_cache_.mutable_gpu_data());
+	//caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, 1, bias_dim_, outer_dim_, Dtype(1),
+	//	num_multiplier_.gpu_data(), num_by_chann_cache_.gpu_data(), Dtype(1), bias_diff);
+	//caffe_gpu_gemv<Dtype>(CblasNoTrans, outer_dim_*bias_dim_, inner_dim_, Dtype(1),
+	//	      top_diff, bias_multiplier_.gpu_data(), Dtype(accum), num_by_chann_cache_.mutable_gpu_data());
+	//caffe_gpu_gemv<Dtype>(CblasTrans, outer_dim_,bias_dim_, Dtype(1),
+	//	num_by_chann_cache_.gpu_data(), num_multiplier_.gpu_data(), Dtype(1), bias_diff);
   }
 }
 

@@ -44,6 +44,8 @@ class BiasLayer : public Layer<Dtype> {
 
  private:
   Blob<Dtype> bias_multiplier_;
+  Blob<Dtype> num_multiplier_;
+  Blob<Dtype> num_by_chann_cache_;
   int outer_dim_, bias_dim_, inner_dim_, dim_;
 };
 

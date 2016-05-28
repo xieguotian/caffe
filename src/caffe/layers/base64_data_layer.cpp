@@ -227,7 +227,7 @@ namespace caffe {
 			CHECK_GT(data_size, lines_id_);
 
 			if (item_id != 0){
-				infile >> tmp >> base64string;
+				infile >> label >> base64string;
 				read_line_time += timer.MicroSeconds();
 				timer.Start();
 				string decode_string = base64_decode(base64string);

@@ -153,6 +153,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>../../3rdparty/lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.0\lib\x64;D:\Anaconda\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>python27.lib;opencv_core2410.lib;opencv_imgproc2410.lib;opencv_highgui2410.lib;cudart.lib;cuda.lib;nppi.lib;cufft.lib;cublas.lib;curand.lib;gflags.lib;libglog.lib;libopenblas.dll.a;libprotobuf.lib;libprotoc.lib;leveldb.lib;lmdb.lib;hdf5.lib;hdf5_hl.lib;Shlwapi.lib;cudnn.lib;pthreadVC2_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <Profile>false</Profile>
     </Link>
     <PreBuildEvent>
       <Command>

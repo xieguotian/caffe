@@ -124,3 +124,8 @@ caffe/matcaffe/*.pdb
 src/caffe/test/test_data/my_test/*
 caffe/src
 caffe/caffe/Debug
+
+caffe/*.vsp
+caffe/*.vspx
+caffe/*.psess
+src/caffe/layers/batch_norm_opt_layer_org.cu
