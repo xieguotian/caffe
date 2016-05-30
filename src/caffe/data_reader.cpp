@@ -80,13 +80,31 @@ void DataReader::Body::InternalThreadEntry() {
 		if (shuffle)
 		{
 			key_list.clear();
-			while (cursor->valid())
+			label_list.clear();
+			if (param_.data_param().key_files_size() > 0)
 			{
-				string key = cursor->key();
-				key_list.push_back(key);
-				cursor->Next();
+				std::ifstream key_file(param_.data_param().key_files(0));
+				string key;
+				int label;
+				use_other_label = true;
+				while (key_file >> key >>label)
+				{
+					key_list.push_back(key);
+					label_list.push_back(label);
+				}
 			}
-			cursor->SeekToFirst();
+			else
+			{
+				use_other_label = false;
+				while (cursor->valid())
+				{
+					string key = cursor->key();
+					key_list.push_back(key);
+					cursor->Next();
+				}
+
+				cursor->SeekToFirst();
+			}
 			std::srand(std::time(0));
 			for (int i = 0; i < key_list.size(); ++i)
 			{
@@ -126,7 +144,8 @@ void DataReader::Body::InternalThreadEntry() {
 	}
 	else // read multi-source db with specific sample ratio
 	{
-		vector<shared_ptr<db::DB>> db_set;//(db::GetDB(param_.data_param().backend()));
+		//read all data base.
+		vector<shared_ptr<db::DB>> db_set;
 		vector < shared_ptr<db::Cursor>> cursor_set;
 		for (int i = 0; i < param_.data_param().multi_source_size(); ++i)
 		{
@@ -163,41 +182,61 @@ void DataReader::Body::InternalThreadEntry() {
 		}
 		std::random_shuffle(random_sequence.begin(), random_sequence.end());
 
-
+		//shuffle all data base
 		if (shuffle)
 		{
-			key_index_set.resize(cursor_set.size());
-			key_list_set.resize(cursor_set.size());
-			key_pos_set.resize(cursor_set.size());
 			key_index_set.clear();
 			key_list_set.clear();
 			key_pos_set.clear();
+			label_list_set.clear();
+
+			key_index_set.resize(cursor_set.size());
+			key_list_set.resize(cursor_set.size());
+			key_pos_set.resize(cursor_set.size());
+			label_list_set.resize(cursor_set.size());
 
 			for (int idx = 0; idx < cursor_set.size(); ++idx)
 			{
 				shared_ptr<db::Cursor> cursor = cursor_set[idx];
 
 				key_list_set[idx].clear();
-				//key_list.clear();
-				while (cursor->valid())
+				label_list_set[idx].clear();
+				if (param_.data_param().key_files_size() > idx)		// has key list file and read them
 				{
-					string key = cursor->key();
-					//key_list.push_back(key);
-					key_list_set[idx].push_back(key);
-					cursor->Next();
+					std::ifstream key_file(param_.data_param().key_files(idx));
+					string key;
+					int label;
+					use_other_label = true;
+					while (key_file >> key>>label)
+					{
+						key_list_set[idx].push_back(key);
+						label_list_set[idx].push_back(label);
+					}
 				}
-				cursor->SeekToFirst();
+				else           // do not has key list file and read from data base.
+				{
+					use_other_label = false;
+					while (cursor->valid())
+					{
+						string key = cursor->key();
+						//key_list.push_back(key);
+						key_list_set[idx].push_back(key);
+						cursor->Next();
+					}
+					cursor->SeekToFirst();
+				}
+
+				// random shuffle key.
 				std::srand(std::time(0));
-				//for (int i = 0; i < key_list.size(); ++i)
 				for (int i = 0; i < key_list_set[idx].size(); ++i)
 				{
-					//key_index.push_back(i);
 					key_index_set[idx].push_back(i);
 				}
-				//std::random_shuffle(key_index.begin(), key_index.end());
 				std::random_shuffle(key_index_set[idx].begin(), key_index_set[idx].end());
+
+				// read first key and data.
 				key_pos_set[idx] = 0;
-				cursor->SeekByKey(key_list[key_index[key_pos_set[idx]]]);
+				cursor->SeekByKey(key_list_set[idx][key_index_set[idx][key_pos_set[idx]]]);
 			}
 		}
 		vector<shared_ptr<QueuePair> > qps;
@@ -212,10 +251,10 @@ void DataReader::Body::InternalThreadEntry() {
 				shared_ptr<QueuePair> qp(new_queue_pairs_.pop());
 				read_one(cursor_set[random_sequence[cursor_idx]].get(), qp.get());
 				qps.push_back(qp);
-				cur_idx++;
-				if (cur_idx >= random_sequence[cursor_idx])
+				cursor_idx++;
+				if (cursor_idx >= random_sequence.size())
 				{
-					cur_idx = 0;
+					cursor_idx = 0;
 					std::random_shuffle(random_sequence.begin(), random_sequence.end());
 				}
 			}
@@ -223,10 +262,10 @@ void DataReader::Body::InternalThreadEntry() {
 			while (!must_stop()) {
 				for (int i = 0; i < solver_count; ++i) {
 					read_one(cursor_set[random_sequence[cursor_idx]].get(), qps[i].get());
-					cur_idx++;
-					if (cur_idx >= random_sequence[cursor_idx])
+					cursor_idx++;
+					if (cursor_idx >= random_sequence.size())
 					{
-						cur_idx = 0;
+						cursor_idx = 0;
 						std::random_shuffle(random_sequence.begin(), random_sequence.end());
 					}
 				}
@@ -250,10 +289,15 @@ void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
 		Datum* datum = qp->free_.pop();
 		// TODO deserialize in-place instead of copy?
 		datum->ParseFromString(cursor->value());
+		if (use_other_label)
+			datum->set_label(label_list[key_index[key_position]]);
+
 		qp->full_.push(datum);
+
 		DLOG(INFO) << key_list[key_index[key_position]] << " vs " << cursor->key() << " label: " << datum->label();
 		if (!cursor->valid())
 			LOG(INFO) << "invalid key: " << key_list[key_index[key_position]];
+
 		// go to the next iter
 		if (shuffle)
 		{
@@ -277,24 +321,33 @@ void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
 	}
 	else
 	{
+		int cur_idx = random_sequence[cursor_idx];
 		Datum* datum = qp->free_.pop();
 		// TODO deserialize in-place instead of copy?
 		datum->ParseFromString(cursor->value());
+		if (use_other_label)
+		{
+			datum->set_label(label_list_set[cur_idx][key_index_set[cur_idx][key_pos_set[cur_idx]]]);
+			//LOG(INFO) << "orgin label vs new label: " << datum->label() << " vs " << label_list_set[cur_idx][key_index_set[cur_idx][key_pos_set[cur_idx]]];
+			//LOG(INFO) << "cur_idx: " << cur_idx << ",key_pos: " << key_pos_set[cur_idx] << ",key_indes: " << key_index_set[cur_idx][key_pos_set[cur_idx]]
+			//	<< ",key: " << key_list_set[cur_idx][key_index_set[cur_idx][key_pos_set[cur_idx]]];
+		}
+
 		qp->full_.push(datum);
-		DLOG(INFO) << key_list_set[cursor_idx][key_index_set[cursor_idx][key_pos_set[cursor_idx]]] << " vs " << cursor->key() << " label: " << datum->label();
+		DLOG(INFO) << key_list_set[cur_idx][key_index_set[cur_idx][key_pos_set[cur_idx]]] << " vs " << cursor->key() << " label: " << datum->label();
 		if (!cursor->valid())
-			LOG(INFO) << "invalid key: " << key_list_set[cursor_idx][key_index_set[cursor_idx][key_pos_set[cursor_idx]]];
+			LOG(INFO) << "invalid key: " << key_list_set[cur_idx][key_index_set[cur_idx][key_pos_set[cur_idx]]];
 		// go to the next iter
 		if (shuffle)
 		{
-			key_pos_set[cursor_idx]++;
-			if (key_pos_set[cursor_idx] >= key_index_set[cursor_idx].size())
+			key_pos_set[cur_idx]++;
+			if (key_pos_set[cur_idx] >= key_index_set[cur_idx].size())
 			{
 				LOG(INFO) << "Restarting data and shuffle.";
-				std::random_shuffle(key_index_set[cursor_idx].begin(), key_index_set[cursor_idx].end());
-				key_pos_set[cursor_idx] = 0;
+				std::random_shuffle(key_index_set[cur_idx].begin(), key_index_set[cur_idx].end());
+				key_pos_set[cur_idx] = 0;
 			}
-			cursor->SeekByKey(key_list_set[cursor_idx][key_index_set[cursor_idx][key_pos_set[cursor_idx]]]);
+			cursor->SeekByKey(key_list_set[cur_idx][key_index_set[cur_idx][key_pos_set[cur_idx]]]);
 		}
 		else
 		{

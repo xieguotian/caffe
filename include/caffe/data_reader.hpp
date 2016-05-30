@@ -62,10 +62,13 @@ class DataReader {
 	// shuffle each epoch
 	bool shuffle;
 	vector<string> key_list;
+	vector<int> label_list;
 	vector<int> key_index;
 	int key_position;
+	bool use_other_label = false;
 
 	vector<vector<string>> key_list_set;
+	vector<vector<int>> label_list_set;
 	vector<vector<int>> key_index_set;
 	vector<int> key_pos_set;
 	vector<int> random_sequence;

@@ -656,6 +656,7 @@ message DataParameter {
   optional bool shuffle = 101 [default = false];
   repeated string multi_source = 102;
   repeated float ratio_sample = 103;
+  repeated string key_files = 104;
 }
 
 message DropoutParameter {
