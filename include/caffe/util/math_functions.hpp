@@ -266,6 +266,26 @@ void caffe_gpu_##name<double>(const int n, const double* x, double* y) { \
       n, x, y); \
 }
 
+
+template <typename Dtype>
+__global__ void channel_div_kernel(const int n, const int channel, const int spat_dim, const Dtype* a,
+	const Dtype* b, Dtype* y) {
+	CUDA_KERNEL_LOOP(index, n) {
+		int ch_res = index / spat_dim;
+		int ch_idx = ch_res % channel;
+		y[index] = a[index] / (b[ch_idx] + FLT_EPSILON);
+	}
+}
+
+template <typename Dtype>
+__global__ void channel_sub_kernel(const int n, const int channel, const int spat_dim, const Dtype* a,
+	const Dtype* b, Dtype* y) {
+	CUDA_KERNEL_LOOP(index, n) {
+		int ch_res = index / spat_dim;
+		int ch_idx = ch_res % channel;
+		y[index] = a[index] - b[ch_idx];
+	}
+}
 #endif  // !CPU_ONLY
 
 }  // namespace caffe

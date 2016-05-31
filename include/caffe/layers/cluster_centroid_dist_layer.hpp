@@ -45,6 +45,8 @@ namespace caffe{
 		Blob<Dtype> square_feat_;
 		Blob<Dtype> square_cluster_;
 		float scale;
+
+		Blob<Dtype> temp_diff_;
 	};
 }
 

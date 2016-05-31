@@ -56,6 +56,8 @@ namespace caffe{
 		caffe_gpu_add(top[0]->count(), cache_feat_.gpu_data(), top_data, top_data);
 		caffe_gpu_add(top[0]->count(), cache_cluster_.gpu_data(), top_data, top_data);
 		caffe_gpu_scale(top[0]->count(), (Dtype)scale, top_data, top_data);
+		channel_div_kernel<Dtype> << <CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS >> >(
+			top[0]->count(), num_cluster_, 1, top_data, this->blobs_[1]->gpu_data(), top_data);
 		//for (int n = 0; n < bottom[0]->num(); n++)
 		//{
 		//	for (int k = 0; k < num_cluster_; ++k)
@@ -95,9 +97,16 @@ namespace caffe{
 		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom)
 	{
 		Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-		const Dtype* top_diff = top[0]->gpu_diff();
-		Dtype* centroid_diff = this->blobs_[0]->mutable_gpu_diff();
+		channel_div_kernel<Dtype> << <CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS >> >(
+			top[0]->count(), 
+			num_cluster_, 
+			1, 
+			top[0]->gpu_diff(), 
+			this->blobs_[1]->gpu_data(), 
+			temp_diff_.mutable_gpu_data());
 
+		Dtype* centroid_diff = this->blobs_[0]->mutable_gpu_diff();
+		const Dtype* top_diff = temp_diff_.gpu_data();
 		const Dtype* centroid_data = this->blobs_[0]->gpu_data();
 		const Dtype* top_data = top[0]->gpu_data();
 		//sum diff along centroid num

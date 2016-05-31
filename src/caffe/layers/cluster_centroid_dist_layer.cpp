@@ -14,12 +14,17 @@ namespace caffe{
 		cluster_shape[0] = num_cluster_;
 		cluster_shape[1] = centroid_dim_;
 
-		this->blobs_.resize(1);
+		this->blobs_.resize(2);
 		this->blobs_[0].reset(new Blob<Dtype>(cluster_shape));
 		shared_ptr<Filler<Dtype>> cluster_filler(GetFiller<Dtype>(
 			this->layer_param_.cluster_centroid_param().centroid_filler()));
 		cluster_filler->Fill(this->blobs_[0].get());
 		scale = this->layer_param_.cluster_centroid_param().scale();
+
+		cluster_shape.clear();
+		cluster_shape.push_back(num_cluster_);
+		this->blobs_[1].reset(new Blob<Dtype>(cluster_shape));
+		caffe_set(num_cluster_, (Dtype)1.0, this->blobs_[1]->mutable_cpu_data());
 	}
 
 	template <typename Dtype>
@@ -50,6 +55,8 @@ namespace caffe{
 		vector<int> column_shape(1);
 		column_shape[0] = std::max(bottom[0]->num(), num_cluster_);
 		column_.Reshape(column_shape);
+		temp_diff_.ReshapeLike(*top[0]);
+
 	}
 
 	template <typename Dtype>
@@ -86,6 +93,12 @@ namespace caffe{
 		caffe_add(top[0]->count(), cache_feat_.cpu_data(), top_data, top_data);
 		caffe_add(top[0]->count(), cache_cluster_.cpu_data(), top_data, top_data);
 		caffe_cpu_scale(top[0]->count(), (Dtype)scale, top_data, top_data);
+		for (int i = 0; i < top[0]->count(); ++i)
+		{
+			int ch_idx = i % num_cluster_;
+			top_data[i] = top_data[i] / (this->blobs_[1]->gpu_data()[ch_idx] + FLT_EPSILON);
+		}
+
 		//const Dtype* bottom_data = bottom[0]->cpu_data();
 		//Dtype* top_data = top[0]->mutable_cpu_data();
 		//Dtype* diff_data = diff_.mutable_cpu_data();

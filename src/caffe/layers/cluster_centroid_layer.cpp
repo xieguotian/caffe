@@ -14,11 +14,16 @@ namespace caffe{
 		cluster_shape[0] = num_cluster_;
 		cluster_shape[1] = centroid_dim_;
 
-		this->blobs_.resize(1);
+		this->blobs_.resize(2);
 		this->blobs_[0].reset(new Blob<Dtype>(cluster_shape));
 		shared_ptr<Filler<Dtype>> cluster_filler(GetFiller<Dtype>(
 			this->layer_param_.cluster_centroid_param().centroid_filler()));
 		cluster_filler->Fill(this->blobs_[0].get());
+
+		cluster_shape.clear();
+		cluster_shape.push_back(num_cluster_);
+		this->blobs_[1].reset(new Blob<Dtype>(cluster_shape));
+		caffe_set(num_cluster_, (Dtype)1.0, this->blobs_[1]->mutable_cpu_data());
 	}
 
 	template <typename Dtype>
