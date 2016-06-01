@@ -21,8 +21,8 @@ namespace caffe{
 		cluster_filler->Fill(this->blobs_[0].get());
 		scale = this->layer_param_.cluster_centroid_param().scale();
 
-		cluster_shape.clear();
-		cluster_shape.push_back(num_cluster_);
+		//cluster_shape.clear();
+		//cluster_shape.push_back(num_cluster_);
 		this->blobs_[1].reset(new Blob<Dtype>(cluster_shape));
 		caffe_set(num_cluster_, (Dtype)1.0, this->blobs_[1]->mutable_cpu_data());
 	}
@@ -55,7 +55,7 @@ namespace caffe{
 		vector<int> column_shape(1);
 		column_shape[0] = std::max(bottom[0]->num(), num_cluster_);
 		column_.Reshape(column_shape);
-		temp_diff_.ReshapeLike(*top[0]);
+		//temp_diff_.ReshapeLike(*top[0]);
 
 	}
 

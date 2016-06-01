@@ -66,6 +66,7 @@ class DataReader {
 	vector<int> key_index;
 	int key_position;
 	bool use_other_label = false;
+	bool use_key_files = false;
 
 	vector<vector<string>> key_list_set;
 	vector<vector<int>> label_list_set;

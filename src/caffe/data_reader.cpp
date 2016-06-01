@@ -114,6 +114,27 @@ void DataReader::Body::InternalThreadEntry() {
 			key_position = 0;
 			cursor->SeekByKey(key_list[key_index[key_position]]);
 		}
+		else if (param_.data_param().key_files_size()>0)
+		{
+			use_key_files = true;
+			use_other_label = true;
+			key_list.clear();
+			label_list.clear();
+			std::ifstream key_file(param_.data_param().key_files(0));
+			string key;
+			int label;
+			while (key_file >> key >> label)
+			{
+				key_list.push_back(key);
+				label_list.push_back(label);
+			}
+			for (int i = 0; i < key_list.size(); ++i)
+			{
+				key_index.push_back(i);
+			}
+			key_position = 0;
+			cursor->SeekByKey(key_list[key_index[key_position]]);
+		}
 		vector<shared_ptr<QueuePair> > qps;
 		try {
 			int solver_count = param_.phase() == TRAIN ? Caffe::solver_count() : 1;
@@ -308,6 +329,17 @@ void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
 				std::random_shuffle(key_index.begin(), key_index.end());
 				key_position = 0;
 			}
+			cursor->SeekByKey(key_list[key_index[key_position]]);
+		}
+		else if (use_key_files)
+		{
+			//LOG(INFO) << key_list[key_index[key_position]] << " vs " << cursor->key() << " label: " << datum->label();
+			key_position++;
+			if (key_position >= key_index.size())
+			{
+				key_position = 0;
+			}
+			
 			cursor->SeekByKey(key_list[key_index[key_position]]);
 		}
 		else
