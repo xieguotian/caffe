@@ -407,6 +407,7 @@ message LayerParameter {
   optional SmoothL1LossParameter smooth_l1_loss_param = 8266719;
   optional ClusterCentroidParameter cluster_centroid_param = 8266720;
   optional Base64DataParameter base64_data_param = 8266721;
+  optional BinaryBoundingParameter binary_bounding_param = 8266722; 
 }
 
 // message for multi-scale image argumentation
@@ -1524,3 +1525,14 @@ message Base64DataParameter {
   optional string root_folder = 12 [default = ""];
   optional uint32 data_size = 14 [default = 0];
 }
+
+message BinaryBoundingParameter{
+	optional float alpha = 1 [default=1];
+	optional float beta = 2 [default=1];
+	optional bool update_centroid = 3 [default=false];
+	optional uint32 dustbin_label = 4 [default = 0];
+	optional float ratio = 5 [default = 0.99];
+	optional float threshold = 6[default = 1];
+	optional bool not_initialed = 7 [default = false];
+}
+

@@ -24,7 +24,7 @@ namespace caffe{
 		//cluster_shape.clear();
 		//cluster_shape.push_back(num_cluster_);
 		this->blobs_[1].reset(new Blob<Dtype>(cluster_shape));
-		caffe_set(num_cluster_, (Dtype)1.0, this->blobs_[1]->mutable_cpu_data());
+		caffe_set(this->blobs_[1]->count(), (Dtype)1.0, this->blobs_[1]->mutable_cpu_data());
 	}
 
 	template <typename Dtype>
@@ -35,9 +35,6 @@ namespace caffe{
 		top_shape[0] = bottom[0]->num();
 		top_shape[1] = num_cluster_;
 		top[0]->Reshape(top_shape);
-
-		cache_feat_.Reshape(top_shape);
-		cache_cluster_.Reshape(top_shape);
 		
 		vector<int> square_shape(2);
 		square_shape[0] = bottom[0]->num();
@@ -63,6 +60,9 @@ namespace caffe{
 	void ClusterCentroidDistLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 		const vector<Blob<Dtype>*>& top)
 	{
+		NOT_IMPLEMENTED;
+
+		/*
 		const Dtype* bottom_data = bottom[0]->cpu_data();
 		Dtype* top_data = top[0]->mutable_cpu_data();
 		const Dtype* centroid_data = this->blobs_[0]->cpu_data();
@@ -98,7 +98,7 @@ namespace caffe{
 			int ch_idx = i % num_cluster_;
 			top_data[i] = top_data[i] / (this->blobs_[1]->gpu_data()[ch_idx] + FLT_EPSILON);
 		}
-
+		*/
 		//const Dtype* bottom_data = bottom[0]->cpu_data();
 		//Dtype* top_data = top[0]->mutable_cpu_data();
 		//Dtype* diff_data = diff_.mutable_cpu_data();

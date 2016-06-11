@@ -26,7 +26,9 @@
     <CudaCompile Include="..\..\src\caffe\layers\batch_norm_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\batch_reindex_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\bias_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\binary_bounding_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\bnll_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\cluster_centroid_dist_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\col2img_mask_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\concat_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\contrastive_loss_layer.cu" />
@@ -120,7 +122,9 @@
     <ClCompile Include="..\..\src\caffe\layers\batch_norm_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\batch_reindex_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\bias_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\binary_bounding_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\bnll_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\cluster_centroid_dist_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\col2img_mask_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\concat_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\contrastive_loss_layer.cpp" />
@@ -222,8 +226,10 @@
     <ClCompile Include="..\..\src\caffe\test\test_batch_norm_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_batch_reindex_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_bias_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_binary_bounding_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_blob.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_caffe_main.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_centroid_dist_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_col2img_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_common.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_concat_layer.cpp" />
@@ -584,7 +590,7 @@
       <AdditionalDependencies>opencv_core2410.lib;opencv_imgproc2410.lib;opencv_highgui2410.lib;cudart.lib;cuda.lib;nppi.lib;cufft.lib;cublas.lib;curand.lib;gflags.lib;libglog.lib;libopenblas.dll.a;libprotobuf.lib;libprotoc.lib;leveldb.lib;lmdb.lib;hdf5.lib;hdf5_hl.lib;Shlwapi.lib;cudnn.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CudaCompile>
-      <CodeGeneration>compute_30,sm_30;compute_35,sm_35</CodeGeneration>
+      <CodeGeneration>compute_35,sm_35</CodeGeneration>
       <TargetMachinePlatform>64</TargetMachinePlatform>
     </CudaCompile>
   </ItemDefinitionGroup>

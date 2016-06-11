@@ -20,8 +20,8 @@ namespace caffe{
 			this->layer_param_.cluster_centroid_param().centroid_filler()));
 		cluster_filler->Fill(this->blobs_[0].get());
 
-		cluster_shape.clear();
-		cluster_shape.push_back(num_cluster_);
+		//cluster_shape.clear();
+		//cluster_shape.push_back(num_cluster_);
 		this->blobs_[1].reset(new Blob<Dtype>(cluster_shape));
 		caffe_set(num_cluster_, (Dtype)1.0, this->blobs_[1]->mutable_cpu_data());
 	}
