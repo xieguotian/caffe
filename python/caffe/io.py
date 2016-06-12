@@ -48,7 +48,7 @@ def array_to_blobproto(arr, diff=None):
     return blob
 
 
-def arraylist_to_blobprotovecor_str(arraylist):
+def arraylist_to_blobprotovector_str(arraylist):
     """Converts a list of arrays to a serialized blobprotovec, which could be
     then passed to a network for processing.
     """
@@ -65,7 +65,7 @@ def blobprotovector_str_to_arraylist(str):
     return [blobproto_to_array(blob) for blob in vec.blobs]
 
 
-def array_to_datum(arr, label=0):
+def array_to_datum(arr, label=None):
     """Converts a 3-dimensional array to datum. If the array has dtype uint8,
     the output data will be encoded as a string. Otherwise, the output data
     will be stored in float format.
@@ -78,7 +78,8 @@ def array_to_datum(arr, label=0):
         datum.data = arr.tostring()
     else:
         datum.float_data.extend(arr.flat)
-    datum.label = label
+    if label is not None:
+        datum.label = label
     return datum
 
 
