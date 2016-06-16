@@ -79,7 +79,7 @@ class Solver {
    protected:
     virtual void on_start() = 0;
     virtual void on_gradients_ready() = 0;
-
+	virtual void on_loss_ready() = 0;
     template <typename T>
     friend class Solver;
   };
@@ -94,6 +94,28 @@ class Solver {
    */
   virtual inline const char* type() const { return ""; }
 
+  Dtype get_smooth_loss() { return smoothed_loss_; }
+  void set_show_smoothed_loss(Dtype show_loss) { show_smoothed_loss_ = show_loss; }
+  void set_show_result(vector<shared_ptr<Blob<Dtype>>> show_result) {
+	  if (show_result_vec_.size() != show_result.size())
+	  {
+		  show_result_vec_.resize(show_result.size());
+		  for (int j = 0; j < show_result_vec_.size(); ++j)
+			  show_result_vec_[j].reset(new Blob<Dtype>());
+	  }
+
+	  for (int j = 0; j < show_result.size(); ++j)
+	  {
+		  if (show_result[j]->count() != show_result_vec_[j]->count())
+		  {
+			  show_result_vec_[j]->ReshapeLike(*show_result[j]);
+		  }
+		  memcpy(
+			  show_result_vec_[j]->mutable_cpu_data(),
+			  show_result[j]->cpu_data(),
+			  show_result[j]->count()*sizeof(Dtype));
+	  }
+  }
  protected:
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
@@ -117,6 +139,8 @@ class Solver {
   vector<Callback*> callbacks_;
   vector<Dtype> losses_;
   Dtype smoothed_loss_;
+  Dtype show_smoothed_loss_;
+  vector<shared_ptr<Blob<Dtype>>> show_result_vec_;
 
   // The root solver that holds root nets (actually containing shared layers)
   // in data parallelism

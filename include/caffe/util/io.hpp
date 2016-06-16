@@ -152,6 +152,8 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 void DatumToCVMat(const Datum* datum, cv::Mat& cv_img);
 #endif  // USE_OPENCV
 
+bool SetBufferToDatum(string buffer, const int label,
+	Datum* datum);
 }  // namespace caffe
 
 #endif   // CAFFE_UTIL_IO_H_

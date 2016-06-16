@@ -230,9 +230,14 @@ void Solver<Dtype>::Step(int iters) {
     // average the loss across iterations for smoothed reporting
     UpdateSmoothedLoss(loss, start_iter, average_loss);
     if (display) {
-      LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
-          << ", loss = " << smoothed_loss_;
-      const vector<Blob<Dtype>*>& result = net_->output_blobs();
+      /*LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
+          << ", loss = " << smoothed_loss_;*/
+		for (int i = 0; i < callbacks_.size(); ++i) {
+			callbacks_[i]->on_loss_ready();
+		}
+		LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
+			<< ", loss = " << show_smoothed_loss_;
+		const vector<shared_ptr<Blob<Dtype>>>& result = show_result_vec_;// net_->output_blobs();
       int score_index = 0;
       for (int j = 0; j < result.size(); ++j) {
         const Dtype* result_vec = result[j]->cpu_data();

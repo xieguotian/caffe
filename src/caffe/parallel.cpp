@@ -12,6 +12,7 @@
 #include "boost/thread.hpp"
 #include "caffe/caffe.hpp"
 #include "caffe/parallel.hpp"
+#include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
@@ -437,6 +438,83 @@ void P2PSync<Dtype>::Run(const vector<int>& gpus) {
   }
 }
 
+template<typename Dtype>
+void P2PSync<Dtype>::on_loss_ready()
+{
+	smoothed_loss_tmp_ = solver_->get_smooth_loss();
+
+	vector<Blob<Dtype>*> show_result_vec = solver_->net()->output_blobs();
+
+	if (show_result_vec.size() != show_result_.size())
+	{
+		show_result_.resize(show_result_vec.size());
+		for (int j = 0; j < show_result_.size(); ++j)
+			show_result_[j].reset(new Blob<Dtype>());
+
+	}
+	for (int j = 0; j < show_result_.size(); ++j)
+	{
+		if (show_result_[j]->count() != show_result_vec[j]->count())
+		{
+			show_result_[j]->ReshapeLike(*show_result_vec[j]);
+		}
+		memcpy(
+			show_result_[j]->mutable_cpu_data(),
+			show_result_vec[j]->cpu_data(),
+			show_result_vec[j]->count()*sizeof(Dtype));
+	}
+	// Sum children gradients as they appear in the queue
+	for (int i = 0; i < children_.size(); ++i) {
+		P2PSync<Dtype> *child = queue_.pop();
+		smoothed_loss_tmp_ += child->parent_loss_;
+
+		for (int j = 0; j < show_result_.size(); ++j)
+		{
+			for (int k = 0; k < show_result_[j]->count(); ++k)
+			{
+				show_result_[j]->mutable_cpu_data()[k] +=
+					child->parent_result_[j]->cpu_data()[k];
+			}
+		}
+	}
+
+	// Send gradients to parent
+	if (parent_) {
+		parent_loss_ = smoothed_loss_tmp_;
+
+		if (show_result_.size() != parent_result_.size())
+		{
+			parent_result_.resize(show_result_.size());
+			for (int j = 0; j < parent_result_.size(); ++j)
+				parent_result_[j].reset(new Blob<Dtype>());
+
+		}
+		for (int j = 0; j < show_result_.size(); ++j)
+		{
+			if (parent_result_[j]->count() != show_result_[j]->count())
+			{
+				parent_result_[j]->ReshapeLike(*show_result_[j]);
+			}
+			memcpy(
+				parent_result_[j]->mutable_cpu_data(),
+				show_result_[j]->cpu_data(),
+				show_result_[j]->count()*sizeof(Dtype));
+		}
+		parent_->queue_.push(this);
+	}
+	else {
+		smoothed_loss_tmp_ = smoothed_loss_tmp_ / Caffe::solver_count();
+		for (int j = 0; j < show_result_.size(); ++j)
+		{
+			for (int k = 0; k < show_result_[j]->count(); ++k)
+			{
+				show_result_[j]->mutable_cpu_data()[k] /= Caffe::solver_count();
+			}
+		}
+		solver_->set_show_smoothed_loss(smoothed_loss_tmp_);
+		solver_->set_show_result(show_result_);
+	}
+}
 INSTANTIATE_CLASS(Params);
 INSTANTIATE_CLASS(GPUParams);
 INSTANTIATE_CLASS(P2PSync);
