@@ -189,7 +189,7 @@ bool ReadFileToDatum(const string& filename, const int label,
 bool SetBufferToDatum(string buffer, const int label,
 	Datum* datum) {
 	std::streampos size;
-	std::string buffer;
+	//std::string buffer;
 	datum->set_data(buffer);
 	datum->set_label(label);
 	datum->set_encoded(true);

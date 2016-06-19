@@ -76,6 +76,42 @@ class GradientChecker {
   Dtype kink_range_;
 };
 
+template<typename Dtype>
+void CopyBlobVector(const vector<Blob<Dtype>*> input, vector<Blob<Dtype>*>& output)
+{
+	if (input.size() != output.size())
+	{
+		output.resize(input.size());
+		for (int i = 0; i < output.size(); ++i)
+			output[i] = new Blob<Dtype>();
+	}
+
+	for (int i = 0; i < input.size(); ++i)
+	{
+		if (output[i]->count() != input[i]->count())
+		{
+			output[i]->ReshapeLike(*input[i]);
+		}
+		memcpy(
+			output[i]->mutable_cpu_data(), 
+			input[i]->cpu_data(), 
+			input[i]->count()*sizeof(Dtype));
+	}
+}
+
+
+template<typename Dtype>
+void CopyBlobDiffVector(const vector<Blob<Dtype>*> input, const vector<Blob<Dtype>*>& output)
+{
+
+	for (int i = 0; i < input.size(); ++i)
+	{
+		memcpy(
+			output[i]->mutable_cpu_diff(),
+			input[i]->cpu_diff(),
+			input[i]->count()*sizeof(Dtype));
+	}
+}
 
 template <typename Dtype>
 void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
@@ -113,10 +149,14 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
   Caffe::set_random_seed(seed_);
   // Ignore the loss from the layer (it's just the weighted sum of the losses
   // from the top blobs, whose gradients we may want to test individually).
-  layer->Forward(bottom, top);
+
+  vector<Blob<Dtype>*> tmp_bottom;
+  CopyBlobVector<Dtype>(bottom, tmp_bottom);
+  layer->Forward(tmp_bottom, top);
   // Get additional loss from the objective
   GetObjAndGradient(*layer, top, top_id, top_data_id);
-  layer->Backward(top, propagate_down, bottom);
+  layer->Backward(top, propagate_down, tmp_bottom);
+  CopyBlobDiffVector(tmp_bottom, bottom);
   // Store computed gradients for all checked blobs
   vector<shared_ptr<Blob<Dtype> > >
       computed_gradient_blobs(blobs_to_check.size());
@@ -153,13 +193,15 @@ void GradientChecker<Dtype>::CheckGradientSingle(Layer<Dtype>* layer,
         // Compute loss with stepsize_ added to input.
         current_blob->mutable_cpu_data()[feat_id] += stepsize_;
         Caffe::set_random_seed(seed_);
-        layer->Forward(bottom, top);
+		CopyBlobVector<Dtype>(bottom, tmp_bottom);
+		layer->Forward(tmp_bottom, top);
         positive_objective =
             GetObjAndGradient(*layer, top, top_id, top_data_id);
         // Compute loss with stepsize_ subtracted from input.
         current_blob->mutable_cpu_data()[feat_id] -= stepsize_ * 2;
         Caffe::set_random_seed(seed_);
-        layer->Forward(bottom, top);
+		CopyBlobVector<Dtype>(bottom, tmp_bottom);
+		layer->Forward(tmp_bottom, top);
         negative_objective =
             GetObjAndGradient(*layer, top, top_id, top_data_id);
         // Recover original input value.

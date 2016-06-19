@@ -445,6 +445,7 @@ void P2PSync<Dtype>::on_loss_ready()
 
 	vector<Blob<Dtype>*> show_result_vec = solver_->net()->output_blobs();
 
+	// reshape show_result_
 	if (show_result_vec.size() != show_result_.size())
 	{
 		show_result_.resize(show_result_vec.size());
@@ -482,6 +483,7 @@ void P2PSync<Dtype>::on_loss_ready()
 	if (parent_) {
 		parent_loss_ = smoothed_loss_tmp_;
 
+		// reshape parent_result_
 		if (show_result_.size() != parent_result_.size())
 		{
 			parent_result_.resize(show_result_.size());

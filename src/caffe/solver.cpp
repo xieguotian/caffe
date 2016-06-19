@@ -233,11 +233,12 @@ void Solver<Dtype>::Step(int iters) {
       /*LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
           << ", loss = " << smoothed_loss_;*/
 		for (int i = 0; i < callbacks_.size(); ++i) {
-			callbacks_[i]->on_loss_ready();
+			callbacks_[i]->on_loss_ready(); 
 		}
 		LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
 			<< ", loss = " << show_smoothed_loss_;
-		const vector<shared_ptr<Blob<Dtype>>>& result = show_result_vec_;// net_->output_blobs();
+		//const /*vector<shared_ptr<Blob<Dtype>>>&*/vector<Blob<Dtype>*>& result = net_->output_blobs();//show_result_vec_;// net_->output_blobs();
+		const vector<shared_ptr<Blob<Dtype>>>& result = show_result_vec_;
       int score_index = 0;
       for (int j = 0; j < result.size(); ++j) {
         const Dtype* result_vec = result[j]->cpu_data();
