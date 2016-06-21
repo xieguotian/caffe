@@ -207,6 +207,7 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
       parent_(parent),
       children_(),
       queue_(),
+	  queue2_(),
       initial_iter_(root_solver->iter()),
       solver_() {
 #ifndef CPU_ONLY
@@ -443,7 +444,7 @@ void P2PSync<Dtype>::on_loss_ready()
 {
 	smoothed_loss_tmp_ = solver_->get_smooth_loss();
 
-	vector<Blob<Dtype>*> show_result_vec = solver_->net()->output_blobs();
+	vector<shared_ptr<Blob<Dtype>>> show_result_vec = solver_->get_smooth_result();//solver_->net()->output_blobs();
 
 	// reshape show_result_
 	if (show_result_vec.size() != show_result_.size())
@@ -466,7 +467,7 @@ void P2PSync<Dtype>::on_loss_ready()
 	}
 	// Sum children gradients as they appear in the queue
 	for (int i = 0; i < children_.size(); ++i) {
-		P2PSync<Dtype> *child = queue_.pop();
+		P2PSync<Dtype> *child = queue2_.pop();
 		smoothed_loss_tmp_ += child->parent_loss_;
 
 		for (int j = 0; j < show_result_.size(); ++j)
@@ -502,7 +503,7 @@ void P2PSync<Dtype>::on_loss_ready()
 				show_result_[j]->cpu_data(),
 				show_result_[j]->count()*sizeof(Dtype));
 		}
-		parent_->queue_.push(this);
+		parent_->queue2_.push(this);
 	}
 	else {
 		smoothed_loss_tmp_ = smoothed_loss_tmp_ / Caffe::solver_count();

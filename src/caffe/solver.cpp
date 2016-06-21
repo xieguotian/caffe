@@ -489,6 +489,52 @@ void Solver<Dtype>::Restore(const char* state_file) {
   }
 }
 
+template<typename Dtype>
+void CopyBlobVector(const vector<Blob<Dtype>*> input, vector<shared_ptr<Blob<Dtype>>>& output)
+{
+	if (input.size() != output.size())
+	{
+		output.resize(input.size());
+		for (int i = 0; i < output.size(); ++i)
+			output[i].reset(new Blob<Dtype>());
+	}
+
+	for (int i = 0; i < input.size(); ++i)
+	{
+		if (output[i]->count() != input[i]->count())
+		{
+			output[i]->ReshapeLike(*input[i]);
+		}
+		memcpy(
+			output[i]->mutable_cpu_data(),
+			input[i]->cpu_data(),
+			input[i]->count()*sizeof(Dtype));
+	}
+}
+
+template<typename Dtype>
+void CopyBlobVector(const vector<shared_ptr<Blob<Dtype>>> input, vector<shared_ptr<Blob<Dtype>>>& output)
+{
+	if (input.size() != output.size())
+	{
+		output.resize(input.size());
+		for (int i = 0; i < output.size(); ++i)
+			output[i].reset(new Blob<Dtype>());
+	}
+
+	for (int i = 0; i < input.size(); ++i)
+	{
+		if (output[i]->count() != input[i]->count())
+		{
+			output[i]->ReshapeLike(*input[i]);
+		}
+		memcpy(
+			output[i]->mutable_cpu_data(),
+			input[i]->cpu_data(),
+			input[i]->count()*sizeof(Dtype));
+	}
+}
+
 template <typename Dtype>
 void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int start_iter,
     int average_loss) {
@@ -496,10 +542,52 @@ void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int start_iter,
     losses_.push_back(loss);
     int size = losses_.size();
     smoothed_loss_ = (smoothed_loss_ * (size - 1) + loss) / size;
+
+	vector<shared_ptr<Blob<Dtype>>> tmp_result;
+	CopyBlobVector<Dtype>(net_->output_blobs(), tmp_result);
+	results_set_.push_back(tmp_result);
+	
+	for (int i = 0; i < tmp_result.size(); ++i)
+	{
+		if (smoothed_result_vec_.size() != tmp_result.size())
+		{
+			CopyBlobVector(tmp_result, smoothed_result_vec_);
+		}
+		else
+		{
+			for (int j = 0; j < tmp_result[i]->count(); ++j)
+			{
+				smoothed_result_vec_[i]->mutable_cpu_data()[j] *= (size - 1);
+				smoothed_result_vec_[i]->mutable_cpu_data()[j] += tmp_result[i]->cpu_data()[j];
+				smoothed_result_vec_[i]->mutable_cpu_data()[j] /= size;
+			}
+		}
+	}
   } else {
     int idx = (iter_ - start_iter) % average_loss;
     smoothed_loss_ += (loss - losses_[idx]) / average_loss;
     losses_[idx] = loss;
+
+	vector<shared_ptr<Blob<Dtype>>> tmp_result;
+	CopyBlobVector<Dtype>(net_->output_blobs(), tmp_result);
+	vector<shared_ptr<Blob<Dtype>>> old = results_set_[idx];
+	for (int i = 0; i < tmp_result.size(); ++i)
+	{
+		if (smoothed_result_vec_.size() != tmp_result.size())
+		{
+			CopyBlobVector(tmp_result, smoothed_result_vec_);
+		}
+		else
+		{
+			for (int j = 0; j < tmp_result[i]->count(); ++j)
+			{
+				smoothed_result_vec_[i]->mutable_cpu_data()[j] += 
+					(tmp_result[i]->cpu_data()[j]-
+					old[i]->cpu_data()[j])/average_loss;
+			}
+		}
+	}
+	results_set_[idx] = tmp_result;
   }
 }
 

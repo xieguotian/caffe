@@ -281,6 +281,7 @@
     <ClInclude Include="..\..\include\caffe\util\blocking_queue.hpp" />
     <ClInclude Include="..\..\include\caffe\util\cudnn.hpp" />
     <ClInclude Include="..\..\include\caffe\util\db.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\db_base64.hpp" />
     <ClInclude Include="..\..\include\caffe\util\db_leveldb.hpp" />
     <ClInclude Include="..\..\include\caffe\util\db_lmdb.hpp" />
     <ClInclude Include="..\..\include\caffe\util\device_alternate.hpp" />

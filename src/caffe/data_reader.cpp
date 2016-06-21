@@ -170,12 +170,24 @@ void DataReader::Body::InternalThreadEntry() {
 		vector < shared_ptr<db::Cursor>> cursor_set;
 		for (int i = 0; i < param_.data_param().multi_source_size(); ++i)
 		{
-			shared_ptr<db::DB> db(db::GetDB(param_.data_param().backend()));
-			db->Open(param_.data_param().multi_source(i), db::READ);
-			db_set.push_back(db);
+			if (param_.data_param().multi_backends_size()>0)
+			{
+				shared_ptr<db::DB> db(db::GetDB(param_.data_param().multi_backends(i)));
+				db->Open(param_.data_param().multi_source(i), db::READ);
+				db_set.push_back(db);
 
-			shared_ptr<db::Cursor> cursor(db->NewCursor());
-			cursor_set.push_back(cursor);
+				shared_ptr<db::Cursor> cursor(db->NewCursor());
+				cursor_set.push_back(cursor);
+			}
+			else
+			{
+				shared_ptr<db::DB> db(db::GetDB(param_.data_param().backend()));
+				db->Open(param_.data_param().multi_source(i), db::READ);
+				db_set.push_back(db);
+
+				shared_ptr<db::Cursor> cursor(db->NewCursor());
+				cursor_set.push_back(cursor);
+			}
 		}
 		
 		//random sequence.
@@ -368,7 +380,10 @@ void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
 		qp->full_.push(datum);
 		DLOG(INFO) << key_list_set[cur_idx][key_index_set[cur_idx][key_pos_set[cur_idx]]] << " vs " << cursor->key() << " label: " << datum->label();
 		if (!cursor->valid())
+		{
 			LOG(INFO) << "invalid key: " << key_list_set[cur_idx][key_index_set[cur_idx][key_pos_set[cur_idx]]];
+			CHECK(cursor->valid());
+		}
 		// go to the next iter
 		if (shuffle)
 		{

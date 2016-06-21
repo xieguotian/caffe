@@ -21,7 +21,7 @@
         <CudaArchitecture>compute_35,sm_35;compute_52,sm_52</CudaArchitecture>
 
         <!-- CuDNN 3 and 4 are supported -->
-        <CuDnnPath>D:\users\v-guoxie\caffe2\3rdparty</CuDnnPath>
+        <CuDnnPath>$(SolutionDir)\..\3rdparty</CuDnnPath>
         <ScriptsDir>$(SolutionDir)\scripts</ScriptsDir>
     </PropertyGroup>
     <PropertyGroup Condition="'$(CpuOnlyBuild)'=='false'">

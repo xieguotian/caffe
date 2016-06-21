@@ -95,6 +95,8 @@ class Solver {
   virtual inline const char* type() const { return ""; }
 
   Dtype get_smooth_loss() { return smoothed_loss_; }
+  vector<shared_ptr<Blob<Dtype>>> get_smooth_result() { return smoothed_result_vec_; }
+
   void set_show_smoothed_loss(Dtype show_loss) { show_smoothed_loss_ = show_loss; }
   void set_show_result(vector<shared_ptr<Blob<Dtype>>> show_result) {
 	  if (show_result_vec_.size() != show_result.size())
@@ -141,7 +143,8 @@ class Solver {
   Dtype smoothed_loss_;
   Dtype show_smoothed_loss_;
   vector<shared_ptr<Blob<Dtype>>> show_result_vec_;
-
+  vector<shared_ptr<Blob<Dtype>>> smoothed_result_vec_;
+  vector<vector<shared_ptr<Blob<Dtype>>>> results_set_;
   // The root solver that holds root nets (actually containing shared layers)
   // in data parallelism
   const Solver* const root_solver_;

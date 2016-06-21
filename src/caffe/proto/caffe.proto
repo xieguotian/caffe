@@ -652,6 +652,7 @@ message DataParameter {
   enum DB {
     LEVELDB = 0;
     LMDB = 1;
+	BASE64 = 2;
   }
   // Specify the data source.
   optional string source = 1;
@@ -684,6 +685,8 @@ message DataParameter {
   repeated string multi_source = 102;
   repeated float ratio_sample = 103;
   repeated string key_files = 104;
+  
+  repeated DB multi_backends = 105;
 }
 
 message DropoutParameter {

@@ -156,8 +156,8 @@ def plot_chart(chart_type, path_to_png, path_to_log_list):
             x_axis_field, y_axis_field = get_field_descriptions(ch_type)
             x, y = get_field_indecies(x_axis_field, y_axis_field,ch_type)
             data = load_data(data_file, x, y)
-            if ix==0:
-                data = smooth_data2(data,50)
+            #if ix==0:
+            #    data = smooth_data2(data,50)
             ## TODO: more systematic color cycle for lines
             color = [random.random(), random.random(), random.random()]
             label = get_data_label(path_to_log,ch_type)

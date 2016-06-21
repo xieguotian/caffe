@@ -108,6 +108,7 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
   P2PSync<Dtype>* parent_;
   vector<P2PSync<Dtype>*> children_;
   BlockingQueue<P2PSync<Dtype>*> queue_;
+  BlockingQueue<P2PSync<Dtype>*> queue2_;
   const int initial_iter_;
   Dtype* parent_grads_;
   shared_ptr<Solver<Dtype> > solver_;
