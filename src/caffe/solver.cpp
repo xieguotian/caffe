@@ -230,6 +230,11 @@ void Solver<Dtype>::Step(int iters) {
     // average the loss across iterations for smoothed reporting
     UpdateSmoothedLoss(loss, start_iter, average_loss);
     if (display) {
+		if (Caffe::root_solver() && !(callbacks_.size()>0))
+		{
+			this->set_show_result(this->smoothed_result_vec_);
+			this->set_show_smoothed_loss(this->smoothed_loss_);
+		}
       /*LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
           << ", loss = " << smoothed_loss_;*/
 		for (int i = 0; i < callbacks_.size(); ++i) {

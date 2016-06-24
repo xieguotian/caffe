@@ -89,19 +89,8 @@ namespace caffe {
 		class Base64Cursor : public Cursor {
 		public:
 			explicit Base64Cursor( string base64_cursor)
-				: valid_(false) {
+				: valid_(false), is_key_pos_map_ready_(false){
 				base64_cursor_.open(base64_cursor);
-				string line;
-				size_t line_pos = base64_cursor_.beg;
-				while (std::getline(base64_cursor_, line))
-				{
-					int pos = line.find_last_of('\t');
-					string key = line.substr(0, pos);
-					key_pos_map_[key] = line_pos;
-					line_pos = base64_cursor_.tellg();
-				}
-				base64_cursor_.clear();
-				base64_cursor_.seekg(0);
 				SeekToFirst();
 			}
 			virtual ~Base64Cursor() {
@@ -131,6 +120,22 @@ namespace caffe {
 					valid_ = false;
 					LOG(INFO) << "first no line";
 				}
+			}
+			void init_key_pos_map()
+			{
+				LOG(INFO) << "begin initial base64 key-pos map.";
+				string line;
+				size_t line_pos = base64_cursor_.beg;
+				while (std::getline(base64_cursor_, line))
+				{
+					int pos = line.find_last_of('\t');
+					string key = line.substr(0, pos);
+					key_pos_map_[key] = line_pos;
+					line_pos = base64_cursor_.tellg();
+				}
+				base64_cursor_.clear();
+				base64_cursor_.seekg(0);
+				LOG(INFO) << "end initial base64 key-pos map.";
 			}
 			virtual void Next() {
 				string line;
@@ -166,6 +171,11 @@ namespace caffe {
 
 			virtual void SeekByKey(string key)
 			{
+				if (!is_key_pos_map_ready_)
+				{
+					init_key_pos_map();
+					is_key_pos_map_ready_ = true;
+				}
 				if (base64_cursor_.eof())
 				{
 					base64_cursor_.clear();
@@ -206,6 +216,7 @@ namespace caffe {
 			map<string, size_t> key_pos_map_;
 			bool valid_;
 			std::ifstream base64_cursor_;
+			bool is_key_pos_map_ready_;
 		};
 
 		class Baset64Transaction : public Transaction {
