@@ -360,4 +360,18 @@ const char* curandGetErrorString(curandStatus_t error) {
 
 #endif  // CPU_ONLY
 
+vector<string> string_split(const string str, const char split_char)
+{
+	std::stringstream ss(str);
+	std::vector<string> result;
+	string tmp_string="";
+	while (std::getline(ss, tmp_string, split_char))
+	{
+		if (tmp_string != "")
+		{
+			result.push_back(tmp_string);
+		}
+	}
+	return result;
+}
 }  // namespace caffe

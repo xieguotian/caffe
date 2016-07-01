@@ -182,6 +182,7 @@ class Caffe {
   DISABLE_COPY_AND_ASSIGN(Caffe);
 };
 
+vector<string> string_split(const string str, const char split_char = ' ');
 }  // namespace caffe
 
 #endif  // CAFFE_COMMON_HPP_

@@ -81,16 +81,34 @@ void DataReader::Body::InternalThreadEntry() {
 		{
 			key_list.clear();
 			label_list.clear();
+			kl_info_vec.clear();
+
 			if (param_.data_param().key_files_size() > 0)
 			{
 				std::ifstream key_file(param_.data_param().key_files(0));
 				string key;
 				int label;
 				use_other_label = true;
-				while (key_file >> key >>label)
+				//while (key_file >> key >>label)
+				string line;
+				while (std::getline(key_file,line))
 				{
+					vector<string> str_vec = string_split(line, ' ');
+					key = str_vec[0];
+					label = atoi(str_vec[1].c_str());
+
 					key_list.push_back(key);
 					label_list.push_back(label);
+
+					if (str_vec.size() >= 3)
+					{
+						vector<float> tmp_info;
+						for (int info_idx = 2; info_idx < str_vec.size(); ++info_idx)
+						{
+							tmp_info.push_back(std::stof(str_vec[info_idx]));
+						}
+						kl_info_vec.push_back(tmp_info);
+					}
 				}
 			}
 			else
@@ -123,10 +141,26 @@ void DataReader::Body::InternalThreadEntry() {
 			std::ifstream key_file(param_.data_param().key_files(0));
 			string key;
 			int label;
-			while (key_file >> key >> label)
+			//while (key_file >> key >> label)
+			string line;
+			while (std::getline(key_file, line))
 			{
+				vector<string> str_vec = string_split(line, ' ');
+				key = str_vec[0];
+				label = atoi(str_vec[1].c_str());
+
 				key_list.push_back(key);
 				label_list.push_back(label);
+
+				if (str_vec.size() >= 3)
+				{
+					vector<float> tmp_info;
+					for (int info_idx = 2; info_idx < str_vec.size(); ++info_idx)
+					{
+						tmp_info.push_back(std::stof(str_vec[info_idx]));
+					}
+					kl_info_vec.push_back(tmp_info);
+				}
 			}
 			for (int i = 0; i < key_list.size(); ++i)
 			{
@@ -222,11 +256,13 @@ void DataReader::Body::InternalThreadEntry() {
 			key_list_set.clear();
 			key_pos_set.clear();
 			label_list_set.clear();
+			kl_info_set.clear();
 
 			key_index_set.resize(cursor_set.size());
 			key_list_set.resize(cursor_set.size());
 			key_pos_set.resize(cursor_set.size());
 			label_list_set.resize(cursor_set.size());
+			kl_info_set.resize(cursor_set.size());
 
 			for (int idx = 0; idx < cursor_set.size(); ++idx)
 			{
@@ -234,17 +270,36 @@ void DataReader::Body::InternalThreadEntry() {
 
 				key_list_set[idx].clear();
 				label_list_set[idx].clear();
+				kl_info_set[idx].clear();
+
 				if (param_.data_param().key_files_size() > idx)		// has key list file and read them
 				{
 					std::ifstream key_file(param_.data_param().key_files(idx));
 					string key;
 					int label;
 					use_other_label = true;
-					while (key_file >> key>>label)
+					//while (key_file >> key>>label)
+					string line;
+					while (std::getline(key_file, line))
 					{
+						vector<string> str_vec = string_split(line, ' ');
+						key = str_vec[0];
+						label = atoi(str_vec[1].c_str());
+
 						key_list_set[idx].push_back(key);
 						label_list_set[idx].push_back(label);
+
+						if (str_vec.size() >= 3)
+						{
+							vector<float> tmp_info;
+							for (int info_idx = 2; info_idx < str_vec.size(); ++info_idx)
+							{
+								tmp_info.push_back(std::stof(str_vec[info_idx]));
+							}
+							kl_info_set[idx].push_back(tmp_info);
+						}
 					}
+					LOG(INFO) <<"data"<< idx<<":"<<key_list_set[idx].size();
 				}
 				else           // do not has key list file and read from data base.
 				{
@@ -324,6 +379,13 @@ void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
 		datum->ParseFromString(cursor->value());
 		if (use_other_label)
 			datum->set_label(label_list[key_index[key_position]]);
+		if (kl_info_vec.size() > 0)
+		{
+			datum->mutable_float_data()->Resize(kl_info_vec[key_position].size(), 0);
+
+			memcpy(datum->mutable_float_data()->mutable_data(), kl_info_vec[key_position].data(),
+				sizeof(float)*kl_info_vec[key_position].size());
+		}
 
 		qp->full_.push(datum);
 
@@ -377,6 +439,21 @@ void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
 			//	<< ",key: " << key_list_set[cur_idx][key_index_set[cur_idx][key_pos_set[cur_idx]]];
 		}
 
+		if (kl_info_set.size() > 0)
+		{
+			if (kl_info_set[cur_idx].size() > 0)
+			{
+				const float* kl_info_vec_tmp = kl_info_set[cur_idx][key_index_set[cur_idx][key_pos_set[cur_idx]]].data();
+				size_t size_tmp = kl_info_set[cur_idx][key_index_set[cur_idx][key_pos_set[cur_idx]]].size();
+				datum->mutable_float_data()->Resize(size_tmp,0);
+				memcpy(datum->mutable_float_data()->mutable_data(),
+					kl_info_vec_tmp, sizeof(float)*size_tmp);
+				//for (int i = 0; i <kl_info_vec_tmp.size(); ++i)
+				//{
+				//	datum->mutable_float_data()->Set(i, kl_info_vec_tmp[i]);
+				//}
+			}
+		}
 		qp->full_.push(datum);
 		DLOG(INFO) << key_list_set[cur_idx][key_index_set[cur_idx][key_pos_set[cur_idx]]] << " vs " << cursor->key() << " label: " << datum->label();
 		if (!cursor->valid())

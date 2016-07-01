@@ -15,6 +15,8 @@ from ._caffe import Net, SGDSolver, NesterovSolver, AdaGradSolver, \
 import caffe.io
 
 import six
+import datetime
+import os
 
 # We directly update methods from Net here (rather than using composition or
 # inheritance) so that nets created by caffe (e.g., by SGDSolver) will
@@ -292,7 +294,27 @@ def _Net_batch(self, blobs):
                                                  padding])
         yield padded_batch
 
+def SetDataLayerSource(source,dbtype,prototxt,batchsize=None):
+    with open(prototxt) as fid:
+        proto = fid.readlines()
+    pos = prototxt.rfind('.')
 
+    count = 0
+    tmp_name = prototxt[:pos]+'_tmp%d'%count + prototxt[pos:]
+    while os.path.exists(tmp_name):
+        count+=1
+        tmp_name = prototxt[:pos]+'_tmp%d'%count + prototxt[pos:]
+    with open(tmp_name,'w') as fout:
+        for line in proto:
+            if 'source' in line:
+                line = 'source: \"%s\"'% source
+            elif 'backend' in line:
+                line = 'backend: %s' % dbtype
+            if not batchsize==None:
+                if 'batch_size' in line:
+                    line = 'batch_size: %d' %batchsize
+            print >>fout,line.strip('\n')
+    return tmp_name
 class _Net_IdNameWrapper:
     """
     A simple wrapper that allows the ids propery to be accessed as a dict

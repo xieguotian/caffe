@@ -450,6 +450,7 @@ message TransformationParameter {
   optional bool force_gray = 7 [default = false];
   optional ScaleRange multi_scale_param = 8;
   optional bool test10crop = 9 [default = false];
+  optional bool color_shift = 10 [default=false];
 }
 
 // Message that stores parameters shared by loss layers

@@ -49,7 +49,7 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
   }
   // num_images == batch_size_
   Dtype* top_data = added_data_.mutable_cpu_data();
-  Reset(top_data, top_label, num);
+  Reset(top_data, top_label, num,true);
   has_new_data_ = true;
 }
 
@@ -74,19 +74,19 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
   }
   // num_images == batch_size_
   Dtype* top_data = added_data_.mutable_cpu_data();
-  Reset(top_data, top_label, num);
+  Reset(top_data, top_label, num,true);
   has_new_data_ = true;
 }
 #endif  // USE_OPENCV
 
 template <typename Dtype>
-void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n) {
+void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n, bool is_transformed=false) {
   CHECK(data);
   CHECK(labels);
   CHECK_EQ(n % batch_size_, 0) << "n must be a multiple of batch size";
   // Warn with transformation parameters since a memory array is meant to
   // be generic and no transformations are done with Reset().
-  if (this->layer_param_.has_transform_param()) {
+  if (this->layer_param_.has_transform_param() && !is_transformed) {
     LOG(WARNING) << this->type() << " does not transform array data on Reset()";
   }
   data_ = data;

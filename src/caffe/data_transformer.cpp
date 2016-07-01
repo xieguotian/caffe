@@ -131,6 +131,21 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Blob<Dtype>* transformed_blob) {
+	is_color_shift = false;
+	if (datum.float_data_size() > 0 && param_.color_shift())
+	{
+		//for (int i = 0; i < 9; ++i)
+		//{
+		//	**(color_kl_cache_.P+i) = datum.float_data(i);
+		//}
+		memcpy(color_kl_cache_.P, datum.float_data().data(), sizeof(float)* 9);
+		memcpy(color_kl_cache_.SqrtV, datum.float_data().data() + 9, sizeof(float)* 3);
+		//for (int i = 0; i < 3; ++i)
+		//{
+		//	color_kl_cache_.SqrtV[i] = datum.float_data(i + 9);
+		//}
+		is_color_shift = true;
+	}
   // If datum is encoded, decoded and transform the cv::image.
   if (datum.encoded()) {
 #ifdef USE_OPENCV
@@ -457,6 +472,24 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 	  int h_off = 0;
 	  int w_off = 0;
 	  cv::Mat cv_cropped_img = tmp_cv_img;
+
+	  // calculate color shit vector.
+	  Dtype color_shift[3] = { 0, 0, 0 };
+	  if (phase_ == TRAIN && is_color_shift)
+	  {
+		  // modify picture pixels respected to color KL matrix
+		  Dtype a[3];
+		  caffe_rng_gaussian<Dtype>(3, 0, 0.1, a);
+
+		  for (int k = 0; k < 3; k++) 
+		  {
+			  for (int j = 0; j < 3; j++) 
+			  {
+				  color_shift[k] += color_kl_cache_.P[k][j] * color_kl_cache_.SqrtV[j] * a[j];
+			  }
+		  }
+	//LOG(INFO) << color_shift[0] << "," << color_shift[1] << ","<< color_shift[2];
+	  }
 	  if (crop_size) {
 		  CHECK_EQ(crop_size, height);
 		  CHECK_EQ(crop_size, width);
@@ -499,21 +532,21 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 					  if (use_crop_mean)
 					  {
 						  transformed_data[top_index] =
-							  (pixel - mean[top_index]) * scale;
+							  (pixel - mean[top_index] + color_shift[c]) * scale;
 					  }
 					  else
 					  {
 						  transformed_data[top_index] =
-							  (pixel - mean[mean_index]) * scale;
+							  (pixel - mean[mean_index]+color_shift[c]) * scale;
 					  }
 				  }
 				  else {
 					  if (has_mean_values) {
 						  transformed_data[top_index] =
-							  (pixel - mean_values_[c]) * scale;
+							  (pixel - mean_values_[c]+color_shift[c]) * scale;
 					  }
 					  else {
-						  transformed_data[top_index] = pixel * scale;
+						  transformed_data[top_index] = (pixel + color_shift[c]) * scale;
 					  }
 				  }
 			  }

@@ -9,6 +9,13 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <numpy/arrayobject.h>
 
+#ifdef USE_OPENCV
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/highgui/highgui_c.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#endif  // USE_OPENCV
+
 // these need to be included after boost on OS X
 #include <string>  // NOLINT(build/include_order)
 #include <vector>  // NOLINT(build/include_order)
@@ -156,6 +163,24 @@ void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
       PyArray_DIMS(data_arr)[0]);
 }
 
+void Net_SetInputImage(Net<Dtype>* net, string image_path,int label=0) {
+	// check that this network has an input MemoryDataLayer
+	shared_ptr<MemoryDataLayer<Dtype> > md_layer =
+		boost::dynamic_pointer_cast<MemoryDataLayer<Dtype> >(net->layers()[0]);
+	if (!md_layer) {
+		throw std::runtime_error("set_input_arrays may only be called if the"
+			" first layer is a MemoryDataLayer");
+	}
+
+	vector<cv::Mat> image_set;
+	vector<int> label_set;
+	cv::Mat tmp_img;
+	tmp_img = ReadImageToCVMat(image_path, 0, 0, true);
+	image_set.push_back(tmp_img);
+	label_set.push_back(label);
+	md_layer->AddMatVector(image_set, label_set);
+}
+
 Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
   ReadSolverParamsFromTextFileOrDie(filename, &param);
@@ -278,6 +303,8 @@ BOOST_PYTHON_MODULE(_caffe) {
         bp::return_value_policy<bp::copy_const_reference>()))
     .add_property("_layer_names", bp::make_function(&Net<Dtype>::layer_names,
         bp::return_value_policy<bp::copy_const_reference>()))
+	.add_property("_layer_types", bp::make_function(&Net<Dtype>::layer_types,
+		bp::return_value_policy<bp::copy_const_reference>()))
     .add_property("_inputs", bp::make_function(&Net<Dtype>::input_blob_indices,
         bp::return_value_policy<bp::copy_const_reference>()))
     .add_property("_outputs",
@@ -285,6 +312,7 @@ BOOST_PYTHON_MODULE(_caffe) {
         bp::return_value_policy<bp::copy_const_reference>()))
     .def("_set_input_arrays", &Net_SetInputArrays,
         bp::with_custodian_and_ward<1, 2, bp::with_custodian_and_ward<1, 3> >())
+	.def("_set_input_image", &Net_SetInputImage)
     .def("save", &Net_Save)
     .def("save_hdf5", &Net_SaveHDF5)
     .def("load_hdf5", &Net_LoadHDF5);

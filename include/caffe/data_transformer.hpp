@@ -147,6 +147,12 @@ class DataTransformer {
   Phase phase_;
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
+  bool is_color_shift = false;
+  struct kl_info {
+	  float P[3][3];
+	  float SqrtV[3];
+  };
+  kl_info color_kl_cache_;
 };
 
 }  // namespace caffe
