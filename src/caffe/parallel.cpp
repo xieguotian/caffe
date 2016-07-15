@@ -283,7 +283,11 @@ void P2PSync<Dtype>::InternalThreadEntry() {
     Caffe::set_random_seed(
         solver_->param().random_seed() + solver_->param().device_id());
   }
-  solver_->Step(solver_->param().max_iter() - initial_iter_);
+  if (end_iter_ < 0)
+  {
+	  end_iter_ = solver_->param().max_iter();
+  }
+  solver_->Step(end_iter_ - initial_iter_);
 }
 
 template<typename Dtype>
@@ -428,7 +432,7 @@ void P2PSync<Dtype>::Run(const vector<int>& gpus) {
   LOG(INFO)<< "Starting Optimization";
 
   for (int i = 1; i < syncs.size(); ++i) {
-    syncs[i]->StartInternalThread();
+    syncs[i]->StartInternalThread_param();
   }
 
   // Run root solver on current thread

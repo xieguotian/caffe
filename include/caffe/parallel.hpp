@@ -98,6 +98,7 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
                vector<shared_ptr<P2PSync<Dtype> > >* syncs);
   inline const int initial_iter() const { return initial_iter_; }
 
+  inline void StartInternalThread_param(int end_iter = -1){ end_iter_ = end_iter; StartInternalThread(); }
  protected:
   void on_start();
   void on_gradients_ready();
@@ -120,6 +121,8 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
   using Params<Dtype>::size_;
   using Params<Dtype>::data_;
   using Params<Dtype>::diff_;
+
+  int end_iter_;
 };
 
 }  // namespace caffe

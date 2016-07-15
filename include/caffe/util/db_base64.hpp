@@ -64,6 +64,8 @@ namespace caffe {
 		{
 			string img_label = base64_str;
 			int pos = img_label.find_last_of(' '); 
+			if (pos == string::npos)
+				pos = img_label.find_last_of('\t');
 			int label;
 			string img;
 			if (pos == string::npos)
@@ -105,7 +107,7 @@ namespace caffe {
 				string line;
 				if (std::getline(base64_cursor_, line))
 				{
-					int pos = line.find_last_of('\t');
+					int pos = line.find_first_of('\t');
 					if (pos == string::npos)
 					{
 						valid_ = false;
@@ -128,7 +130,7 @@ namespace caffe {
 				size_t line_pos = base64_cursor_.beg;
 				while (std::getline(base64_cursor_, line))
 				{
-					int pos = line.find_last_of('\t');
+					int pos = line.find_first_of('\t');
 					string key = line.substr(0, pos);
 					key_pos_map_[key] = line_pos;
 					line_pos = base64_cursor_.tellg();
@@ -141,7 +143,7 @@ namespace caffe {
 				string line;
 				if (std::getline(base64_cursor_, line))
 				{
-					int pos = line.find_last_of('\t');
+					int pos = line.find_first_of('\t');
 					if (pos == string::npos)
 					{
 						valid_ = false;
@@ -192,7 +194,7 @@ namespace caffe {
 				string line;
 				if (std::getline(base64_cursor_, line))
 				{
-					int pos = line.find_last_of('\t');
+					int pos = line.find_first_of('\t');
 					if (pos == string::npos)
 					{
 						LOG(INFO) << "read key fail: "  << line << "\t" << key;

@@ -988,9 +988,10 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
         Blob<Dtype> source_blob;
         const bool kReshape = true;
         source_blob.FromProto(source_layer.blobs(j), kReshape);
-		if (target_blobs[j]->count() == source_blob.count())
+		if (target_blobs[j]->count() == source_blob.count() ||
+			layers_[target_layer_id]->layer_param().force_copy())
 		{
-			target_blobs[j]->CopyFrom(source_blob, false, false);
+			target_blobs[j]->CopyFrom(source_blob, false, false,true);
 		}
 		else
 		{

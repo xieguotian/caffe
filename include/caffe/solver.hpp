@@ -54,8 +54,8 @@ class Solver {
   SolverAction::Enum GetRequestedAction();
   // The main entry of the solver function. In default, iter will be zero. Pass
   // in a non-zero iter number to resume training for a pre-trained net.
-  virtual void Solve(const char* resume_file = NULL);
-  inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
+  virtual void Solve(const char* resume_file = NULL, int end_iter = -1);
+  inline void Solve(const string resume_file, int end_iter = -1) { Solve(resume_file.c_str(), end_iter); }
   void Step(int iters);
   // The Restore method simply dispatches to one of the
   // RestoreSolverStateFrom___ protected methods. You should implement these

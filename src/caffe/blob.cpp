@@ -418,30 +418,37 @@ bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
 }
 
 template <typename Dtype>
-void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
-  if (source.count() != count_ && source.shape() != shape_) {
+void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape, bool force_copy) {
+  if (source.shape() != shape_ && !force_copy) {
     if (reshape) {
       ReshapeLike(source);
     } else {
       LOG(FATAL) << "Trying to copy blobs of different sizes.";
     }
   }
+  int copy_count = count_;
+  if (force_copy)
+  {
+	  copy_count = std::min(count_, source.count());
+	  LOG(INFO) << "force copy from source to target (" 
+		  << source.count() << " vs " << count_ << ")";
+  }
   switch (Caffe::mode()) {
   case Caffe::GPU:
     if (copy_diff) {
-      caffe_copy(count_, source.gpu_diff(),
+      caffe_copy(copy_count, source.gpu_diff(),
           static_cast<Dtype*>(diff_->mutable_gpu_data()));
     } else {
-      caffe_copy(count_, source.gpu_data(),
+      caffe_copy(copy_count, source.gpu_data(),
           static_cast<Dtype*>(data_->mutable_gpu_data()));
     }
     break;
   case Caffe::CPU:
     if (copy_diff) {
-      caffe_copy(count_, source.cpu_diff(),
+      caffe_copy(copy_count, source.cpu_diff(),
           static_cast<Dtype*>(diff_->mutable_cpu_data()));
     } else {
-      caffe_copy(count_, source.cpu_data(),
+      caffe_copy(copy_count, source.cpu_data(),
           static_cast<Dtype*>(data_->mutable_cpu_data()));
     }
     break;

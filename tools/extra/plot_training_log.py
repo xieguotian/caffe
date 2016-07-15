@@ -157,11 +157,11 @@ def plot_chart(chart_type, path_to_png, path_to_log_list):
             x, y = get_field_indecies(x_axis_field, y_axis_field,ch_type)
             data = load_data(data_file, x, y)
             #if ix==0:
-            #    data = smooth_data2(data,50)
+            #    data = smooth_data2(data,20)
             ## TODO: more systematic color cycle for lines
             color = [random.random(), random.random(), random.random()]
-            label = get_data_label(path_to_log,ch_type)
-            linewidth = 0.75
+            label = get_data_label(path_to_log,ch_type).replace('loss','accuracy')
+            linewidth = 2
             ## If there too many datapoints, do not use marker.
     ##        use_marker = False
             use_marker = True
@@ -175,16 +175,17 @@ def plot_chart(chart_type, path_to_png, path_to_log_list):
                     try:
                         marker = random_marker()
                         plt.plot(data[0], data[1], label = label, color = color,
-                                 marker = marker, linewidth = linewidth)
+                                 marker = marker,
+                                 linewidth = linewidth)
                         ok = True
                     except:
                         pass
     legend_loc = get_legend_loc(chart_type[0])
     plt.legend(loc = legend_loc, ncol = 1) # ajust ncol to fit the space
-    plt.title(get_chart_type_descriptions(chart_type))
+    plt.title(get_chart_type_descriptions(chart_type).replace('loss','accuracy'))
     plt.xlabel(x_axis_field)
-    plt.ylabel(y_axis_field)
-    #plt.ylim((0,7))
+    plt.ylabel(y_axis_field.replace('loss','accuracy'))
+    #plt.ylim((0.4,0.9))
     plt.grid()
     plt.savefig(path_to_png)
     plt.show()

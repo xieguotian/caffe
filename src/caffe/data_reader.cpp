@@ -227,19 +227,20 @@ void DataReader::Body::InternalThreadEntry() {
 		//random sequence.
 		vector<int> coef_set(param_.data_param().ratio_sample_size());
 		float total_sum = 0;
+		int num_rand = 10000;
 		for (int i = 0; i < coef_set.size(); ++i)
 		{
 			total_sum += param_.data_param().ratio_sample(i);
 		}
 		for (int i = 0; i < coef_set.size(); ++i)
 		{
-			coef_set[i] = (int)(param_.data_param().ratio_sample(i) / total_sum * 1000);
+			coef_set[i] = (int)(param_.data_param().ratio_sample(i) / total_sum * num_rand);
 		}
 		for (int i = 1; i < coef_set.size(); ++i)
 		{
 			coef_set[i] += coef_set[i - 1];
 		}
-		random_sequence.resize(1000);
+		random_sequence.resize(num_rand);
 		int cur_idx = 0;
 		for (int i = 0; i < random_sequence.size();++i)
 		{

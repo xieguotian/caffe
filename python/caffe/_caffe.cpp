@@ -25,6 +25,7 @@
 #include "caffe/layers/memory_data_layer.hpp"
 #include "caffe/layers/python_layer.hpp"
 #include "caffe/sgd_solvers.hpp"
+#include "train_manager.h"
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
@@ -356,7 +357,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("test_nets", bp::make_function(&Solver<Dtype>::test_nets,
           bp::return_internal_reference<>()))
     .add_property("iter", &Solver<Dtype>::iter)
-    .def("solve", static_cast<void (Solver<Dtype>::*)(const char*)>(
+    .def("solve", static_cast<void (Solver<Dtype>::*)(const char*,int)>(
           &Solver<Dtype>::Solve), SolveOverloads())
     .def("step", &Solver<Dtype>::Step)
     .def("restore", &Solver<Dtype>::Restore)
@@ -404,6 +405,13 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::class_<vector<bool> >("BoolVec")
     .def(bp::vector_indexing_suite<vector<bool> >());
 
+  bp::class_<TrainManager<Dtype>, shared_ptr<TrainManager<Dtype> >, boost::noncopyable>(
+	  "TrainManager", bp::no_init)
+	  .def("__init__", bp::make_constructor(&Train_Init<Dtype>))
+	  .def("__init__", bp::make_constructor(&Train_Init_Load<Dtype>))
+	  .add_property("net", &TrainManager<Dtype>::net)
+	  .def("Train", &TrainManager<Dtype>::Train)
+	  .def("Init", &TrainManager<Dtype>::Init);
   // boost python expects a void (missing) return value, while import_array
   // returns NULL for python3. import_array1() forces a void return value.
   import_array1();

@@ -18,4 +18,4 @@ with open(b64_save_path,'w') as fout:
             with open(img_folder+'/'+img_path,'rb') as fimg:
                 img_str = fimg.read()
                 img_b64 = base64.b64encode(img_str)
-                print >>fout,'%09d_%s\t%s %d'%(ix,img_path,img_b64,label)
+                print >>fout,'%09d_%s\t%s\t%d'%(ix,img_path,img_b64,label)

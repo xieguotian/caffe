@@ -186,7 +186,7 @@ class Blob {
    *        shape if necessary
    */
   void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
-      bool reshape = false);
+	  bool reshape = false, bool force_copy = false);
 
   inline Dtype data_at(const int n, const int c, const int h,
       const int w) const {

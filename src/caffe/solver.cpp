@@ -290,11 +290,13 @@ void Solver<Dtype>::Step(int iters) {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Solve(const char* resume_file) {
-  CHECK(Caffe::root_solver());
-  LOG(INFO) << "Solving " << net_->name();
-  LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
-
+void Solver<Dtype>::Solve(const char* resume_file, int end_iter) {
+	if (iter_ <= 0)
+	{
+		CHECK(Caffe::root_solver());
+		LOG(INFO) << "Solving " << net_->name();
+		LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
+	}
   // Initialize to false every time we start solving.
   requested_early_exit_ = false;
 
@@ -306,11 +308,18 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.
   int start_iter = iter_;
-  Step(param_.max_iter() - iter_);
+  if (end_iter < 0)
+  {
+	  end_iter = param_.max_iter();
+  }
+  //Step(param_.max_iter() - iter_);
+  Step(end_iter - iter_);
+  bool is_end = end_iter >= param_.max_iter();
+
   // If we haven't already, save a snapshot after optimization, unless
   // overridden by setting snapshot_after_train := false
   if (param_.snapshot_after_train()
-      && (!param_.snapshot() || iter_ % param_.snapshot() != 0)) {
+	  && (!param_.snapshot() || iter_ % param_.snapshot() != 0) && (is_end || requested_early_exit_)) {
     Snapshot();
   }
   if (requested_early_exit_) {
@@ -323,7 +332,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   // training, for the train net we only run a forward pass as we've already
   // updated the parameters "max_iter" times -- this final pass is only done to
   // display the loss, which is computed in the forward pass.
-  if (param_.display() && iter_ % param_.display() == 0) {
+  if (param_.display() && iter_ % param_.display() == 0 && is_end) {
     int average_loss = this->param_.average_loss();
     Dtype loss;
     net_->Forward(&loss);
@@ -332,7 +341,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
 
     LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss_;
   }
-  if (param_.test_interval() && iter_ % param_.test_interval() == 0) {
+  if (param_.test_interval() && iter_ % param_.test_interval() == 0 && is_end) {
     TestAll();
   }
   LOG(INFO) << "Optimization Done.";
