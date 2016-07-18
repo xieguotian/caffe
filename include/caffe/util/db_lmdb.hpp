@@ -18,7 +18,7 @@ inline void MDB_CHECK(int mdb_status) {
 class LMDBCursor : public Cursor {
  public:
   explicit LMDBCursor(MDB_txn* mdb_txn, MDB_cursor* mdb_cursor)
-    : mdb_txn_(mdb_txn), mdb_cursor_(mdb_cursor), valid_(false) {
+    : mdb_txn_(mdb_txn), mdb_cursor_(mdb_cursor) {
     SeekToFirst();
   }
   virtual ~LMDBCursor() {
@@ -68,7 +68,7 @@ class LMDBCursor : public Cursor {
   MDB_txn* mdb_txn_;
   MDB_cursor* mdb_cursor_;
   MDB_val mdb_key_, mdb_value_;
-  bool valid_;
+  //bool valid_;
 };
 
 class LMDBTransaction : public Transaction {

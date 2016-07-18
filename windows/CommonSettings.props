@@ -29,7 +29,7 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(UseCuDNN)'=='true'">
-        <CudaDependencies>cudnn.lib;$(CudaDependencies)</CudaDependencies>
+        <CudaDependencies>cudnn_5.lib;$(CudaDependencies)</CudaDependencies>
     </PropertyGroup>
     <PropertyGroup Condition="'$(UseCuDNN)'=='true' And $(CuDnnPath)!=''">
         <LibraryPath>$(CuDnnPath)\cuda\lib\x64;$(LibraryPath)</LibraryPath>

@@ -23,6 +23,7 @@
 
 #include "caffe/caffe.hpp"
 #include "caffe/layers/memory_data_layer.hpp"
+#include "caffe/layers/data_layer.hpp"
 #include "caffe/layers/python_layer.hpp"
 #include "caffe/sgd_solvers.hpp"
 #include "train_manager.h"
@@ -182,6 +183,25 @@ void Net_SetInputImage(Net<Dtype>* net, string image_path,int label=0) {
 	md_layer->AddMatVector(image_set, label_set);
 }
 
+void Net_SetInputKeyFile(Net<Dtype>* net, bp::list name_list, bp::list ratio_list) {
+	vector<string> name_list_tmp;
+	vector<float> ratio_list_tmp;
+	bp::ssize_t len = bp::len(name_list);
+	for (int i = 0; i < len; i++)
+	{
+		name_list_tmp.push_back(bp::extract<string>(name_list[i]));
+		ratio_list_tmp.push_back(bp::extract<float>(ratio_list[i]));
+	}
+	// check that this network has an input MemoryDataLayer
+	shared_ptr<DataLayer<Dtype> > data_layer =
+		boost::dynamic_pointer_cast<DataLayer<Dtype> >(net->layers()[0]);
+	if (!data_layer) {
+		throw std::runtime_error("set_input_key_file may only be called if the"
+			" first layer is a DataLayer");
+	}
+	data_layer->reset_list(name_list_tmp, ratio_list_tmp);
+}
+
 Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
   ReadSolverParamsFromTextFileOrDie(filename, &param);
@@ -314,6 +334,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("_set_input_arrays", &Net_SetInputArrays,
         bp::with_custodian_and_ward<1, 2, bp::with_custodian_and_ward<1, 3> >())
 	.def("_set_input_image", &Net_SetInputImage)
+	.def("_set_input_key_file", &Net_SetInputKeyFile)
     .def("save", &Net_Save)
     .def("save_hdf5", &Net_SaveHDF5)
     .def("load_hdf5", &Net_LoadHDF5);

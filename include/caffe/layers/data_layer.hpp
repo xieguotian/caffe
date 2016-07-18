@@ -28,6 +28,10 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual inline int MinTopBlobs() const { return 1; }
   virtual inline int MaxTopBlobs() const { return 2; }
 
+  void reset_list(vector<string>& name_list, vector<float>& ratio_list)
+  {
+	  reader_.reset_list(name_list, ratio_list);
+  }
  protected:
   virtual void load_batch(Batch<Dtype>* batch);
 

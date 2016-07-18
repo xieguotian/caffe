@@ -12,14 +12,58 @@ enum Mode { READ, WRITE, NEW };
 
 class Cursor {
  public:
-  Cursor() { }
+  Cursor() {
+	  key_index_list.clear();
+	  key_list.clear();
+	  label_list.clear();
+	  kl_info_vec.clear();
+	  valid_ = false;
+  }
   virtual ~Cursor() { }
   virtual void SeekToFirst() = 0;
   virtual void Next() = 0;
   virtual string key() = 0;
   virtual string value() = 0;
   virtual bool valid() = 0;
+
   virtual void SeekByKey(string key) = 0;
+  virtual void set_key_by_file(string key_file);
+  virtual void shuffle();
+  virtual void NextKey(){
+	  if (key_pos >= key_index_list.size())
+		  valid_ = false;
+	  else
+	  {
+		  SeekByKey(key_list[key_index_list[key_pos]]);
+		  key_pos++;
+	  }
+  }
+  virtual void SeekToFirstKey() {
+	  if (key_index_list.size() == 0)
+		  get_key_from_db();
+
+	  key_pos = 0;
+	  NextKey();
+  }
+  virtual bool get_use_other_label()
+  {
+	  return label_list.size() > 0;
+  }
+  virtual bool get_use_kl_info()
+  {
+	  return kl_info_vec.size() > 0;
+  }
+  virtual int label(){ return label_list[key_index_list[key_pos-1]]; }
+  virtual vector<float>& kl_info(){ return  kl_info_vec[key_index_list[key_pos - 1]]; }
+protected:
+	vector<int> key_index_list;
+	vector<string> key_list;
+	vector<int> label_list;
+	vector<vector<float>> kl_info_vec;
+	size_t key_pos = 0;
+	void get_key_from_db();
+
+	bool valid_;
   DISABLE_COPY_AND_ASSIGN(Cursor);
 };
 
@@ -41,7 +85,6 @@ class DB {
   virtual void Close() = 0;
   virtual Cursor* NewCursor() = 0;
   virtual Transaction* NewTransaction() = 0;
-
   DISABLE_COPY_AND_ASSIGN(DB);
 };
 

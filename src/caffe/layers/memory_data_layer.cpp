@@ -38,6 +38,12 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum>& datum_vector) {
   CHECK_GT(num, 0) << "There is no datum to add.";
   CHECK_EQ(num % batch_size_, 0) <<
       "The added data must be a multiple of the batch size.";
+  vector<int> top_shape = this->data_transformer_->InferBlobShape(datum_vector[0]);
+  channels_ = top_shape[1];
+  height_ = top_shape[2];
+  width_ = top_shape[3];
+  size_ = channels_ * height_ * width_;
+
   added_data_.Reshape(num, channels_, height_, width_);
   added_label_.Reshape(num, 1, 1, 1);
   // Apply data transformations (mirror, scale, crop...)
@@ -63,6 +69,12 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
   CHECK_GT(num, 0) << "There is no mat to add";
   CHECK_EQ(num % batch_size_, 0) <<
       "The added data must be a multiple of the batch size.";
+  vector<int> top_shape = this->data_transformer_->InferBlobShape(mat_vector[0]);
+  channels_ = top_shape[1];
+  height_ = top_shape[2];
+  width_ = top_shape[3];
+  size_ = channels_ * height_ * width_;
+
   added_data_.Reshape(num, channels_, height_, width_);
   added_label_.Reshape(num, 1, 1, 1);
   // Apply data transformations (mirror, scale, crop...)

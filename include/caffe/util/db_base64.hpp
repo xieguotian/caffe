@@ -91,7 +91,7 @@ namespace caffe {
 		class Base64Cursor : public Cursor {
 		public:
 			explicit Base64Cursor( string base64_cursor)
-				: valid_(false), is_key_pos_map_ready_(false){
+				: is_key_pos_map_ready_(false){
 				base64_cursor_.open(base64_cursor);
 				SeekToFirst();
 			}
@@ -216,7 +216,7 @@ namespace caffe {
 		private:
 			string base64_key_, base64_value_;
 			map<string, size_t> key_pos_map_;
-			bool valid_;
+			//bool valid_;
 			std::ifstream base64_cursor_;
 			bool is_key_pos_map_ready_;
 		};

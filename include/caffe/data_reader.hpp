@@ -32,6 +32,10 @@ class DataReader {
     return queue_pair_->full_;
   }
 
+  void reset_list(vector<string>& name_list, vector<float>& ratio_list)
+  {
+	  body_->reset_list(name_list, ratio_list);
+  }
  protected:
   // Queue pairs are shared between a body and its readers
   class QueuePair {
@@ -50,7 +54,12 @@ class DataReader {
    public:
     explicit Body(const LayerParameter& param);
     virtual ~Body();
-
+	void reset_list(vector<string>& name_list, vector<float>& ratio_list)
+	{
+		need_reset_list_ = true;
+		name_list_ =  name_list;
+		ratio_list_ = ratio_list;
+	}
    protected:
     void InternalThreadEntry();
     void read_one(db::Cursor* cursor, QueuePair* qp);
@@ -59,6 +68,12 @@ class DataReader {
     BlockingQueue<shared_ptr<QueuePair> > new_queue_pairs_;
 
     friend class DataReader;
+
+	// marker reset_list
+	bool need_reset_list_ = false;
+	vector<string> name_list_;
+	vector<float> ratio_list_;
+
 	// shuffle each epoch
 	bool shuffle;
 	vector<string> key_list;

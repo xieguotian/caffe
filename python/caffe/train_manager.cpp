@@ -89,6 +89,8 @@ namespace caffe{
 	template<typename Dtype>
 	shared_ptr<Net<Dtype>> TrainManager<Dtype>::Init(string solver_proto, string gpu_ids, string snapshot, string weights)
 	{
+		::google::InitGoogleLogging("TrainManager");
+
 		CHECK_GT(solver_proto.size(), 0) << "Need a solver definition to train.";
 		CHECK(!snapshot.size() || !weights.size())
 			<< "Give a snapshot to resume training or weights to finetune "
