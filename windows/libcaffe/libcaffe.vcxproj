@@ -360,6 +360,7 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\batch_norm_opt_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\col2img_mask_layer.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(SolutionDir)\CommonSettings.targets" />
