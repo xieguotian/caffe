@@ -33,7 +33,7 @@ namespace caffe {
 			idx--;
 		}
 		if (idx>=0)
-			coef_set[idx - 1] = num_rand;
+			coef_set[idx] = num_rand;
 		result_sequence.resize(num_rand);
 		int cur_idx = 0;
 		for (int i = 0; i < result_sequence.size(); ++i)
@@ -48,6 +48,11 @@ namespace caffe {
 		std::srand(std::time(0));
 		std::random_shuffle(result_sequence.begin(), result_sequence.end());
 
+		//std::ofstream out_ran("tmp2.txt");
+		//for (int ri = 0; ri<result_sequence.size(); ++ri)
+		//{
+		//	out_ran << result_sequence[ri] << std::endl;
+		//}
 		return result_sequence;
 	}
 
@@ -200,6 +205,21 @@ void DataReader::Body::InternalThreadEntry() {
 			ratio_vec.push_back(param_.data_param().ratio_sample(i));
 		}
 		random_sequence = rand_sequence(ratio_vec);
+
+		vector<float> sum_ratio(ratio_vec.size(), 0);
+		for (int ri = 0; ri < random_sequence.size(); ++ri)
+		{
+			sum_ratio[random_sequence[ri]] += 1;
+		}
+		string debug_ratio_str = "sample ratio: ";
+		for (int ri = 0; ri < sum_ratio.size(); ++ri)
+			debug_ratio_str = debug_ratio_str + std::to_string(sum_ratio[ri])+",";
+		LOG(INFO) << debug_ratio_str;
+		//std::ofstream out_ran("tmp.txt");
+		//for (int ri = 0; ri<random_sequence.size(); ++ri)
+		//{
+		//	out_ran << random_sequence[ri] << "," ;
+		//}
 		// read key file and shuffle
 		use_key_files = false;
 		shuffle = false;
@@ -293,8 +313,18 @@ void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
 		Datum* datum = qp->free_.pop();
 		// TODO deserialize in-place instead of copy?
 		datum->ParseFromString(cursor->value());
+
 		if (cursor->get_use_other_label())
 			datum->set_label(cursor->label());
+
+		//int pos = cursor->key().find_first_of('/');
+		//string image_name = cursor->key().substr(pos + 1);
+		//string out_name = "tmp/" + std::to_string(random_sequence[cursor_idx]) + "_" + image_name;
+		//LOG(INFO) << out_name;
+		//std::ofstream our_img(out_name,std::ofstream::binary);
+		//our_img << datum->data();
+		//our_img.close();
+
 		if (cursor->get_use_kl_info())
 		{
 			datum->mutable_float_data()->Resize(cursor->kl_info().size(), 0);
@@ -335,11 +365,19 @@ void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
 		Datum* datum = qp->free_.pop();
 		// TODO deserialize in-place instead of copy?
 		datum->ParseFromString(cursor->value());
+
 		if (cursor->get_use_other_label())
 		{
 			datum->set_label(cursor->label());
 		}
-
+		
+		//int pos = cursor->key().find_first_of('/');
+		//string image_name = cursor->key().substr(pos + 1);
+		//string out_name = "tmp/" + std::to_string(random_sequence[cursor_idx]) + "_" + image_name;
+		//LOG(INFO) << out_name;
+		//std::ofstream our_img(out_name, std::ofstream::binary);
+		//our_img << datum->data();
+		//our_img.close();
 
 		if (cursor->get_use_kl_info())
 		{
