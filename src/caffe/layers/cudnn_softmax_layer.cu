@@ -10,7 +10,18 @@ namespace caffe {
 template <typename Dtype>
 void CuDNNSoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  const Dtype* bottom_data = bottom[0]->gpu_data();
+  //const Dtype* bottom_data = bottom[0]->gpu_data();
+	Dtype* bottom_data;
+	if (use_T_)
+	{
+		bottom_data = bottom[0]->mutable_gpu_diff();
+		caffe_copy(bottom[0]->count(), bottom[0]->gpu_data(), bottom_data);
+		caffe_gpu_scal(bottom[0]->count(), (Dtype)1.0 / temperature_, bottom_data);
+	}
+	else
+	{
+		bottom_data = bottom[0]->mutable_gpu_data();
+	}
   Dtype* top_data = top[0]->mutable_gpu_data();
   CUDNN_CHECK(cudnnSoftmaxForward(handle_, CUDNN_SOFTMAX_ACCURATE,
         CUDNN_SOFTMAX_MODE_CHANNEL,
@@ -18,6 +29,8 @@ void CuDNNSoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         bottom_desc_, bottom_data,
         cudnn::dataType<Dtype>::zero,
         top_desc_, top_data));
+  if (use_T_)
+	  caffe_gpu_set(bottom[0]->count(), (Dtype)0.0, bottom[0]->mutable_gpu_diff());
 }
 
 template <typename Dtype>
@@ -35,6 +48,8 @@ void CuDNNSoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           top_desc_, top_data, top_desc_, top_diff,
           cudnn::dataType<Dtype>::zero,
           bottom_desc_, bottom_diff));
+	if (use_T_)
+		caffe_gpu_scal(top[0]->count(), (Dtype)1.0 / temperature_, bottom_diff);
   }
 }
 

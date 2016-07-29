@@ -74,6 +74,43 @@ TYPED_TEST(SoftmaxLayerTest, TestForward) {
   }
 }
 
+TYPED_TEST(SoftmaxLayerTest, TestForward_T) {
+	typedef typename TypeParam::Dtype Dtype;
+	LayerParameter layer_param;
+	float temperature = 10;
+	layer_param.mutable_softmax_param()->set_temperature(temperature);
+
+	SoftmaxLayer<Dtype> layer(layer_param);
+	layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	// Test sum
+	for (int i = 0; i < this->blob_bottom_->num(); ++i) {
+		for (int k = 0; k < this->blob_bottom_->height(); ++k) {
+			for (int l = 0; l < this->blob_bottom_->width(); ++l) {
+				Dtype sum = 0;
+				for (int j = 0; j < this->blob_top_->channels(); ++j) {
+					sum += this->blob_top_->data_at(i, j, k, l);
+				}
+				EXPECT_GE(sum, 0.999);
+				EXPECT_LE(sum, 1.001);
+				// Test exact values
+				Dtype scale = 0;
+				for (int j = 0; j < this->blob_bottom_->channels(); ++j) {
+					scale += exp(1.0 / temperature*this->blob_bottom_->data_at(i, j, k, l));
+				}
+				for (int j = 0; j < this->blob_bottom_->channels(); ++j) {
+					EXPECT_GE(this->blob_top_->data_at(i, j, k, l) + 1e-4,
+						exp(1.0 / temperature*this->blob_bottom_->data_at(i, j, k, l)) / scale)
+						<< "debug: " << i << " " << j;
+					EXPECT_LE(this->blob_top_->data_at(i, j, k, l) - 1e-4,
+						exp(1.0 / temperature*this->blob_bottom_->data_at(i, j, k, l)) / scale)
+						<< "debug: " << i << " " << j;
+				}
+			}
+		}
+	}
+}
+
 TYPED_TEST(SoftmaxLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -81,6 +118,17 @@ TYPED_TEST(SoftmaxLayerTest, TestGradient) {
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
+}
+
+TYPED_TEST(SoftmaxLayerTest, TestGradient_T) {
+	typedef typename TypeParam::Dtype Dtype;
+	LayerParameter layer_param;
+	float temperature = 10;
+	layer_param.mutable_softmax_param()->set_temperature(temperature);
+	SoftmaxLayer<Dtype> layer(layer_param);
+	GradientChecker<Dtype> checker(1e-2, 1e-3);
+	checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+		this->blob_top_vec_);
 }
 
 #ifdef USE_CUDNN
@@ -139,6 +187,41 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
   }
 }
 
+TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN_T) {
+	LayerParameter layer_param;
+	float temperature = 10;
+	layer_param.mutable_softmax_param()->set_temperature(temperature);
+	CuDNNSoftmaxLayer<TypeParam> layer(layer_param);
+	layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	// Test sum
+	for (int i = 0; i < this->blob_bottom_->num(); ++i) {
+		for (int k = 0; k < this->blob_bottom_->height(); ++k) {
+			for (int l = 0; l < this->blob_bottom_->width(); ++l) {
+				TypeParam sum = 0;
+				for (int j = 0; j < this->blob_top_->channels(); ++j) {
+					sum += this->blob_top_->data_at(i, j, k, l);
+				}
+				EXPECT_GE(sum, 0.999);
+				EXPECT_LE(sum, 1.001);
+				// Test exact values
+				TypeParam scale = 0;
+				for (int j = 0; j < this->blob_bottom_->channels(); ++j) {
+					scale += exp(1.0 / temperature*this->blob_bottom_->data_at(i, j, k, l));
+				}
+				for (int j = 0; j < this->blob_bottom_->channels(); ++j) {
+					EXPECT_GE(this->blob_top_->data_at(i, j, k, l) + 1e-4,
+						exp(1.0 / temperature*this->blob_bottom_->data_at(i, j, k, l)) / scale)
+						<< "debug: " << i << " " << j;
+					EXPECT_LE(this->blob_top_->data_at(i, j, k, l) - 1e-4,
+						exp(1.0 / temperature*this->blob_bottom_->data_at(i, j, k, l)) / scale)
+						<< "debug: " << i << " " << j;
+				}
+			}
+		}
+	}
+}
+
 TYPED_TEST(CuDNNSoftmaxLayerTest, TestGradientCuDNN) {
   LayerParameter layer_param;
   CuDNNSoftmaxLayer<TypeParam> layer(layer_param);
@@ -147,6 +230,15 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestGradientCuDNN) {
       this->blob_top_vec_);
 }
 
+TYPED_TEST(CuDNNSoftmaxLayerTest, TestGradientCuDNN_T) {
+	LayerParameter layer_param;
+	float temperature = 10;
+	layer_param.mutable_softmax_param()->set_temperature(temperature);
+	CuDNNSoftmaxLayer<TypeParam> layer(layer_param);
+	GradientChecker<TypeParam> checker(1e-2, 1e-3);
+	checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+		this->blob_top_vec_);
+}
 #endif
 
 }  // namespace caffe

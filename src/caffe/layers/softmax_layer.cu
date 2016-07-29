@@ -85,7 +85,18 @@ __global__ void kernel_channel_dot(const int num, const int channels,
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  const Dtype* bottom_data = bottom[0]->gpu_data();
+  //const Dtype* bottom_data = bottom[0]->gpu_data();
+	Dtype* bottom_data;
+	if (use_T_)
+	{
+		bottom_data = bottom[0]->mutable_gpu_diff();
+		caffe_copy(bottom[0]->count(), bottom[0]->gpu_data(), bottom_data);
+		caffe_gpu_scal(bottom[0]->count(), (Dtype)1.0 / temperature_, bottom_data);
+	}
+	else
+	{
+		bottom_data = bottom[0]->mutable_gpu_data();
+	}
   Dtype* top_data = top[0]->mutable_gpu_data();
   Dtype* scale_data = scale_.mutable_gpu_data();
   int count = bottom[0]->count();
@@ -117,6 +128,9 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   kernel_channel_div<Dtype><<<CAFFE_GET_BLOCKS(count),
       CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
       scale_data, top_data);
+
+  if (use_T_)
+	  caffe_gpu_set(bottom[0]->count(), (Dtype)0.0, bottom[0]->mutable_gpu_diff());
 }
 
 template <typename Dtype>
@@ -140,6 +154,8 @@ void SoftmaxLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       scale_data, bottom_diff);
   // elementwise multiplication
   caffe_gpu_mul<Dtype>(top[0]->count(), bottom_diff, top_data, bottom_diff);
+  if (use_T_)
+	  caffe_gpu_scal(top[0]->count(), (Dtype)1.0 / temperature_, bottom_diff);
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(SoftmaxLayer);

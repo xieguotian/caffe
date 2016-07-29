@@ -5,6 +5,13 @@
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
+	template<typename Dtype>
+	void SoftmaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+		const vector<Blob<Dtype>*>& top)
+	{
+		use_T_ = this->layer_param_.softmax_param().temperature() != 0;
+		temperature_ = this->layer_param_.softmax_param().temperature();
+	}
 
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -26,7 +33,18 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  const Dtype* bottom_data = bottom[0]->cpu_data();
+  //const Dtype* bottom_data = bottom[0]->cpu_data();
+	Dtype* bottom_data;
+	if (use_T_)
+	{
+		bottom_data = bottom[0]->mutable_cpu_diff();
+		caffe_copy(bottom[0]->count(), bottom[0]->cpu_data(), bottom_data);
+		caffe_scal(bottom[0]->count(), (Dtype)1.0 / temperature_, bottom_data);
+	}
+	else
+	{
+		bottom_data = bottom[0]->mutable_cpu_data();
+	}
   Dtype* top_data = top[0]->mutable_cpu_data();
   Dtype* scale_data = scale_.mutable_cpu_data();
   int channels = bottom[0]->shape(softmax_axis_);
@@ -57,6 +75,9 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       top_data += inner_num_;
     }
   }
+
+  if (use_T_)
+	  caffe_set(bottom[0]->count(), (Dtype)0.0, bottom[0]->mutable_cpu_diff());
 }
 
 template <typename Dtype>
@@ -83,6 +104,8 @@ void SoftmaxLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
   // elementwise multiplication
   caffe_mul(top[0]->count(), bottom_diff, top_data, bottom_diff);
+  if (use_T_)
+	  caffe_scal(top[0]->count(), (Dtype)1.0 / temperature_, bottom_diff);
 }
 
 
