@@ -1,12 +1,28 @@
 import caffe
 import sys
 import os
+import argparse
 
-if len(sys.argv)<4:
-    print 'Usage: python convert_model.py net_proto net_param net_posfix'
-net_proto = sys.argv[1]
-net_param = sys.argv[2]
-pos_fix = sys.argv[3]
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "net_proto",
+    help="prototxt of net work"
+)
+parser.add_argument(
+    "save_prefix",
+    help="prefix of save file name."
+)
+parser.add_argument(
+    "--net_param",
+    default="",
+    help="net param"
+)
+
+args = parser.parse_args()
+
+net_proto = args.net_proto
+net_param = args.net_param
+pos_fix = args.save_prefix
 
 base_name = os.path.basename(net_proto).strip().split('.')
 net_new_proto = base_name[0]+'_'+pos_fix+'.'+base_name[1]
@@ -21,15 +37,16 @@ with open(net_proto) as fid:
                     line = line[:pos] + '_' + pos_fix +line[pos:]
             print >>fout,line
 
-net = caffe.Net(net_proto,net_param,caffe.TEST)
-net2 =  caffe.Net(net_new_proto,caffe.TEST)
+if net_param!="":
+    net = caffe.Net(net_proto,net_param,caffe.TEST)
+    net2 =  caffe.Net(net_new_proto,caffe.TEST)
 
-for name,param in net.params.items():
-    print 'copy param '+name
-    new_name =name+'_' + pos_fix
-    for ix,sub_param  in enumerate(param):
-        net2.params[new_name][ix].data[:] = sub_param.data.copy()
+    for name,param in net.params.items():
+        print 'copy param '+name
+        new_name =name+'_' + pos_fix
+        for ix,sub_param  in enumerate(param):
+            net2.params[new_name][ix].data[:] = sub_param.data.copy()
 
-base_name = os.path.basename(net_param).strip().split('.')
-net_new_param = base_name[0]+'_'+pos_fix+'.'+base_name[1]
-net2.save(net_new_param)
+    base_name = os.path.basename(net_param).strip().split('.')
+    net_new_param = base_name[0]+'_'+pos_fix+'.'+base_name[1]
+    net2.save(net_new_param)

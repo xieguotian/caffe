@@ -73,6 +73,7 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\caffe\test\test_accuracy_binary_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_accuracy_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_argmax_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_batch_norm_layer.cpp" />
@@ -127,6 +128,8 @@
     <ClCompile Include="..\..\src\caffe\test\test_scale_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_sigmoid_cross_entropy_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_slice_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_softmax_binary_loss_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_softmax_cross_entropy_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_softmax_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_softmax_with_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_solver.cpp" />

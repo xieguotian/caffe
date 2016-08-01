@@ -46,8 +46,15 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
       LOG(INFO) << "MultiStep Status: Iteration " <<
       this->iter_ << ", step = " << this->current_step_;
     }
-    rate = this->param_.base_lr() *
-        pow(this->param_.gamma(), this->current_step_);
+	if (this->param_.step_lr_size()>this->current_step_)
+	{
+		rate = this->param_.step_lr(this->current_step_);
+	}
+	else
+	{
+		rate = this->param_.base_lr() *
+			pow(this->param_.gamma(), this->current_step_ - this->param_.step_lr_size());
+	}
   } else if (lr_policy == "poly") {
     rate = this->param_.base_lr() * pow(Dtype(1.) -
         (Dtype(this->iter_) / Dtype(this->param_.max_iter())),
