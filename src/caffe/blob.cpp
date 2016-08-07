@@ -141,6 +141,12 @@ void Blob<Dtype>::ShareData(const Blob& other) {
 }
 
 template <typename Dtype>
+void Blob<Dtype>::ShareData_LE(const Blob& other) {
+	CHECK_LE(count_, other.count());
+	data_ = other.data();
+}
+
+template <typename Dtype>
 void Blob<Dtype>::ShareDiff(const Blob& other) {
   CHECK_EQ(count_, other.count());
   diff_ = other.diff();

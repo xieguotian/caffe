@@ -349,10 +349,12 @@ void Solver<Dtype>::Solve(const char* resume_file, int end_iter) {
 
 template <typename Dtype>
 void Solver<Dtype>::TestAll() {
+	net_->Release_mem();
   for (int test_net_id = 0;
        test_net_id < test_nets_.size() && !requested_early_exit_;
        ++test_net_id) {
     Test(test_net_id);
+	test_nets_[test_net_id]->Release_mem();
   }
 }
 

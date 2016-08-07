@@ -228,6 +228,13 @@ class Net {
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
       const string& layer_name);
 
+  void Release_mem()
+  {
+	  for (int i = 0; i < shared_blobs_.size(); ++i)
+		  blobs_[i]->Release_mem();
+	  for (int i = 0; i < blobs_.size(); ++i)
+		  blobs_[i]->Release_mem();
+  }
  protected:
   // Helpers for Init.
   /// @brief Append a new top blob to the net.
@@ -263,6 +270,11 @@ class Net {
   vector<string> blob_names_;
   map<string, int> blob_names_index_;
   vector<bool> blob_need_backward_;
+
+  vector<int> blob_used_counter_;
+  vector<shared_ptr<Blob<Dtype> > > shared_blobs_;
+  vector<int> shared_record_;
+  vector<int> shared_blobs_index_;
   /// bottom_vecs stores the vectors containing the input for each layer.
   /// They don't actually host the blobs (blobs_ does), so we simply store
   /// pointers.

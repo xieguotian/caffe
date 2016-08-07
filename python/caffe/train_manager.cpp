@@ -180,12 +180,14 @@ namespace caffe{
 
 			for (int i = 1; i < syncs.size(); ++i) {
 				syncs[i]->StopInternalThread();
+				syncs[i]->solver()->net()->Release_mem();
 			}
-
+			root_sync->solver()->net()->Release_mem();
 			return root_sync->solver()->net();
 		}
 		else{
 			solver_->Solve(NULL,end_iter);
+			solver_->net()->Release_mem();
 			return solver_->net();
 		}
 	}

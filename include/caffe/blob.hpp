@@ -253,6 +253,7 @@ class Blob {
    * shared_ptr calls its destructor when reset with the "=" operator.
    */
   void ShareData(const Blob& other);
+  void ShareData_LE(const Blob& other);
   /**
    * @brief Set the diff_ shared_ptr to point to the SyncedMemory holding the
    *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
@@ -266,6 +267,11 @@ class Blob {
 
   bool ShapeEquals(const BlobProto& other);
 
+  inline void Release_mem()
+  {
+	  data_->release_mem();
+	  diff_->release_mem();
+  }
  protected:
   shared_ptr<SyncedMemory> data_;
   shared_ptr<SyncedMemory> diff_;

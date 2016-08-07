@@ -337,7 +337,8 @@ BOOST_PYTHON_MODULE(_caffe) {
 	.def("_set_input_key_file", &Net_SetInputKeyFile)
     .def("save", &Net_Save)
     .def("save_hdf5", &Net_SaveHDF5)
-    .def("load_hdf5", &Net_LoadHDF5);
+    .def("load_hdf5", &Net_LoadHDF5)
+	.def("release_mem",&Net<Dtype>::Release_mem);
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Net<Dtype>);
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
