@@ -187,6 +187,8 @@ def plot_chart(chart_type, path_to_png, path_to_log_list):
     plt.ylabel(y_axis_field.replace('loss','accuracy'))
     #plt.ylim((0.4,0.9))
     plt.grid()
+    manager = plt.get_current_fig_manager()
+    manager.window.showMaximized()
     plt.savefig(path_to_png)
     plt.show()
 

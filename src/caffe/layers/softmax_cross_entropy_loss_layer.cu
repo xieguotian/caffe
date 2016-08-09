@@ -10,7 +10,7 @@ namespace caffe {
 template <typename Dtype>
 __global__ void cross_entropy_kernel(const int n, const Dtype* a, const Dtype* b, Dtype* y) {
 	CUDA_KERNEL_LOOP(index, n) {
-		y[index] = -b[index]*log(a[index]);
+		y[index] = -b[index] * log(max(a[index], Dtype(FLT_MIN)));
 	}
 }
 
