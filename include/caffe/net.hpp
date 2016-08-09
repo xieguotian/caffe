@@ -231,9 +231,12 @@ class Net {
   void Release_mem()
   {
 	  for (int i = 0; i < shared_blobs_.size(); ++i)
-		  blobs_[i]->Release_mem();
+		  shared_blobs_[i]->Release_mem();
 	  for (int i = 0; i < blobs_.size(); ++i)
-		  blobs_[i]->Release_mem();
+	  {
+		  if (blobs_deletable_[i])
+			blobs_[i]->Release_mem();
+	  }
   }
  protected:
   // Helpers for Init.
@@ -271,6 +274,7 @@ class Net {
   map<string, int> blob_names_index_;
   vector<bool> blob_need_backward_;
 
+  vector<bool> blobs_deletable_;
   vector<int> blob_used_counter_;
   vector<shared_ptr<Blob<Dtype> > > shared_blobs_;
   vector<int> shared_record_;
@@ -328,6 +332,7 @@ class Net {
   vector<string> layer_type_record_;
   vector<int> used_cache_record_;
   bool opt_memory_;
+  bool opt_test_shared_memory_;
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 

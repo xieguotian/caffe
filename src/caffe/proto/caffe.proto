@@ -95,6 +95,7 @@ message NetParameter {
   repeated V1LayerParameter layers = 2;
   
   optional bool opt_memory = 200 [default = false];
+  optional bool opt_test_shared_memory = 201 [default = false];
 }
 
 // NOTE
