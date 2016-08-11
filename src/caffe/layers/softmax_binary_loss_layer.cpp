@@ -106,8 +106,9 @@ void SoftmaxBinaryLossLayer<Dtype>::Forward_cpu(
       }
       DCHECK_GE(label_value, 0);
       DCHECK_LT(label_value, prob_.shape(softmax_axis_));
-      loss -= log(std::max(prob_data[i * dim + label_value * inner_num_ + j],
-                           Dtype(FLT_MIN)));
+	  Dtype ratio = label_value == 0 ? 1.0 : 1.0 / (num_cls - 1);
+	  loss -= ratio * log(std::max(prob_data[i * dim + label_value * inner_num_ + j],
+		  Dtype(FLT_MIN)));
       ++count;
     }
   }
@@ -142,7 +143,10 @@ void SoftmaxBinaryLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
             bottom_diff[i * dim + c * inner_num_ + j] = 0;
           }
         } else {
+			Dtype ratio = label_value == 0 ? 1.0 : 1.0 / (num_cls - 1);
           bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+		  bottom_diff[i * dim + label_value * inner_num_ + j] *= ratio;
+		  bottom_diff[i * dim + (1-label_value) * inner_num_ + j] *= ratio;
           ++count;
         }
       }

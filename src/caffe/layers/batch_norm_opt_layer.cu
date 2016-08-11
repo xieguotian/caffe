@@ -84,7 +84,8 @@ void BatchNormOptLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   channel_div_kernel_neps<Dtype> << <CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS >> >(
 	  top[0]->count(), channels_, spatial_dim, top_data, variance_.gpu_data(), top_data);
 
-  caffe_gpu_set(top[0]->count(), Dtype(0), top[0]->mutable_gpu_diff());
+  if (!use_global_stats_)
+	caffe_gpu_set(top[0]->count(), Dtype(0), top[0]->mutable_gpu_diff());
 }
 
 template <typename Dtype>

@@ -159,7 +159,9 @@ void BatchNormOptLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 	  int ch_idx = res % channels_;
 	  top[0]->mutable_cpu_data()[n] /= variance_.cpu_data()[ch_idx];
   }
-  caffe_set(top[0]->count(), Dtype(0), top[0]->mutable_cpu_diff());
+
+  if (!use_global_stats_)
+	caffe_set(top[0]->count(), Dtype(0), top[0]->mutable_cpu_diff());
 }
 
 template <typename Dtype>

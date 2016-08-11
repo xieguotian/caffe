@@ -213,6 +213,60 @@ namespace caffe {
 					LOG(INFO) << "read key fail: " << key;
 				}
 			}
+
+			virtual void set_key_by_file(string key_file_name)
+			{
+				LOG(INFO) << "set key by key_file: " << key_file_name;
+				key_list.clear();
+				label_list.clear();
+				kl_info_vec.clear();
+				key_index_list.clear();
+
+				std::ifstream key_file(key_file_name);
+				string key;
+				int label;
+				//while (key_file >> key >>label)
+				string line;
+				while (std::getline(key_file, line))
+				{
+					vector<string> str_vec = string_split(line, ' ');
+					if (str_vec.size() < 2)
+						str_vec = string_split(line, '\t');
+					key = str_vec[0];
+					label = atoi(str_vec[1].c_str());
+
+					key_list.push_back(key);
+					label_list.push_back(label);
+
+					if (str_vec.size() >= 3)
+					{
+						key_pos_map_[key] = atoll(str_vec[2].c_str());
+						if (str_vec.size() >= 4)
+						{
+							vector<float> tmp_info;
+							for (int info_idx = 3; info_idx < str_vec.size(); ++info_idx)
+							{
+								tmp_info.push_back(std::stof(str_vec[info_idx]));
+							}
+							kl_info_vec.push_back(tmp_info);
+						}
+					}
+				}
+
+				for (int i = 0; i < key_list.size(); ++i)
+				{
+					key_index_list.push_back(i);
+				}
+				if (key_pos_map_.size()>0)
+				{
+					is_key_pos_map_ready_ = true;
+					CHECK_EQ(key_pos_map_.size(), key_index_list.size())
+						<< "key_pos_map size vs key size: " << key_pos_map_.size() << " vs "
+						<< key_index_list.size();
+					LOG(INFO) << "key_pos_map size: " << key_pos_map_.size();
+				}
+				LOG(INFO) << "data size: " << key_index_list.size();
+			}
 		private:
 			string base64_key_, base64_value_;
 			map<string, size_t> key_pos_map_;
@@ -249,7 +303,6 @@ namespace caffe {
 			}
 
 			virtual Baset64Transaction* NewTransaction(){ return new Baset64Transaction(); }
-
 		private:
 			string base64_stream_;
 			Base64Cursor* base64_cursor;
