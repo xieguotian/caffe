@@ -279,6 +279,11 @@ class Net {
   vector<shared_ptr<Blob<Dtype> > > shared_blobs_;
   vector<int> shared_record_;
   vector<int> shared_blobs_index_;
+
+  vector<int> blob_diff_used_counter_;
+  vector<shared_ptr<Blob<Dtype> > > shared_blobs_diff_;
+  vector<int> shared_record_diff_;
+  vector<int> shared_blobs_diff_index_;
   /// bottom_vecs stores the vectors containing the input for each layer.
   /// They don't actually host the blobs (blobs_ does), so we simply store
   /// pointers.

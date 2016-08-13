@@ -293,7 +293,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 	  shared_blobs_index_.resize(blobs_.size());
 	  for (int i = 0; i < layers_.size(); ++i) 
 	  {
-		  if (opt_test_shared_memory_ || (opt_memory_&& !layer_need_backward_[i]))
+		  if ((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_&& !layer_need_backward_[i]))
 		  {
 			  if (layer_types_[i] == "Split")
 			  {
@@ -390,6 +390,107 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
   if (phase_ == Phase::TRAIN && opt_memory_)
   {
+	  blob_diff_used_counter_.resize(blobs_.size(),0);
+
+	  for (int layer_id = layers_.size() - 1; layer_id >= 0; layer_id--)
+	  {
+		  for (int bottom_id = 0; bottom_id < bottom_vecs_[layer_id].size(); ++bottom_id)
+		  {
+			  if (bottom_id < top_vecs_[layer_id].size() && bottom_vecs_[layer_id][bottom_id] == top_vecs_[layer_id][bottom_id])
+				  continue;
+			  int blob_id = bottom_id_vecs_[layer_id][bottom_id];
+			  blob_diff_used_counter_[blob_id] = 1;
+		  }
+
+		  for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id)
+		  {
+			  const int blob_id = top_id_vecs_[layer_id][top_id];
+
+			  if (blob_used_counter_[blob_id] == 1)
+				  continue;
+
+			  blob_diff_used_counter_[blob_id] += 1;
+		  }
+	  }
+	  //shared memory
+	  shared_blobs_diff_index_.resize(blobs_.size());
+	  for (int layer_id = layers_.size() - 1; layer_id >= 0; layer_id--)
+	  {
+		  if (phase_ == Phase::TRAIN && opt_memory_)//&& layer_need_backward_[i])
+		  {
+
+			  //append shared memory for top.
+			  for (int bi = 0; bi < bottom_vecs_[layer_id].size(); ++bi)
+			  {
+				  // if in-place, don't borrow the shared memory again.
+				  if (top_vecs_[layer_id].size()>bi && top_vecs_[layer_id][bi] == bottom_vecs_[layer_id][bi])
+					  continue;
+
+				  bool is_find_cache = false;
+				  int cache_idx = -1;
+				  const int blob_id = bottom_id_vecs_[layer_id][bi];
+
+				  if (blob_diff_used_counter_[blob_id] == 1)
+				  {
+					  shared_ptr<Blob<Dtype> > blob_pointer(new Blob<Dtype>());
+					  shared_blobs_diff_.push_back(blob_pointer);
+					  cache_idx = shared_blobs_diff_.size() - 1;
+
+					  shared_record_diff_.push_back(blob_diff_used_counter_[blob_id]);
+				  }
+				  else
+				  {
+					  //search for cache memory.
+					  for (int si = 0; si < shared_record_diff_.size(); si++)
+					  {
+						  if (shared_record_diff_[si] == 0)
+						  {
+							  //found cache
+							  is_find_cache = true;
+							  cache_idx = si;
+							  shared_record_diff_[si] = blob_diff_used_counter_[blob_id];
+							  break;
+						  }
+					  }
+					  //if not found cache, create new cache.
+					  if (!is_find_cache)
+					  {
+						  shared_ptr<Blob<Dtype> > blob_pointer(new Blob<Dtype>());
+						  shared_blobs_diff_.push_back(blob_pointer);
+						  cache_idx = shared_blobs_diff_.size() - 1;
+
+						  shared_record_diff_.push_back(blob_diff_used_counter_[blob_id]);
+					  }
+
+				  }
+
+				  //share cache meory.
+				  if (shared_blobs_diff_[cache_idx]->count() < blobs_[blob_id]->count())
+				  {
+					  shared_blobs_diff_[cache_idx]->ReshapeLike(*blobs_[blob_id]);
+					  LOG_IF(INFO, Caffe::root_solver()) << "reshape diff of " << layer_types_[layer_id] << " " << shared_blobs_diff_[cache_idx]->count();
+				  }
+				  blobs_[blob_id]->ShareDiff_LE(*shared_blobs_diff_[cache_idx]);
+				  shared_blobs_diff_index_[blob_id] = cache_idx;
+			  }
+
+			  //release shared memory for bottom.
+			  for (int ti = 0; ti < top_vecs_[layer_id].size(); ++ti)
+			  {
+				  const int blob_id = top_id_vecs_[layer_id][ti];
+				  const int shared_blob_id = shared_blobs_diff_index_[blob_id];
+
+				  shared_record_diff_[shared_blob_id] -= 1;
+				  //release memory
+				  if (shared_record_diff_[shared_blob_id] == 1)
+					  shared_record_diff_[shared_blob_id] = 0;
+			  }
+		  }
+	  }
+	  LOG_IF(INFO, Caffe::root_solver()) << "diff cache size for train net is : " << shared_blobs_diff_.size();
+	  for (int i = 0; i < shared_blobs_diff_.size(); i++)
+		  LOG_IF(INFO, Caffe::root_solver()) << "cache id " << i << " size:" << shared_blobs_diff_[i]->count();
+	  /*
 	  // init mem optimization
 	  for (int type_id = 0; type_id < layer_types_.size(); ++type_id)
 	  {
@@ -506,6 +607,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 			  }
 		  }
 	  }
+	  */
   }
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
 }
@@ -851,6 +953,29 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
 	  if (layer_need_backward_[i]) {
+		  if (((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_&& !layer_need_backward_[i]))
+			  && layer_types_[i] != "Split")
+		  {
+			  //share cache meory.
+			  for (int bi = 0; bi < bottom_vecs_[i].size(); bi++)
+			  {
+				  int blob_id = bottom_id_vecs_[i][bi];
+				  int cache_idx = shared_blobs_diff_index_[blob_id];
+				  // if in-place, don't borrow the shared memory again.
+				  if (top_vecs_[i].size()>bi && top_vecs_[i][bi] == bottom_vecs_[i][bi])
+				  {
+					  continue;
+				  }
+
+				  if (shared_blobs_diff_[cache_idx]->count() < blobs_[blob_id]->count())
+				  {
+					  shared_blobs_diff_[cache_idx]->ReshapeLike(*blobs_[blob_id]);
+					  LOG_IF(INFO, Caffe::root_solver()) << "diff reshape " << layer_types_[i] << " " << shared_blobs_diff_[cache_idx]->count();
+				  }
+				  blobs_[blob_id]->ShareDiff_LE(*shared_blobs_diff_[cache_idx]);
+			  }
+		  }
+		  /*
 		  if (opt_memory_)
 		  {
 			  // find cache for bottom vector.
@@ -918,10 +1043,12 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
 				  }
 			  }
 		  }
-
+		  */
 		  layers_[i]->Backward(
 			  top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
 		  if (debug_info_) { BackwardDebugInfo(i); }
+
+		  /*
 		  // release cache
 
 		  if (opt_memory_)
@@ -955,6 +1082,7 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
 				  }
 			  }
 		  }
+		  */
 	  }
   }
 
