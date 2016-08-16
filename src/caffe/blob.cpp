@@ -5,6 +5,7 @@
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
+#include <cuda_fp16.h>
 
 namespace caffe {
 
@@ -557,6 +558,7 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
 INSTANTIATE_CLASS(Blob);
 template class Blob<int>;
 template class Blob<unsigned int>;
+//template class Blob<half>;
 
 }  // namespace caffe
 

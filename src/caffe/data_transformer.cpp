@@ -158,6 +158,13 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     } else {
       cv_img = DecodeDatumToCVMatNative(datum);
     }
+	if (!cv_img.data)
+	{
+		transformed_blob->is_set_data(false);
+		return;
+	}
+	else
+		transformed_blob->is_set_data(true);
     // Transform the cv::image into blob.
     return Transform(cv_img, transformed_blob);
 #else

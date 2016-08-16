@@ -11,6 +11,7 @@
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "util\half_util.hpp"
 
 namespace caffe {
 
@@ -235,7 +236,16 @@ class Net {
 	  for (int i = 0; i < blobs_.size(); ++i)
 	  {
 		  if (blobs_deletable_[i])
-			blobs_[i]->Release_mem();
+		  {
+			  blobs_[i]->Release_mem();
+		  }
+	  }
+	  for (int i = 0; i < half_blobs_.size(); ++i)
+	  {
+		  if (blobs_deletable_[i])
+		  {
+			  half_blobs_[i]->release_mem();
+		  }
 	  }
   }
  protected:
@@ -274,9 +284,10 @@ class Net {
   map<string, int> blob_names_index_;
   vector<bool> blob_need_backward_;
 
+  //new add blob information for diff and data sharing
   vector<bool> blobs_deletable_;
   vector<int> blob_used_counter_;
-  vector<shared_ptr<Blob<Dtype> > > shared_blobs_;
+  vector<shared_ptr<Blob<Dtype>> > shared_blobs_;
   vector<int> shared_record_;
   vector<int> shared_blobs_index_;
 
@@ -284,6 +295,10 @@ class Net {
   vector<shared_ptr<Blob<Dtype> > > shared_blobs_diff_;
   vector<int> shared_record_diff_;
   vector<int> shared_blobs_diff_index_;
+
+  // half float point
+  vector<shared_ptr<SyncedMemory>> half_blobs_;
+  bool half_support_;
   /// bottom_vecs stores the vectors containing the input for each layer.
   /// They don't actually host the blobs (blobs_ does), so we simply store
   /// pointers.

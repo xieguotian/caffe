@@ -272,6 +272,9 @@ class Blob {
 	  data_->release_mem();
 	  diff_->release_mem();
   }
+
+  bool has_set_data() { return has_set_data_; }
+  void is_set_data(bool has_set_data){ has_set_data_ = has_set_data; }
  protected:
   shared_ptr<SyncedMemory> data_;
   shared_ptr<SyncedMemory> diff_;
@@ -279,6 +282,7 @@ class Blob {
   vector<int> shape_;
   int count_;
   int capacity_;
+  bool has_set_data_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob

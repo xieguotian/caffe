@@ -136,6 +136,7 @@ void DataReader::Body::InternalThreadEntry() {
 			if (param_.data_param().shuffle())
 			{
 				shuffle = true;
+				cursor->set_shuffle(true);
 				cursor->shuffle();
 			}
 			cursor->SeekToFirstKey();
@@ -235,6 +236,7 @@ void DataReader::Body::InternalThreadEntry() {
 				if (param_.data_param().shuffle())
 				{
 					shuffle = true;
+					cursor_set[idx]->set_shuffle(true);
 					cursor_set[idx]->shuffle();
 				}
 				cursor_set[idx]->SeekToFirstKey();
@@ -344,9 +346,10 @@ void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
 			cursor->NextKey();
 			if (!cursor->valid())
 			{
-				LOG(INFO) << "Restarting data and shuffle.";
-				if (shuffle)
-					cursor->shuffle();
+				//LOG(INFO) << "Restarting data and shuffle.";
+				//if (shuffle)
+					//cursor->shuffle();
+				LOG(INFO) << "Restarting data.";
 				cursor->SeekToFirstKey();
 			}
 		}
@@ -397,9 +400,10 @@ void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
 			cursor->NextKey();
 			if (!cursor->valid())
 			{
-				LOG(INFO) << "Restarting data and shuffle.";
-				if (shuffle)
-					cursor->shuffle();
+				//LOG(INFO) << "Restarting data and shuffle.";
+				//if (shuffle)
+					//cursor->shuffle();
+				LOG(INFO) << "Restarting data";
 				cursor->SeekToFirstKey();
 			}
 		}

@@ -128,6 +128,8 @@ namespace caffe {
 				LOG(INFO) << "begin initial base64 key-pos map.";
 				string line;
 				size_t line_pos = base64_cursor_.beg;
+				base64_cursor_.clear();
+				base64_cursor_.seekg(0);
 				while (std::getline(base64_cursor_, line))
 				{
 					int pos = line.find_first_of('\t');
@@ -205,12 +207,12 @@ namespace caffe {
 					base64_value_ = base64ToDatumString(line.substr(pos + 1));
 					valid_ = base64_key_ == key;
 					if (!valid_)
-						LOG(INFO) << "key1:" << base64_key_ << "," << key;
+						LOG(INFO) << "key not equal:" << base64_key_ << "," << key;
 				}
 				else
 				{
 					valid_ = false;
-					LOG(INFO) << "read key fail: " << key;
+					LOG(INFO) << "read key fail: " << key << "\tpos:" << line_pos;
 				}
 			}
 
@@ -267,6 +269,7 @@ namespace caffe {
 				}
 				LOG(INFO) << "data size: " << key_index_list.size();
 			}
+
 		private:
 			string base64_key_, base64_value_;
 			map<string, size_t> key_pos_map_;

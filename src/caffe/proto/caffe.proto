@@ -96,6 +96,7 @@ message NetParameter {
   
   optional bool opt_memory = 200 [default = false];
   optional bool opt_test_shared_memory = 201 [default = false];
+  optional bool opt_fp16 = 202 [default = false];
 }
 
 // NOTE

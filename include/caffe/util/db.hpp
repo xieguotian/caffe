@@ -18,6 +18,7 @@ class Cursor {
 	  label_list.clear();
 	  kl_info_vec.clear();
 	  valid_ = false;
+	  is_shuffle = false;
   }
   virtual ~Cursor() { }
   virtual void SeekToFirst() = 0;
@@ -31,11 +32,26 @@ class Cursor {
   virtual void shuffle();
   virtual void NextKey(){
 	  if (key_pos >= key_index_list.size())
-		  valid_ = false;
+	  {
+		  if (is_shuffle)
+		  {
+			  LOG(INFO) << "shuffle and restarting data.";
+			  shuffle();
+			  SeekToFirstKey();
+		  }
+		  else
+			valid_ = false;
+	  }
 	  else
 	  {
 		  SeekByKey(key_list[key_index_list[key_pos]]);
 		  key_pos++;
+		  while (!valid_ && key_pos < key_index_list.size())
+		  {
+			  LOG(INFO) << "Read current data fail and read next.";
+			  SeekByKey(key_list[key_index_list[key_pos]]);
+			  key_pos++;
+		  }
 	  }
   }
   virtual void SeekToFirstKey() {
@@ -55,6 +71,7 @@ class Cursor {
   }
   virtual int label(){ return label_list[key_index_list[key_pos-1]]; }
   virtual vector<float>& kl_info(){ return  kl_info_vec[key_index_list[key_pos - 1]]; }
+  virtual void set_shuffle(bool val){ is_shuffle = val; }
 protected:
 	vector<int> key_index_list;
 	vector<string> key_list;
@@ -64,6 +81,7 @@ protected:
 	void get_key_from_db();
 
 	bool valid_;
+	bool is_shuffle;
   DISABLE_COPY_AND_ASSIGN(Cursor);
 };
 

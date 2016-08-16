@@ -1,130 +1,151 @@
-#include "THCHalf.h"
 #include <thrust/transform.h>
 #include <thrust/execution_policy.h>
+#include "util/half_util.hpp"
+#include <cuda_fp16.h>
 
-struct __half2floatOp {
-  __device__ float operator()(half v) { return __half2float(v); }
-};
+namespace caffe {
+	template <typename Dtype>
+	struct __half2floatOp {
+		__device__ Dtype operator()(half v) { return (Dtype)__half2float(v); }
+	};
 
-struct __float2halfOp {
-  __device__ half operator()(float v) { return __float2half(v); }
-};
+	template <typename Dtype>
+	struct __float2halfOp {
+		__device__ half operator()(Dtype v) { return __float2half((float)v); }
+	};
 
-void THCFloat2Half(THCState *state, half *out, float *in, long len) {
-  thrust::transform(
+	template <typename Dtype>
+	void THCFloat2Half(/*THCState *state,*/ half *out, Dtype *in, long len) {
+		thrust::transform(
 #if CUDA_VERSION >= 7000
-    thrust::cuda::par.on(THCState_getCurrentStream(state)),
+			//thrust::cuda::par.on(THCState_getCurrentStream(state)),
+			thrust::cuda::par,
 #else
-    thrust::device,
+			thrust::device,
 #endif
-    in, in + len, out, __float2halfOp());
-}
+			in, in + len, out, __float2halfOp<Dtype>());
+	}
 
-void THCHalf2Float(THCState *state, float *out, half *in, long len) {
-  thrust::transform(
+	template <typename Dtype>
+	void THCHalf2Float(/*THCState *state,*/ Dtype *out, half *in, long len) {
+		thrust::transform(
 #if CUDA_VERSION >= 7000
-    thrust::cuda::par.on(THCState_getCurrentStream(state)),
+			thrust::cuda::par,//.on(THCState_getCurrentStream(state)),
 #else
-    thrust::device,
+			thrust::device,
 #endif
-    in, in + len, out, __half2floatOp());
-}
+			in, in + len, out, __half2floatOp<Dtype>());
+	}
 
-float THC_half2float(half a)
-{
-  unsigned int bits = a.x & 0x7fff;
-  unsigned int sign = a.x & 0x8000;
-  unsigned int exp = a.x & 0x7c00;
+	template struct __half2floatOp<double>;
+	template struct __half2floatOp<float>;
+	template struct __float2halfOp<double>;
+	template struct __float2halfOp<float>;
+	template void THCFloat2Half<double>(half *out, double *in, long len);
+	template void THCFloat2Half<float>(half *out, float *in, long len);
+	template void THCHalf2Float<double>(double *out, half *in, long len);
+	template void THCHalf2Float<float>(float *out, half *in, long len);
 
-  bits <<= 13;
-  sign <<= 16;
+	float THC_half2float(half a)
+	{
+		unsigned int bits = a.x & 0x7fff;
+		unsigned int sign = a.x & 0x8000;
+		unsigned int exp = a.x & 0x7c00;
 
-  bits += 0x38000000U;
+		bits <<= 13;
+		sign <<= 16;
 
-  // flush denormals to 0
-  bits = (exp == 0 ? 0 : bits) | sign;
+		bits += 0x38000000U;
 
-  union {
-    float f;
-    unsigned int v;
-  } conv;
-  conv.v = bits;
+		// flush denormals to 0
+		bits = (exp == 0 ? 0 : bits) | sign;
 
-  return conv.f;
-}
+		union {
+			float f;
+			unsigned int v;
+		} conv;
+		conv.v = bits;
 
-/*
-  Copyright (c) 2015, Norbert Juffa
-  All rights reserved.
+		return conv.f;
+	}
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
+	/*
+	  Copyright (c) 2015, Norbert Juffa
+	  All rights reserved.
 
-  1. Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
+	  Redistribution and use in source and binary forms, with or without
+	  modification, are permitted provided that the following conditions
+	  are met:
 
-  2. Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in the
-     documentation and/or other materials provided with the distribution.
+	  1. Redistributions of source code must retain the above copyright
+	  notice, this list of conditions and the following disclaimer.
 
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-  HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+	  2. Redistributions in binary form must reproduce the above copyright
+	  notice, this list of conditions and the following disclaimer in the
+	  documentation and/or other materials provided with the distribution.
 
-half THC_float2half(float a)
-{
-  uint32_t ia;
-  uint16_t ir;
-  memcpy(&ia, &a, sizeof(float));
+	  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+	  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+	  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+	  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+	  HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+	  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+	  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+	  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+	  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+	  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+	  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	  */
 
-  ir = (ia >> 16) & 0x8000;
-  if ((ia & 0x7f800000) == 0x7f800000) {
-    if ((ia & 0x7fffffff) == 0x7f800000) {
-      ir |= 0x7c00; /* infinity */
-    } else {
-      ir = 0x7fff; /* canonical NaN */
-    }
-  } else if ((ia & 0x7f800000) >= 0x33000000) {
-    int shift = (int)((ia >> 23) & 0xff) - 127;
-    if (shift > 15) {
-      ir |= 0x7c00; /* infinity */
-    } else {
-      ia = (ia & 0x007fffff) | 0x00800000; /* extract mantissa */
-      if (shift < -14) { /* denormal */
-        ir |= ia >> (-1 - shift);
-        ia = ia << (32 - (-1 - shift));
-      } else { /* normal */
-        ir |= ia >> (24 - 11);
-        ia = ia << (32 - (24 - 11));
-        ir = ir + ((14 + shift) << 10);
-      }
-      /* IEEE-754 round to nearest of even */
-      if ((ia > 0x80000000) || ((ia == 0x80000000) && (ir & 1))) {
-        ir++;
-      }
-    }
-  }
+	half THC_float2half(float a)
+	{
+		uint32_t ia;
+		uint16_t ir;
+		memcpy(&ia, &a, sizeof(float));
 
-  half ret;
-  memcpy(&ret, &ir, sizeof(half));
-  return ret;
-}
+		ir = (ia >> 16) & 0x8000;
+		if ((ia & 0x7f800000) == 0x7f800000) {
+			if ((ia & 0x7fffffff) == 0x7f800000) {
+				ir |= 0x7c00; /* infinity */
+			}
+			else {
+				ir = 0x7fff; /* canonical NaN */
+			}
+		}
+		else if ((ia & 0x7f800000) >= 0x33000000) {
+			int shift = (int)((ia >> 23) & 0xff) - 127;
+			if (shift > 15) {
+				ir |= 0x7c00; /* infinity */
+			}
+			else {
+				ia = (ia & 0x007fffff) | 0x00800000; /* extract mantissa */
+				if (shift < -14) { /* denormal */
+					ir |= ia >> (-1 - shift);
+					ia = ia << (32 - (-1 - shift));
+				}
+				else { /* normal */
+					ir |= ia >> (24 - 11);
+					ia = ia << (32 - (24 - 11));
+					ir = ir + ((14 + shift) << 10);
+				}
+				/* IEEE-754 round to nearest of even */
+				if ((ia > 0x80000000) || ((ia == 0x80000000) && (ir & 1))) {
+					ir++;
+				}
+			}
+		}
 
-THC_EXTERNC int THC_nativeHalfInstructions(THCState *state) {
-  cudaDeviceProp* prop =
-    THCState_getCurrentDeviceProperties(state);
+		half ret;
+		memcpy(&ret, &ir, sizeof(half));
+		return ret;
+	}
 
-  // CC 5.3+
-  return (prop->major > 5 ||
-          (prop->major == 5 && prop->minor == 3));
+	//int THC_nativeHalfInstructions(THCState *state) {
+	//  cudaDeviceProp* prop =
+	//    THCState_getCurrentDeviceProperties(state);
+	//
+	//  // CC 5.3+
+	//  return (prop->major > 5 ||
+	//          (prop->major == 5 && prop->minor == 3));
+	//}
 }

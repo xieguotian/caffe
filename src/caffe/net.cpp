@@ -18,6 +18,7 @@
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
+#include "util\half_util.hpp"
 
 namespace caffe {
 
@@ -284,6 +285,18 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   ShareWeights();
   debug_info_ = param.debug_info();
 
+  //half point 
+  half_support_ = param.opt_fp16() && Caffe::mode() == Caffe::GPU;
+  if (phase_ == Phase::TRAIN && half_support_)
+  {
+	  half_blobs_.clear();
+	  for (int i = 0; i < blobs_.size(); ++i)
+	  {
+		  shared_ptr<SyncedMemory> half_blob(new SyncedMemory(blobs_[i]->count()*sizeof(half)));
+		  half_blobs_.push_back(half_blob);
+	  }
+  }
+
   opt_memory_ = param.opt_memory();
   opt_test_shared_memory_ = param.opt_test_shared_memory();
   shared_blobs_.clear();
@@ -293,7 +306,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 	  shared_blobs_index_.resize(blobs_.size());
 	  for (int i = 0; i < layers_.size(); ++i) 
 	  {
-		  if ((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_&& !layer_need_backward_[i]))
+		  if ((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_&& (!layer_need_backward_[i] || half_support_ )))
 		  {
 			  if (layer_types_[i] == "Split")
 			  {
@@ -884,7 +897,7 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   CHECK_LT(end, layers_.size());
   Dtype loss = 0;
   for (int i = start; i <= end; ++i) {
-	  if (((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_&& !layer_need_backward_[i]))
+	  if (((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_&& (!layer_need_backward_[i]||half_support_)))
 		  && layer_types_[i] != "Split")
 	  {
 		  //share cache meory.
@@ -907,10 +920,46 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
 			  blobs_[blob_id]->ShareData_LE(*shared_blobs_[cache_idx]);
 		  }
 	  }
+	  //if (phase_ == Phase::TRAIN && half_support_)
+	  //{
+		 // for (int bi = 0; bi < bottom_vecs_[i].size(); ++bi)
+		 // {
+			//  int blob_id = bottom_id_vecs_[i][bi];
+			//  //if (half_blobs_[blob_id]->count() < blobs_[blob_id]->count())
+			//	  //half_blobs_[blob_id]->ReshapeLike(*blobs_[blob_id]);
+
+			//  THCHalf2Float(
+			//	  blobs_[blob_id]->mutable_gpu_data(),
+			//	  static_cast<half*>(half_blobs_[blob_id]->mutable_gpu_data()),
+			//	  blobs_[blob_id]->count());
+		 // }
+	  //}
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
+
+	if (phase_ == Phase::TRAIN && half_support_)
+	{
+		for (int ti = 0; ti < top_vecs_[i].size(); ++ti)
+		{
+			int blob_id = top_id_vecs_[i][ti];
+			if (layer_types_[i] == "Split" || layer_types_[i] == "BatchNormOpt")
+			{
+				half_blobs_[blob_id] = half_blobs_[bottom_id_vecs_[i][0]];
+			}
+			else{
+				if ((half_blobs_[blob_id]->size() / sizeof(half)) < blobs_[blob_id]->count())
+				{
+					//half_blobs_[blob_id]->Reshape(blobs_[blob_id]->shape());
+					half_blobs_[blob_id].reset(new SyncedMemory(blobs_[blob_id]->count()*sizeof(half)));
+				}
+			}
+			THCFloat2Half<Dtype>(static_cast<half*>(half_blobs_[blob_id]->mutable_gpu_data()),
+				blobs_[blob_id]->mutable_gpu_data(),
+				blobs_[blob_id]->count());
+		}
+	}
   }
   return loss;
 }
@@ -974,6 +1023,21 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
 				  }
 				  blobs_[blob_id]->ShareDiff_LE(*shared_blobs_diff_[cache_idx]);
 			  }
+		  }
+
+		  if (phase_ == Phase::TRAIN && half_support_)
+		  {
+		   for (int bi = 0; bi < bottom_vecs_[i].size(); ++bi)
+		   {
+		    int blob_id = bottom_id_vecs_[i][bi];
+		    //if (half_blobs_[blob_id]->count() < blobs_[blob_id]->count())
+		  	  //half_blobs_[blob_id]->ReshapeLike(*blobs_[blob_id]);
+
+		    THCHalf2Float<Dtype>(
+		  	  blobs_[blob_id]->mutable_gpu_data(),
+		  	  static_cast<half*>(half_blobs_[blob_id]->mutable_gpu_data()),
+		  	  blobs_[blob_id]->count());
+		   }
 		  }
 		  /*
 		  if (opt_memory_)

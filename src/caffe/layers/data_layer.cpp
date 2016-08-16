@@ -88,7 +88,16 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     // Apply data transformations (mirror, scale, crop...)
     int offset = batch->data_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset);
+	this->transformed_data_.is_set_data(false);
     this->data_transformer_->Transform(datum, &(this->transformed_data_));
+
+	while (!this->transformed_data_.has_set_data())
+	{
+		LOG(INFO) << "transform data fail";
+		reader_.free().push(const_cast<Datum*>(&datum));
+		datum = *(reader_.full().pop("Waiting for data"));
+		this->data_transformer_->Transform(datum, &(this->transformed_data_));
+	}
     // Copy label.
     if (this->output_labels_) {
       top_label[item_id] = datum.label();

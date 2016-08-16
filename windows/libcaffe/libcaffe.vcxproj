@@ -295,6 +295,7 @@
     <ClInclude Include="..\..\include\caffe\util\db_leveldb.hpp" />
     <ClInclude Include="..\..\include\caffe\util\db_lmdb.hpp" />
     <ClInclude Include="..\..\include\caffe\util\device_alternate.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\half_util.hpp" />
     <ClInclude Include="..\..\include\caffe\util\hdf5.hpp" />
     <ClInclude Include="..\..\include\caffe\util\im2col.hpp" />
     <ClInclude Include="..\..\include\caffe\util\insert_splits.hpp" />
@@ -374,6 +375,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\softmax_binary_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\softmax_cross_entropy_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\SwapMaxLayer.cu" />
+    <CudaCompile Include="..\..\src\caffe\util\half_util.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(SolutionDir)\CommonSettings.targets" />
