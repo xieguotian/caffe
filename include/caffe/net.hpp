@@ -12,6 +12,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "util\half_util.hpp"
+#include "caffe/layers/cudnn_conv_mask_layer.hpp"
 
 namespace caffe {
 
@@ -246,6 +247,11 @@ class Net {
 		  {
 			  half_blobs_[i]->release_mem();
 		  }
+	  }
+	  for (int i = 0; i < layers_.size(); ++i)
+	  {
+		  if (layer_types_[i] == "Convolution" && layers_[i]->layer_param().convolution_param().engine() == ConvolutionParameter_Engine_CUDNNMASK)
+			  (boost::dynamic_pointer_cast<CuDNNConvolutionMaskLayer<Dtype> >(layers_[i]))->Release_caches();
 	  }
   }
  protected:

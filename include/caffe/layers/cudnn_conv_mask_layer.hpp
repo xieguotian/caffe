@@ -1,5 +1,5 @@
-#ifndef CAFFE_CUDNN_CONV_LAYER_HPP_
-#define CAFFE_CUDNN_CONV_LAYER_HPP_
+#ifndef CAFFE_CUDNN_CONV_MASK_LAYER_HPP_
+#define CAFFE_CUDNN_CONV_MASK_LAYER_HPP_
 
 #include <vector>
 
@@ -27,16 +27,23 @@ namespace caffe {
  * faster as long as it fits in memory.
 */
 template <typename Dtype>
-class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
+class CuDNNConvolutionMaskLayer : public ConvolutionLayer<Dtype> {
  public:
-  explicit CuDNNConvolutionLayer(const LayerParameter& param)
+	 explicit CuDNNConvolutionMaskLayer(const LayerParameter& param)
       : ConvolutionLayer<Dtype>(param), handles_setup_(false) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-  virtual ~CuDNNConvolutionLayer();
+  virtual ~CuDNNConvolutionMaskLayer();
 
+  virtual void Release_caches(){
+	  for (int i = 0; i < mask_caches_.size(); ++i)
+	  {
+		  mask_caches_[i]->Release_mem();
+	  }
+	  LOG(INFO) << "Release caches";
+  }
  protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -64,6 +71,9 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   size_t workspaceSizeInBytes;  // size of underlying storage
   void *workspaceData;  // underlying storage
   void **workspace;  // aliases into workspaceData
+
+  //static Blob<Dtype> caches_;
+  vector<shared_ptr<Blob<char>>> mask_caches_;
 };
 #endif
 

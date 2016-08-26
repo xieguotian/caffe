@@ -60,6 +60,8 @@ void Cursor::set_key_by_file(string key_file_name)
 	while (std::getline(key_file, line))
 	{
 		vector<string> str_vec = string_split(line, ' ');
+		if (str_vec.size() < 2)
+			str_vec = string_split(line, '\t');
 		key = str_vec[0];
 		label = atoi(str_vec[1].c_str());
 

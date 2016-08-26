@@ -150,7 +150,8 @@ def get_legend_loc(chart_type):
 
 def plot_chart(chart_type, path_to_png, path_to_log_list):
     for path_to_log in path_to_log_list:
-        os.system('python %s %s %s' % (get_log_parsing_script(), path_to_log,os.path.dirname(os.path.abspath(path_to_png))))
+        cmd = 'python %s %s %s' % (get_log_parsing_script(), path_to_log,os.path.dirname(os.path.abspath(path_to_png)))
+        os.system(cmd)
         for ix,ch_type in enumerate(chart_type):
             data_file = get_data_file(ch_type, path_to_log)
             x_axis_field, y_axis_field = get_field_descriptions(ch_type)

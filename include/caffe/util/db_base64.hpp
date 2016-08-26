@@ -237,11 +237,13 @@ namespace caffe {
 					key = str_vec[0];
 					label = atoi(str_vec[1].c_str());
 
-					key_list.push_back(key);
-					label_list.push_back(label);
-
 					if (str_vec.size() >= 3)
 					{
+						if (key_pos_map_.find(key) != key_pos_map_.end())
+						{
+							LOG(INFO) << "ignore repeated key: " << key;
+							continue;
+						}
 						key_pos_map_[key] = atoll(str_vec[2].c_str());
 						if (str_vec.size() >= 4)
 						{
@@ -253,6 +255,8 @@ namespace caffe {
 							kl_info_vec.push_back(tmp_info);
 						}
 					}
+					key_list.push_back(key);
+					label_list.push_back(label);
 				}
 
 				for (int i = 0; i < key_list.size(); ++i)

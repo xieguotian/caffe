@@ -164,6 +164,7 @@ void Blob<Dtype>::ShareDiff_LE(const Blob& other) {
 // Blob<int> or Blob<unsigned int>.
 template <> void Blob<unsigned int>::Update() { NOT_IMPLEMENTED; }
 template <> void Blob<int>::Update() { NOT_IMPLEMENTED; }
+template <> void Blob<char>::Update() { NOT_IMPLEMENTED; }
 
 template <typename Dtype>
 void Blob<Dtype>::Update() {
@@ -201,6 +202,11 @@ template <> int Blob<int>::asum_data() const {
   return 0;
 }
 
+template <> char Blob<char>::asum_data() const {
+	NOT_IMPLEMENTED;
+	return 0;
+}
+
 template <typename Dtype>
 Dtype Blob<Dtype>::asum_data() const {
   if (!data_) { return 0; }
@@ -236,6 +242,11 @@ template <> int Blob<int>::asum_diff() const {
   return 0;
 }
 
+template <> char Blob<char>::asum_diff() const {
+	NOT_IMPLEMENTED;
+	return 0;
+}
+
 template <typename Dtype>
 Dtype Blob<Dtype>::asum_diff() const {
   if (!diff_) { return 0; }
@@ -269,6 +280,11 @@ template <> unsigned int Blob<unsigned int>::sumsq_data() const {
 template <> int Blob<int>::sumsq_data() const {
   NOT_IMPLEMENTED;
   return 0;
+}
+
+template <> char Blob<char>::sumsq_data() const {
+	NOT_IMPLEMENTED;
+	return 0;
 }
 
 template <typename Dtype>
@@ -308,6 +324,11 @@ template <> int Blob<int>::sumsq_diff() const {
   return 0;
 }
 
+template <> char Blob<char>::sumsq_diff() const {
+	NOT_IMPLEMENTED;
+	return 0;
+}
+
 template <typename Dtype>
 Dtype Blob<Dtype>::sumsq_diff() const {
   Dtype sumsq;
@@ -343,6 +364,10 @@ template <> void Blob<int>::scale_data(int scale_factor) {
   NOT_IMPLEMENTED;
 }
 
+template <> void Blob<char>::scale_data(char scale_factor) {
+	NOT_IMPLEMENTED;
+}
+
 template <typename Dtype>
 void Blob<Dtype>::scale_data(Dtype scale_factor) {
   Dtype* data;
@@ -374,6 +399,10 @@ template <> void Blob<unsigned int>::scale_diff(unsigned int scale_factor) {
 
 template <> void Blob<int>::scale_diff(int scale_factor) {
   NOT_IMPLEMENTED;
+}
+
+template <> void Blob<char>::scale_diff(char scale_factor) {
+	NOT_IMPLEMENTED;
 }
 
 template <typename Dtype>
@@ -558,6 +587,7 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
 INSTANTIATE_CLASS(Blob);
 template class Blob<int>;
 template class Blob<unsigned int>;
+template class Blob<char>;
 //template class Blob<half>;
 
 }  // namespace caffe

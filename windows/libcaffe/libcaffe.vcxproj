@@ -114,6 +114,7 @@
     <ClCompile Include="..\..\src\caffe\layers\conv_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\crop_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\cudnn_conv_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\cudnn_conv_mask_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\cudnn_lcn_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\cudnn_lrn_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\cudnn_pooling_layer.cpp" />
@@ -222,6 +223,7 @@
     <ClInclude Include="..\..\include\caffe\layers\conv_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\crop_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\cudnn_conv_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\cudnn_conv_mask_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\cudnn_lcn_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\cudnn_lrn_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\cudnn_pooling_layer.hpp" />
@@ -371,6 +373,7 @@
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\batch_norm_opt_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\col2img_mask_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\cudnn_conv_mask_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\softmax_binary_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\softmax_cross_entropy_loss_layer.cu" />

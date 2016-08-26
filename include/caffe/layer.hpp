@@ -318,6 +318,7 @@ class Layer {
 
   inline Phase phase() { return phase_; }
 
+  virtual void Release_caches(){}
  protected:
   /** The protobuf that stores the layer parameters */
   LayerParameter layer_param_;

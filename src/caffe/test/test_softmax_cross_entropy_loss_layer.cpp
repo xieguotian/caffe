@@ -24,6 +24,7 @@ class SoftmaxCrossEntropyLossLayerTest : public MultiDeviceTest<TypeParam> {
 	 SoftmaxCrossEntropyLossLayerTest()
       : blob_bottom_data_(new Blob<Dtype>(10, 5, 2, 3)),
         blob_bottom_label_(new Blob<Dtype>(10, 5, 2, 3)),
+		blob_bottom_hard_label_(new Blob<Dtype>(10, 1, 2, 3)),
         blob_top_loss_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;
@@ -35,6 +36,11 @@ class SoftmaxCrossEntropyLossLayerTest : public MultiDeviceTest<TypeParam> {
     for (int i = 0; i < blob_bottom_label_->count(); ++i) {
       blob_bottom_label_->mutable_cpu_data()[i] = caffe_rng_rand();
     }
+
+	for (int i = 0; i < blob_bottom_hard_label_->count(); ++i) {
+		blob_bottom_hard_label_->mutable_cpu_data()[i] = caffe_rng_rand() % 5;
+	}
+
 	int spat_dim = blob_bottom_label_->height()*blob_bottom_label_->width();
 	for (int n = 0; n < blob_bottom_label_->num(); ++n)
 	{
@@ -65,6 +71,7 @@ class SoftmaxCrossEntropyLossLayerTest : public MultiDeviceTest<TypeParam> {
   }
   Blob<Dtype>* const blob_bottom_data_;
   Blob<Dtype>* const blob_bottom_label_;
+  Blob<Dtype>* const blob_bottom_hard_label_;
   Blob<Dtype>* const blob_top_loss_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
@@ -82,10 +89,36 @@ TYPED_TEST(SoftmaxCrossEntropyLossLayerTest, TestGradient) {
       this->blob_top_vec_, 0);
 }
 
+TYPED_TEST(SoftmaxCrossEntropyLossLayerTest, TestIgnoreLabelGradient) {
+	typedef typename TypeParam::Dtype Dtype;
+	this->blob_bottom_vec_.push_back(blob_bottom_hard_label_);
+	LayerParameter layer_param;
+	layer_param.add_loss_weight(3);
+	layer_param.mutable_loss_param()->set_ignore_label(3);
+	SoftmaxCrossEntropyLossLayer<Dtype> layer(layer_param);
+	GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+	checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+		this->blob_top_vec_, 0);
+}
+
+
 TYPED_TEST(SoftmaxCrossEntropyLossLayerTest, TestGradientTemperature) {
 	typedef typename TypeParam::Dtype Dtype;
 	LayerParameter layer_param;
 	layer_param.add_loss_weight(3);
+	layer_param.mutable_softmax_param()->set_temperature(8);
+	SoftmaxCrossEntropyLossLayer<Dtype> layer(layer_param);
+	GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
+	checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+		this->blob_top_vec_, 0);
+}
+
+TYPED_TEST(SoftmaxCrossEntropyLossLayerTest, TestGradientIgnoreLabelTemperature) {
+	typedef typename TypeParam::Dtype Dtype;
+	this->blob_bottom_vec_.push_back(blob_bottom_hard_label_);
+	LayerParameter layer_param;
+	layer_param.add_loss_weight(3);
+	layer_param.mutable_loss_param()->set_ignore_label(3);
 	layer_param.mutable_softmax_param()->set_temperature(8);
 	SoftmaxCrossEntropyLossLayer<Dtype> layer(layer_param);
 	GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);

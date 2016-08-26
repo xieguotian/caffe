@@ -2,8 +2,8 @@
 #include <algorithm>
 #include <vector>
 
-#include "caffe/layers/cudnn_conv_layer.hpp"
-
+#include "caffe/layers/cudnn_conv_mask_layer.hpp"
+#include "caffe/filler.hpp"
 namespace caffe {
 
 // Set to three for the benefit of the backward pass, which
@@ -15,9 +15,21 @@ namespace caffe {
  * TODO(dox) explain cuDNN interface
  */
 template <typename Dtype>
-void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
+void CuDNNConvolutionMaskLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
+
+  shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
+	  this->layer_param_.convolution_param().weight_filler()));
+  vector<int> weight_shape = this->blobs_[0]->shape();
+  weight_shape[0] = weight_shape[0] / 9;
+  weight_shape[1] = weight_shape[1] * 9;
+  Blob<Dtype> tmp_weight;
+  tmp_weight.Reshape(weight_shape);
+  weight_filler->Fill(&tmp_weight);
+  caffe_copy(tmp_weight.count(), tmp_weight.gpu_data(), this->blobs_[0]->mutable_gpu_data());
+  //weight_filler->Fill(this->blobs_[0].get());
+
   // Initialize CUDA streams and cuDNN.
   stream_         = new cudaStream_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
   handle_         = new cudnnHandle_t[this->group_ * CUDNN_STREAMS_PER_GROUP];
@@ -88,7 +100,7 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 }
 
 template <typename Dtype>
-void CuDNNConvolutionLayer<Dtype>::Reshape(
+void CuDNNConvolutionMaskLayer<Dtype>::Reshape(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   ConvolutionLayer<Dtype>::Reshape(bottom, top);
   CHECK_EQ(2, this->num_spatial_axes_)
@@ -229,10 +241,24 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
     cudnn::setTensor4dDesc<Dtype>(&bias_desc_,
         1, this->num_output_ / this->group_, 1, 1);
   }
+
+  // Reshape top and mask
+  mask_caches_.resize(top.size());
+  vector<int> top_shape = top[0]->shape();
+  int channel_new = top[0]->shape(this->channel_axis_) / 9;
+  top_shape[this->channel_axis_] = channel_new;
+  for (int i = 0; i < top.size(); ++i) 
+  {
+	  //top_shape[this->channel_axis_ + 1] /= 9;
+	  //top_shape[this->channel_axis_ + 2] /= 9;
+	  top[i]->Reshape(top_shape);
+	  mask_caches_[i].reset(new Blob<char>());
+	  mask_caches_[i]->Reshape(top_shape);
+  }
 }
 
 template <typename Dtype>
-CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
+CuDNNConvolutionMaskLayer<Dtype>::~CuDNNConvolutionMaskLayer() {
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 
@@ -262,7 +288,7 @@ CuDNNConvolutionLayer<Dtype>::~CuDNNConvolutionLayer() {
   delete [] workspace_bwd_filter_sizes_;
 }
 
-INSTANTIATE_CLASS(CuDNNConvolutionLayer);
+INSTANTIATE_CLASS(CuDNNConvolutionMaskLayer);
 
 }   // namespace caffe
 #endif
