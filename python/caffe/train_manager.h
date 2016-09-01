@@ -19,6 +19,15 @@ namespace caffe{
 		shared_ptr<Net<Dtype>> Init(string sover_proto, string gpu_ids = "", string snapshot = "", string weights = "");
 		shared_ptr<Net<Dtype>> Train(int iterations, shared_ptr<Net<Dtype>> net=NULL);
 		inline shared_ptr<Net<Dtype>> net(){ return solver_->net(); }
+		inline vector<shared_ptr<Net<Dtype>>> all_nets(){
+			vector<shared_ptr<Net<Dtype>>> results;
+			results.push_back(solver_->net());
+			for (int i = 0; i < syncs.size(); i++)
+			{
+				results.push_back(syncs[i]->solver()->net());
+			}
+			return results;
+		}
 		inline shared_ptr<Net<Dtype>> test_net(){ return solver_->test_nets()[0]; }
 	private:
 		shared_ptr<Solver<Dtype>> solver_;

@@ -78,6 +78,7 @@
     <ClCompile Include="..\..\src\caffe\test\test_argmax_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_batch_norm_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_batch_norm_opt_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_batch_norm_torch_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_batch_reindex_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_benchmark.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_bias_layer.cpp" />

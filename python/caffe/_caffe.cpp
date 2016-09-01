@@ -432,6 +432,7 @@ BOOST_PYTHON_MODULE(_caffe) {
 	  .def("__init__", bp::make_constructor(&Train_Init<Dtype>))
 	  .def("__init__", bp::make_constructor(&Train_Init_Load<Dtype>))
 	  .add_property("net", &TrainManager<Dtype>::net)
+	  //.add_property("all_nets", &TrainManager<Dtype>::all_nets)
 	  .add_property("test_net",&TrainManager<Dtype>::test_net)
 	  .def("Train", &TrainManager<Dtype>::Train)
 	  .def("Init", &TrainManager<Dtype>::Init);
