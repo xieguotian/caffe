@@ -134,5 +134,4 @@ src/caffe/layers/batch_norm_opt_layer_org.cu
 *.sdf
 *.pdb
 *.log
-*.filters
 *.vspx
