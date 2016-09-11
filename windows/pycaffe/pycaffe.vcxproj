@@ -50,6 +50,9 @@
     <ClCompile>
       <DisableSpecificWarnings>4003</DisableSpecificWarnings>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Anaconda\include;C:\Anaconda\Lib\site-packages\numpy\core\include;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </UndefinePreprocessorDefinitions>
     </ClCompile>
     <PreBuildEvent>
       <Command>"$(ScriptsDir)\PythonPreBuild.cmd" "$(SolutionDir)" "$(ProtocDir)" "$(OutDir)"</Command>

@@ -27,7 +27,7 @@ namespace caffe{
 
 	template <typename Dtype>
 	struct Float2 {
-		float v1, v2;
+		Dtype v1, v2;
 		__device__ Float2() {}
 		__device__ Float2(Dtype v1, Dtype v2) : v1(v1), v2(v2) {}
 		__device__ Float2(Dtype v) : v1(v), v2(v) {}
@@ -41,7 +41,7 @@ namespace caffe{
 	template <typename Dtype>
 	struct SumOp {
 		__device__ SumOp(const Dtype* t ,const int* dim) : tensor(t),dims(dim) {}
-		__device__ __forceinline__ float operator()(int n, int ch, int x) {
+		__device__ __forceinline__ Dtype operator()(int n, int ch, int x) {
 			return tensor[(n*dims[1] + ch)*dims[2] + x];
 		}
 		const Dtype* tensor;
@@ -50,12 +50,12 @@ namespace caffe{
 
 	template <typename Dtype>
 	struct VarOp {
-		__device__ VarOp(float m, const Dtype* t,const int* dim) : mean(m), tensor(t),dims(dim) {}
-		__device__ __forceinline__ float operator()(int n, int ch, int x) {
-			float val = tensor[(n*dims[1] + ch)*dims[2] + x];
+		__device__ VarOp(Dtype m, const Dtype* t,const int* dim) : mean(m), tensor(t),dims(dim) {}
+		__device__ __forceinline__ Dtype operator()(int n, int ch, int x) {
+			Dtype val = tensor[(n*dims[1] + ch)*dims[2] + x];
 			return (val - mean) * (val - mean);
 		}
-		const float mean;
+		const Dtype mean;
 		const Dtype* tensor;
 		const int* dims;
 	};
@@ -65,11 +65,11 @@ namespace caffe{
 		__device__ GradOp(Dtype m, const Dtype* i, const Dtype* g, int* dim1, int* dim2)
 		: mean(m), input(i), gradOutput(g),dims1(dim1),dims2(dim2) {}
 		__device__ __forceinline__ Float2<Dtype> operator()(int n, int ch, int x) {
-			float g = gradOutput[(n*dims1[1] + ch)*dims1[2] + x];
-			float c = input[(n*dims2[1] + ch)*dims2[2] + x] - mean;
+			Dtype g = gradOutput[(n*dims1[1] + ch)*dims1[2] + x];
+			Dtype c = input[(n*dims2[1] + ch)*dims2[2] + x] - mean;
 			return Float2<Dtype>(g, g * c);
 		}
-		const float mean;
+		const Dtype mean;
 		const Dtype* input;
 		const Dtype* gradOutput;
 		const int* dims1;
@@ -152,15 +152,15 @@ namespace caffe{
 		int plane = blockIdx.x;
 		int batch = blockIdx.y;
 
-		float invstd = 1.0f / sqrt(runningVar[plane] + epsilon);
-		float mean = runningMean[plane];
-		float gamma = weight!=NULL ? weight[plane] : 1.0f;
-		float beta = bias!=NULL ? bias[plane] : 0.0f;
+		Dtype invstd = 1.0f / sqrt(runningVar[plane] + epsilon);
+		Dtype mean = runningMean[plane];
+		Dtype gamma = weight!=NULL ? weight[plane] : 1.0f;
+		Dtype beta = bias!=NULL ? bias[plane] : 0.0f;
 
 		// Write normalized and update the output
 		for (int x = threadIdx.x; x < dims[2]; x += blockDim.x) {
 			int idx = (batch*dims[1] + plane)*dims[2] + x;
-			float inp = input[idx];
+			Dtype inp = input[idx];
 			output[idx] = gamma * (inp - mean) * invstd + beta;
 		}
 	}
@@ -189,8 +189,8 @@ namespace caffe{
 		// Compute the mean and variance across (batch, x/y/z)
 		Dtype mean = reduce<Dtype>(SumOp<Dtype>(input,dims), plane,dims) * norm;
 		__syncthreads();
-		float varN = reduce<Dtype>(VarOp<Dtype>(mean, input,dims), plane,dims);
-		float invStd = 0.0f;
+		Dtype varN = reduce<Dtype>(VarOp<Dtype>(mean, input,dims), plane,dims);
+		Dtype invStd = 0.0f;
 		if (varN != 0.0f || epsilon != 0.0f) {
 			invStd = 1 / sqrt(varN * norm + epsilon);
 		}
@@ -198,7 +198,7 @@ namespace caffe{
 		// Save the mean, variance, and moving averages
 		if (threadIdx.x == 0) {
 			// Momentum based writeback
-			float unbiasedVar = varN / (N - 1);
+			Dtype unbiasedVar = varN / (N - 1);
 			saveMean[plane] = mean;
 			saveStd[plane] = invStd;
 			runningMean[plane] = (1 - momentum) * runningMean[plane] + momentum * mean;
@@ -206,13 +206,13 @@ namespace caffe{
 		}
 
 		// Write normalized and update the output
-		float gamma = weight!=NULL ? weight[plane] : 1.0f;
-		float beta = bias!=NULL ? bias[plane] : 0.0f;
+		Dtype gamma = weight!=NULL ? weight[plane] : 1.0f;
+		Dtype beta = bias!=NULL ? bias[plane] : 0.0f;
 
 		for (int batch = 0; batch < dims[0]; ++batch) {
 			for (int x = threadIdx.x; x < dims[2]; x += blockDim.x) {
 				int idx = (batch*dims[1] + plane)*dims[2] + x;
-				float inp = input[idx];
+				Dtype inp = input[idx];
 				output[idx] = gamma * (inp - mean) * invStd + beta;
 			}
 		}
@@ -274,7 +274,7 @@ namespace caffe{
 		int plane = blockIdx.x;
 		int N = dims[0] * dims[2];
 
-		float mean, stdVal;
+		Dtype mean, stdVal;
 		if (train) {
 			mean = saveMean[plane];
 			stdVal = saveStd[plane];

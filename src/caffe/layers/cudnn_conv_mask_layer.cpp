@@ -5,6 +5,10 @@
 #include "caffe/layers/cudnn_conv_mask_layer.hpp"
 #include "caffe/filler.hpp"
 namespace caffe {
+	template <> map<string, shared_ptr<Blob<double>>> CuDNNConvolutionMaskLayer<double>::thread_caches_ = map<string, shared_ptr<Blob<double>>>();
+	template <> map<string, shared_ptr<Blob<float>>> CuDNNConvolutionMaskLayer<float>::thread_caches_ = map<string, shared_ptr<Blob<float>>>();
+
+	boost::mutex caches_mutex_;
 
 // Set to three for the benefit of the backward pass, which
 // can use separate streams for calculating the gradient w.r.t.
@@ -23,7 +27,7 @@ void CuDNNConvolutionMaskLayer<Dtype>::LayerSetUp(
 	  this->layer_param_.convolution_param().weight_filler()));
   vector<int> weight_shape = this->blobs_[0]->shape();
   weight_shape[0] = weight_shape[0] / 9;
-  weight_shape[1] = weight_shape[1] * 9;
+  weight_shape[2] = weight_shape[2] * 9;
   Blob<Dtype> tmp_weight;
   tmp_weight.Reshape(weight_shape);
   weight_filler->Fill(&tmp_weight);
@@ -254,6 +258,26 @@ void CuDNNConvolutionMaskLayer<Dtype>::Reshape(
 	  top[i]->Reshape(top_shape);
 	  mask_caches_[i].reset(new Blob<char>());
 	  mask_caches_[i]->Reshape(top_shape);
+  }
+
+  thread_id_ = boost::lexical_cast<std::string>(boost::this_thread::get_id());
+  caches_mutex_.lock();
+  if (thread_caches_.find(thread_id_) == thread_caches_.end())
+  {
+	  thread_caches_[thread_id_] = shared_ptr<Blob<Dtype>>(new Blob<Dtype>());//.reset(new Blob<Dtype>());
+  }
+  caches_mutex_.unlock();
+
+  shared_ptr<Blob<Dtype>> caches_;
+  caches_ = thread_caches_[thread_id_];
+  for (int i = 0; i < top.size(); ++i)
+  {
+	  if (caches_->count() < 9 * top[i]->count())
+	  {
+		  vector<int> shape = top[i]->shape();
+		  shape[1] = shape[1] * 9;
+		  caches_->Reshape(shape);
+	  }
   }
 }
 

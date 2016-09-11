@@ -308,6 +308,11 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 	  {
 		  if ((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_&& (!layer_need_backward_[i] || half_support_ )))
 		  {
+			  // two case is not for shared memory: 1. shared data within the layer. 2. inplace layer.
+			  // shared data with int the layer:
+			  // 1) Split layer
+			  // 2) BatchNormOpt layer
+			  // 3) Flatten layer
 			  if (layer_types_[i] == "Split")
 			  {
 				  //don't append shared memory for top, but increase the shared_record_

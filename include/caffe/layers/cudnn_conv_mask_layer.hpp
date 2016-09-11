@@ -8,10 +8,13 @@
 #include "caffe/proto/caffe.pb.h"
 
 #include "caffe/layers/conv_layer.hpp"
-
+#include <thread>
+#include <boost/thread.hpp>
+#include <boost/lexical_cast.hpp>
 namespace caffe {
 
 #ifdef USE_CUDNN
+	extern boost::mutex caches_mutex_;
 /*
  * @brief cuDNN implementation of ConvolutionLayer.
  *        Fallback to ConvolutionLayer for CPU mode.
@@ -30,7 +33,7 @@ template <typename Dtype>
 class CuDNNConvolutionMaskLayer : public ConvolutionLayer<Dtype> {
  public:
 	 explicit CuDNNConvolutionMaskLayer(const LayerParameter& param)
-      : ConvolutionLayer<Dtype>(param), handles_setup_(false) {}
+		 : ConvolutionLayer<Dtype>(param), handles_setup_(false) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -72,7 +75,8 @@ class CuDNNConvolutionMaskLayer : public ConvolutionLayer<Dtype> {
   void *workspaceData;  // underlying storage
   void **workspace;  // aliases into workspaceData
 
-  //static Blob<Dtype> caches_;
+  static map <string, shared_ptr<Blob<Dtype>>> thread_caches_;
+  string thread_id_;
   vector<shared_ptr<Blob<char>>> mask_caches_;
 };
 #endif

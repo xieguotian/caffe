@@ -455,7 +455,7 @@ bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
 
 template <typename Dtype>
 void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape, bool force_copy) {
-  if (source.shape() != shape_ && !force_copy) {
+	if ((source.count() != count_ || source.shape() != shape_) && !force_copy) {
     if (reshape) {
       ReshapeLike(source);
     } else {

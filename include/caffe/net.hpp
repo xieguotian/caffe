@@ -353,10 +353,10 @@ class Net {
 
   // allocate diff cache according to layer types.
   vector<string> layer_types_;
-  map<string, vector<Blob<Dtype>*>> diff_caches_;
-  map<string, vector<int>> diff_caches_used_;
-  vector<string> layer_type_record_;
-  vector<int> used_cache_record_;
+  //map<string, vector<Blob<Dtype>*>> diff_caches_;
+  //map<string, vector<int>> diff_caches_used_;
+  //vector<string> layer_type_record_;
+  //vector<int> used_cache_record_;
   bool opt_memory_;
   bool opt_test_shared_memory_;
   DISABLE_COPY_AND_ASSIGN(Net);
