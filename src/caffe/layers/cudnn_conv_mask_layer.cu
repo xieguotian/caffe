@@ -139,54 +139,115 @@ __global__ void max_among_six_spatial_bp(const int nthreads,
 {
 
 	CUDA_KERNEL_LOOP(index, nthreads) {
-		const int w_idx = index % width + 1;
-		const int h_idx = (index / width) % height + 1;
+		const int w_idx = index % width ;
+		const int h_idx = (index / width) % height;
 		const int ch_idx = (index / height / width) % channels;
-		const int g_idx = (index / height / width / channels) % 9;
-		const int num_idx = index / channels / height / width / 9;
+		//const int g_idx = (index / height / width / channels) % 9;
+		const int num_idx = index / channels / height / width;// / 9;
 
 		//int j = g_idx % 3;
 		//int i = g_idx / 3;
-
-		int w = w_idx - (int)(g_idx % 3);//j;
-		int h = h_idx - (int)(g_idx / 3);//i;
-
-		if (w >= 0 && w < width && h >= 0 && h < height)
+		Dtype diff_data = input_diff[index];
+		int sel_num = output_mask[index];
+		int g_idx_set[9];
+		int num_g_idx = 0;
+		switch (sel_num)
 		{
-			int idx = ((num_idx*channels + ch_idx)*height + h)*width + w;
-			int sel_num = output_mask[idx];
-			switch (sel_num)
+		case 4:
+			g_idx_set[0] = 4;
+			num_g_idx = 1;
+			break;
+		case 3:
+			g_idx_set[0] = 3;
+			g_idx_set[1] = 4;
+			g_idx_set[2] = 5;
+			num_g_idx = 3;
+			break;
+		case 1:
+			g_idx_set[0] = 1;
+			g_idx_set[1] = 4;
+			g_idx_set[2] = 7;
+			num_g_idx = 3;
+			break;
+		case 0:
+			g_idx_set[0] = 0;
+			g_idx_set[1] = 4;
+			g_idx_set[2] = 8;
+			num_g_idx = 3;
+			break;
+		case 2:
+			g_idx_set[0] = 2;
+			g_idx_set[1] = 4;
+			g_idx_set[2] = 6;
+			num_g_idx = 3;
+			break;
+		case 5:
+			for (int i = 0; i < 9; i++)
+				g_idx_set[i] = i;
+			num_g_idx = 9;
+		default:
+			break;
+		}
+		for (int i = 0; i < num_g_idx; i++)
+		{
+			int g_idx = g_idx_set[i];
+			int w = w_idx - 1 + (int)(g_idx % 3);
+			int h = h_idx - 1 + (int)(g_idx / 3);
+			if (w >= 0 && w < width && h >= 0 && h < height)
 			{
-			//case 0:
-			case 4:
-				if (g_idx == 4)
-					output_diff[index] = input_diff[idx];
-				break;
-			//case 1:
-			case 3:
-				if (g_idx == 3 || g_idx == 4 || g_idx == 5)
-					output_diff[index] = input_diff[idx];
-				break;
-			//case 2:
-			case 1:
-				if (g_idx == 1 || g_idx == 4 || g_idx == 7)
-					output_diff[index] = input_diff[idx];
-				break;
-			//case 3:
-			case 0:
-				if (g_idx == 0 || g_idx == 4 || g_idx == 8)
-					output_diff[index] = input_diff[idx];
-				break;
-			//case 4:
-			case 2:
-				if (g_idx == 2 || g_idx == 4 || g_idx == 6)
-					output_diff[index] = input_diff[idx];
-				break;
-			case 5:
-				output_diff[index] = input_diff[idx];
-				break;
+				int index_t = (((num_idx * 9 + g_idx)*channels + ch_idx)*height + h)*width + w;
+				output_diff[index_t] = diff_data;
 			}
 		}
+
+		/*
+		for (int g_idx = 0; g_idx < 9; g_idx++)
+		{
+			int index_t = (((num_idx * 9 + g_idx)*channels + ch_idx)*height + h_idx)*width + w_idx;
+			//int w = w_idx - (int)(g_idx % 3) + 1;//j;
+			//int h = h_idx - (int)(g_idx / 3) + 1;//i;
+
+			int w = w_idx - 1 + (int)(g_idx % 3);
+			int h = h_idx - 1 + (int)(g_idx / 3);
+
+			if (w >= 0 && w < width && h >= 0 && h < height)
+			{
+				//int idx = ((num_idx*channels + ch_idx)*height + h)*width + w;
+				//int sel_num = output_mask[idx];
+				switch (sel_num)
+				{
+					//case 0:
+				case 4:
+					if (g_idx == 4)
+						output_diff[index_t] = input_diff[idx];
+					break;
+					//case 1:
+				case 3:
+					if (g_idx == 3 || g_idx == 4 || g_idx == 5)
+						output_diff[index_t] = input_diff[idx];
+					break;
+					//case 2:
+				case 1:
+					if (g_idx == 1 || g_idx == 4 || g_idx == 7)
+						output_diff[index_t] = input_diff[idx];
+					break;
+					//case 3:
+				case 0:
+					if (g_idx == 0 || g_idx == 4 || g_idx == 8)
+						output_diff[index_t] = input_diff[idx];
+					break;
+					//case 4:
+				case 2:
+					if (g_idx == 2 || g_idx == 4 || g_idx == 6)
+						output_diff[index_t] = input_diff[idx];
+					break;
+				case 5:
+					output_diff[index_t] = input_diff[idx];
+					break;
+				}
+			}
+		}
+		*/
 
 		//Dtype val = 0;
 		//for (int h_col = h_col_start; h_col < h_col_end; h_col += 1) {
@@ -313,6 +374,84 @@ __global__ void max_among_six_spatial_bp(const int nthreads,
 }
 
 template <typename Dtype>
+__global__ void max_among_six_spatial_bp_fast(const int nthreads,
+	const Dtype* const input_diff,
+	const int num, const int channels,
+	const int height, const int width,
+	Dtype* const output_diff, const char* const output_mask)
+{
+
+	CUDA_KERNEL_LOOP(index, nthreads) {
+
+		const int g_idx = index % 9;
+		const int w_idx = (index / 9)  % width;
+		const int h_idx = (index / 9 / width) % height;
+		const int ch_idx = (index / 9 / height / width) % channels;
+		int w = w_idx - 1 + (int)(g_idx % 3);
+		int h = h_idx - 1 + (int)(g_idx / 3); 
+		const int num_idx = index / channels / height / width / 9;
+		int out_idx = (((num_idx * 9 + g_idx)*channels + ch_idx)*height + h)*width + w; 
+		 
+		__shared__ float diff_data[50];
+		__shared__ int idx_num[50];
+
+		int diff_idx = threadIdx.x / 9;
+		if (g_idx == 0)
+		{
+			int idx = ((num_idx*channels + ch_idx)*height + h_idx)*width + w_idx;
+			diff_data[diff_idx] = input_diff[idx];
+			idx_num[diff_idx] = output_mask[idx];
+		}
+
+		__syncthreads();
+
+		if (w >= 0 && w < width && h >= 0 && h < height)
+		{
+			int sel_num = (int)idx_num[diff_idx];
+			switch (sel_num)
+			{
+				//case 0:
+			case 4:
+				if (g_idx == 4)
+					output_diff[out_idx] = (Dtype)diff_data[diff_idx];
+					//output_diff[out_idx] = input_diff[idx];
+				break;
+				//case 1:
+			case 3:
+				if (g_idx == 3 || g_idx == 4 || g_idx == 5)
+					output_diff[out_idx] = (Dtype)diff_data[diff_idx];
+					//output_diff[out_idx] = input_diff[idx];
+				break;
+				//case 2:
+			case 1:
+				if (g_idx == 1 || g_idx == 4 || g_idx == 7)
+					output_diff[out_idx] = (Dtype)diff_data[diff_idx];
+					//output_diff[out_idx] = input_diff[idx];
+				break;
+				//case 3:
+			case 0:
+				if (g_idx == 0 || g_idx == 4 || g_idx == 8)
+					output_diff[out_idx] = (Dtype)diff_data[diff_idx];
+					//output_diff[out_idx] = input_diff[idx];
+				break;
+				//case 4:
+			case 2:
+				if (g_idx == 2 || g_idx == 4 || g_idx == 6)
+					output_diff[out_idx] = diff_data[diff_idx];
+					//output_diff[out_idx] = input_diff[idx];
+				break;
+			case 5:
+				output_diff[out_idx] = (Dtype)diff_data[diff_idx];
+				//output_diff[out_idx] = input_diff[idx]; 
+				break;
+			default:
+				//output_diff[out_idx] = 0;
+				break;
+			}
+		}
+	}
+}
+template <typename Dtype>
 void CuDNNConvolutionMaskLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = NULL;
@@ -334,10 +473,16 @@ void CuDNNConvolutionMaskLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 	  int n_threads = top[i]->count() * 9;
 	  caffe_gpu_set(n_threads, (Dtype)0, caches_->mutable_gpu_data());
 	  const char* mask_data = mask_caches_[i]->gpu_data();
-	  max_among_six_spatial_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
-		  n_threads, top[i]->gpu_diff(), top[i]->num(),
+	  max_among_six_spatial_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads / 9), CAFFE_CUDA_NUM_THREADS >> >(
+		  n_threads / 9, top[i]->gpu_diff(), top[i]->num(),
 		  top[i]->channels(), top[i]->height(), top[i]->width(),
 		  caches_->mutable_gpu_data(), mask_data); 
+	  //int block_threads = (n_threads + 450 - 1) / 450;
+	  ////int block_threads = (n_threads + 512 - 1) / 512;
+	  //max_among_six_spatial_bp_fast<Dtype> <<<block_threads, 450>>>(
+		 // n_threads, top[i]->gpu_diff(), top[i]->num(),
+		 // top[i]->channels(), top[i]->height(), top[i]->width(),
+		 // caches_->mutable_gpu_data(), mask_data);
 	  const Dtype* top_diff = caches_->gpu_data();//top[i]->gpu_diff();
 
     // Backward through cuDNN in parallel over groups and gradients.

@@ -272,6 +272,8 @@ namespace caffe {
 					LOG(INFO) << "key_pos_map size: " << key_pos_map_.size();
 				}
 				LOG(INFO) << "data size: " << key_index_list.size();
+				if (kl_info_vec.size()>0)
+					LOG(INFO) << "kl_info_size: " << kl_info_vec.size() << " dim: " << kl_info_vec[0].size();
 			}
 
 		private:

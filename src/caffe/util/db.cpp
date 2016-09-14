@@ -84,6 +84,8 @@ void Cursor::set_key_by_file(string key_file_name)
 		key_index_list.push_back(i);
 	}
 	LOG(INFO) << "data size: " << key_index_list.size();
+	if (kl_info_vec.size()>0)
+		LOG(INFO) << "kl_info_size: " << kl_info_vec.size() << " dim: " << kl_info_vec[0].size();
 }
 
 void Cursor::get_key_from_db()

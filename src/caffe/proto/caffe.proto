@@ -38,6 +38,13 @@ message Datum {
   repeated float float_data = 6;
   // If true data contains an encoded image that need to be decoded
   optional bool encoded = 7 [default = false];
+  
+  enum DataType{
+	NULL_DATA = 0;
+	KL_INFO = 1;
+	EXTRA_LABEL = 2;
+  }
+  optional DataType extra_type = 100 [default = NULL_DATA];
 }
 
 message FillerParameter {
@@ -694,6 +701,13 @@ message DataParameter {
   repeated string key_files = 104;
   
   repeated DB multi_backends = 105;
+  
+  enum DataType{
+	NULL_DATA = 0;
+	KL_INFO = 1;
+	EXTRA_LABEL = 2;
+  }
+  optional DataType extra_type = 100 [default = NULL_DATA];
 }
 
 message DropoutParameter {

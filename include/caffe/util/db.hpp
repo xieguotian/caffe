@@ -72,6 +72,8 @@ class Cursor {
   virtual int label(){ return label_list[key_index_list[key_pos-1]]; }
   virtual vector<float>& kl_info(){ return  kl_info_vec[key_index_list[key_pos - 1]]; }
   virtual void set_shuffle(bool val){ is_shuffle = val; }
+  virtual void set_extra_data_type(DataParameter::DataType extra_data_type){ extra_data_type_ = extra_data_type; }
+  virtual DataParameter::DataType get_extra_data_type(){ return extra_data_type_; }
 protected:
 	vector<int> key_index_list;
 	vector<string> key_list;
@@ -82,6 +84,8 @@ protected:
 
 	bool valid_;
 	bool is_shuffle;
+
+	DataParameter::DataType extra_data_type_ = DataParameter_DataType_NULL_DATA;
   DISABLE_COPY_AND_ASSIGN(Cursor);
 };
 

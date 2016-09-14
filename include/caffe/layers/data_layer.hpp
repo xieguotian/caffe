@@ -26,7 +26,7 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual inline const char* type() const { return "Data"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int MaxTopBlobs() const { return 3; }
 
   void reset_list(vector<string>& name_list, vector<float>& ratio_list)
   {

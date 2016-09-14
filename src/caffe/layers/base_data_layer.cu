@@ -20,6 +20,14 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
     caffe_copy(batch->label_.count(), batch->label_.gpu_data(),
         top[1]->mutable_gpu_data());
   }
+  if (this->output_extra_data_)
+  {
+	  // Reshape to loaded extra_data.
+	  top[2]->ReshapeLike(batch->extra_data_);
+	  // copy extra_data
+	  caffe_copy(batch->extra_data_.count(), batch->extra_data_.gpu_data(),
+		  top[2]->mutable_gpu_data());
+  }
   // Ensure the copy is synchronous wrt the host, so that the next batch isn't
   // copied in meanwhile.
   CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));

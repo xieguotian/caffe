@@ -49,6 +49,20 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       this->prefetch_[i].label_.Reshape(label_shape);
     }
   }
+
+  //extra_data
+  this->output_extra_data_ = false;
+  if (top.size()>2)
+  {
+	  this->output_extra_data_ = true;
+	  vector<int> extra_shape(2);// (batch_size, datum.float_data_size());
+	  extra_shape[0] = batch_size;
+	  extra_shape[1] = datum.float_data_size();
+	  top[2]->Reshape(extra_shape);
+	  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+		  this->prefetch_[i].extra_data_.Reshape(extra_shape);
+	  }
+  }
 }
 
 // This function is called on prefetch thread
@@ -102,6 +116,13 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     if (this->output_labels_) {
       top_label[item_id] = datum.label();
     }
+	//copy extra_data.
+	if (this->output_extra_data_)
+	{
+		Dtype* extra_ptr = batch->extra_data_.mutable_cpu_data() + batch->extra_data_.offset(item_id);
+		for (int extra_id = 0; extra_id < datum.float_data_size(); extra_id++)
+			extra_ptr[extra_id] = datum.float_data(extra_id);
+	}
     trans_time += timer.MicroSeconds();
 
     reader_.free().push(const_cast<Datum*>(&datum));

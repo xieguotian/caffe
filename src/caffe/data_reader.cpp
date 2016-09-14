@@ -125,6 +125,7 @@ void DataReader::Body::InternalThreadEntry() {
 		shared_ptr<db::Cursor> cursor(db->NewCursor());
 		use_key_files = false;
 		shuffle = false;
+		cursor->set_extra_data_type(param_.data_param().extra_type());
 
 		if (param_.data_param().key_files_size() > 0 || param_.data_param().shuffle())
 		{
@@ -326,7 +327,7 @@ void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
 		//std::ofstream our_img(out_name,std::ofstream::binary);
 		//our_img << datum->data();
 		//our_img.close();
-
+		datum->set_extra_type((Datum_DataType)cursor->get_extra_data_type());
 		if (cursor->get_use_kl_info())
 		{
 			datum->mutable_float_data()->Resize(cursor->kl_info().size(), 0);
@@ -381,7 +382,7 @@ void DataReader::Body::read_one(db::Cursor* cursor, QueuePair* qp) {
 		//std::ofstream our_img(out_name, std::ofstream::binary);
 		//our_img << datum->data();
 		//our_img.close();
-
+		datum->set_extra_type((Datum_DataType)cursor->get_extra_data_type());
 		if (cursor->get_use_kl_info())
 		{
 			datum->mutable_float_data()->Resize(cursor->kl_info().size(), 0);

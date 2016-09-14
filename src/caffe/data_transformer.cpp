@@ -132,7 +132,7 @@ template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        Blob<Dtype>* transformed_blob) {
 	is_color_shift = false;
-	if (datum.float_data_size() > 0 && param_.color_shift())
+	if (datum.extra_type() == Datum_DataType_KL_INFO && datum.float_data_size() > 0 && param_.color_shift())
 	{
 		//for (int i = 0; i < 9; ++i)
 		//{

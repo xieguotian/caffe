@@ -26,6 +26,6 @@ with open(save_name,'w') as fout:
             label = re_label
         #pos = key.find('_')
         #key = key[pos+1:]
-        print >>fout,'%s %d'%(key.strip(),np.int(label))
+        print >>fout,'%s\t%d'%(key.strip(),np.int(label))
         if(ix+1)%10000==0:
             print 'process %d'%(ix+1)

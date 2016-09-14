@@ -120,7 +120,14 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
     caffe_copy(batch->label_.count(), batch->label_.cpu_data(),
         top[1]->mutable_cpu_data());
   }
-
+  if (this->output_extra_data_)
+  {
+	  // Reshape to loaded extra_data.
+	  top[2]->ReshapeLike(batch->extra_data_);
+	  // copy extra_data
+	  caffe_copy(batch->extra_data_.count(), batch->extra_data_.cpu_data(),
+		  top[2]->mutable_cpu_data());
+  }
   prefetch_free_.push(batch);
 }
 
