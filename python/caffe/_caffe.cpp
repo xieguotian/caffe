@@ -203,6 +203,32 @@ void Net_SetInputKeyFile(Net<Dtype>* net, bp::list name_list, bp::list ratio_lis
 	data_layer->reset_list(name_list_tmp, ratio_list_tmp);
 }
 
+vector<shared_ptr<Blob<Dtype>>> Net_GetMaskCaches(Net<Dtype>* net, string layer_name)
+{
+	shared_ptr<Layer<Dtype>> layer_ptr = net->layer_by_name(layer_name);
+	string layer_type = layer_ptr->type();
+	shared_ptr<CuDNNConvolutionMaskLayer<Dtype> > conv_mask_layer =
+		boost::dynamic_pointer_cast<CuDNNConvolutionMaskLayer<Dtype> >(layer_ptr);
+
+	if (!conv_mask_layer || layer_type != "Convolution" || layer_ptr->layer_param().convolution_param().engine() != ConvolutionParameter_Engine_CUDNNMASK)
+	{
+		throw std::runtime_error("only the convolution mask layer has mask: " + layer_name);
+	}
+
+	vector<shared_ptr<Blob<char>>> mask = conv_mask_layer->get_mask_caches();
+	vector<shared_ptr<Blob<Dtype>>> result(mask.size());
+	for (int i = 0; i < mask.size(); i++)
+	{
+		result[i].reset(new Blob<Dtype>());
+		result[i]->Reshape(mask[i]->shape());
+		for (int j = 0; j < mask[i]->count(); j++)
+		{
+			result[i]->mutable_cpu_data()[j] = (Dtype)mask[i]->cpu_data()[j];
+		}
+	}
+	return result;
+}
+
 Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
   ReadSolverParamsFromTextFileOrDie(filename, &param);
@@ -335,7 +361,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("_set_input_arrays", &Net_SetInputArrays,
         bp::with_custodian_and_ward<1, 2, bp::with_custodian_and_ward<1, 3> >())
 	.def("_set_input_image", &Net_SetInputImage)
-	.def("_set_input_key_file", &Net_SetInputKeyFile)
+	.def("_get_conv_mask", &Net_GetMaskCaches)
+	.def("_", &Net_SetInputKeyFile)
     .def("save", &Net_Save)
     .def("save_hdf5", &Net_SaveHDF5)
     .def("load_hdf5", &Net_LoadHDF5)

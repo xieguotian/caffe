@@ -47,6 +47,8 @@ class CuDNNConvolutionMaskLayer : public ConvolutionLayer<Dtype> {
 	  }
 	  LOG(INFO) << "Release caches";
   }
+
+  virtual vector<shared_ptr<Blob<char>>> get_mask_caches(){ return mask_caches_; }
  protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);

@@ -275,6 +275,21 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 	if (param_.has_multi_scale_param() &&
 		param_.multi_scale_param().is_multi_scale() &&
 		(max_scale >= min_scale && min_length<=max_length) ){
+		int interpolation = cv::INTER_LINEAR; 
+		switch (param_.interpolation())
+		{
+		case TransformationParameter_interpolation_type_INTER_LINEAR:
+			interpolation = cv::INTER_LINEAR;
+			break;
+		case TransformationParameter_interpolation_type_INTER_CUBIC:
+			interpolation = cv::INTER_CUBIC;
+			break;
+		case TransformationParameter_interpolation_type_INTER_LANCZOS4:
+			interpolation = cv::INTER_LANCZOS4;
+			break;
+		default:
+			break;
+		}
 		if (phase_ == TRAIN)
 		{
 			if (min_length == 0 || max_length == 0)
@@ -290,7 +305,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 				int resize_height = org_height*scale;
 				int resize_width = org_width*scale;
 
-				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 			}
 			else
 			{
@@ -305,7 +320,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 				int resize_height = org_height*scale;
 				int resize_width = org_width*scale;
 
-				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 			}
 		}
 		else if (phase_ == TEST)
@@ -316,7 +331,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 				int org_width = cv_img.cols;
 				int resize_height = org_height*min_scale;
 				int resize_width = org_width*min_scale;
-				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 			}
 			else
 			{
@@ -327,7 +342,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 				int resize_height = org_height*scale_ratio;
 				int resize_width = org_width*scale_ratio;
 				//std::cout << resize_height << " " << resize_width <<std::endl;
-				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 			}
 		}
 	}

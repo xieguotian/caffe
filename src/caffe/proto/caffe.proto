@@ -463,6 +463,12 @@ message TransformationParameter {
   optional ScaleRange multi_scale_param = 8;
   optional bool test10crop = 9 [default = false];
   optional bool color_shift = 10 [default=false];
+  enum interpolation_type{
+	INTER_LINEAR = 0;
+	INTER_CUBIC = 1;
+	INTER_LANCZOS4 = 2;
+  }
+  optional interpolation_type interpolation = 11 [default=INTER_CUBIC];
 }
 
 // Message that stores parameters shared by loss layers
@@ -540,10 +546,10 @@ message BatchNormParameter {
   // across the batch.
   optional bool use_global_stats = 1;
   // How much does the moving average decay each iteration?
-  optional float moving_average_fraction = 2 [default = .999];
+  optional float moving_average_fraction = 2 [default = 0.9];//[default = .999];
   // Small value to add to the variance estimate so that we don't divide by
   // zero.
-  optional float eps = 3 [default = 1e-5];
+  optional float eps = 3 [default = 1e-15];//[default = 1e-5];
 }
 
 message BiasParameter {

@@ -337,14 +337,14 @@ namespace caffe{
 		const Dtype* gradOutput = top[0]->gpu_diff();
 		Dtype* gradWeight = this->blobs_[3]->mutable_gpu_diff();
 		Dtype* gradBias = NULL;
-		if (use_global_stats_)
+		if (has_bias_term_)
 			gradBias = this->blobs_[4]->mutable_gpu_diff();
 		const Dtype* weight = this->blobs_[3]->gpu_data();
 		const Dtype* runningMean = this->blobs_[0]->gpu_data();
 		const Dtype* runningVar = this->blobs_[1]->gpu_data();
 		const Dtype* saveMean = mean_.gpu_data();
 		const Dtype* saveStd = variance_.gpu_data();
-		bool train = true;
+		bool train = !use_global_stats_;
 
 
 		dim3 blocks(channels_);
