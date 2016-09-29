@@ -49,34 +49,6 @@ int64_t cluster_seedgen(void) {
   return seed;
 }
 
-DEFINE_string(log_name, "log",
-	"name of log file.");
-DEFINE_string(log_dir, "log",
-	"directory of log file.");
-
-void initGlog()
-{
-	FLAGS_log_dir = FLAGS_log_dir + "\\";
-	//FLAGS_log_dir = ".\\log\\";
-	if (!boost::filesystem::exists(FLAGS_log_dir))
-		_mkdir(FLAGS_log_dir.c_str());
-
-	std::string LOG_INFO_FILE;
-	std::string LOG_WARNING_FILE;
-	std::string LOG_ERROR_FILE;
-	std::string LOG_FATAL_FILE;
-	//std::string now_time = boost::posix_time::to_iso_extended_string(boost::posix_time::second_clock::local_time());
-	//now_time[13] = '-';
-	//now_time[16] = '-';
-	LOG_INFO_FILE = FLAGS_log_dir + FLAGS_log_name + ".";
-	google::SetLogDestination(google::GLOG_INFO, LOG_INFO_FILE.c_str());
-	LOG_WARNING_FILE = FLAGS_log_dir + FLAGS_log_name + "_WARNING.";
-	google::SetLogDestination(google::GLOG_WARNING, LOG_WARNING_FILE.c_str());
-	LOG_ERROR_FILE = FLAGS_log_dir + FLAGS_log_name + "_ERROR.";
-	google::SetLogDestination(google::GLOG_ERROR, LOG_ERROR_FILE.c_str());
-	LOG_FATAL_FILE = FLAGS_log_dir +  FLAGS_log_name +"_FATAL.";
-	google::SetLogDestination(google::GLOG_FATAL, LOG_FATAL_FILE.c_str());
-}
 
 void GlobalInit(int* pargc, char*** pargv) {
   // Google flags.
@@ -85,7 +57,7 @@ void GlobalInit(int* pargc, char*** pargv) {
   ::google::InitGoogleLogging(*(pargv)[0]);
   // Provide a backtrace on segfault.
   //::google::InstallFailureSignalHandler();
-  initGlog();
+  
 }
 
 #ifdef CPU_ONLY  // CPU-only Caffe.

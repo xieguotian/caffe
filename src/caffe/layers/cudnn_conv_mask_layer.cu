@@ -74,6 +74,8 @@ __global__ void max_among_six_spatial(const int nthreads,
 		}
 		output_data[index] = max_value;
 		output_mask[index] = (char)max_pos;
+		//output_data[index] = d[5];
+		//output_mask[index] = (char)5;
 
 	}
 }

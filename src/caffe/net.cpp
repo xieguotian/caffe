@@ -1059,6 +1059,24 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
 		  if ((phase_ == Phase::TRAIN && opt_memory_)
 			  && layer_types_[i] != "Reshape" && layer_types_[i] != "Flatten")
 		  {
+			   //share cache meory.
+			   for (int bi = 0; bi < bottom_vecs_[i].size(); bi++)
+			   {
+			    int blob_id = bottom_id_vecs_[i][bi];
+			    int cache_idx = shared_blobs_diff_index_[blob_id];
+			    // if in-place, don't borrow the shared memory again.
+			    if (top_vecs_[i].size()>bi && top_vecs_[i][bi] == bottom_vecs_[i][bi])
+			    {
+			  	  continue;
+			    }
+
+			    if (shared_blobs_diff_[cache_idx]->count() < blobs_[blob_id]->count())
+			    {
+			  	  shared_blobs_diff_[cache_idx]->ReshapeLike(*blobs_[blob_id]);
+			  	  LOG_IF(INFO, Caffe::root_solver()) << "diff reshape " << layer_types_[i] << " " << shared_blobs_diff_[cache_idx]->count();
+			    }
+			    blobs_[blob_id]->ShareDiff_LE(*shared_blobs_diff_[cache_idx]);
+			   }
 			  for (int bi = 0; bi < bottom_vecs_[i].size(); bi++)
 			  {
 				  // if in-place, don't borrow the shared memory again.

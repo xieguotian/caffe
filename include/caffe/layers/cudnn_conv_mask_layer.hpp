@@ -50,6 +50,8 @@ class CuDNNConvolutionMaskLayer : public ConvolutionLayer<Dtype> {
 
   virtual vector<shared_ptr<Blob<char>>> get_mask_caches(){ return mask_caches_; }
  protected:
+	 virtual void Base_Reshape(const vector<Blob<Dtype>*>& bottom,
+		 const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -73,8 +75,8 @@ class CuDNNConvolutionMaskLayer : public ConvolutionLayer<Dtype> {
   size_t *workspace_fwd_sizes_;
   size_t *workspace_bwd_data_sizes_;
   size_t *workspace_bwd_filter_sizes_;
-  size_t workspaceSizeInBytes;  // size of underlying storage
-  void *workspaceData;  // underlying storage
+  static map<string,size_t> workspaceSizeInBytes;  // size of underlying storage
+  static map<string,void *> workspaceData;  // underlying storage
   void **workspace;  // aliases into workspaceData
 
   static map <string, shared_ptr<Blob<Dtype>>> thread_caches_;

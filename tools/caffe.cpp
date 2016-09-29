@@ -10,6 +10,7 @@ namespace bp = boost::python;
 #include <map>
 #include <string>
 #include <vector>
+#include <direct.h>
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
@@ -47,7 +48,32 @@ DEFINE_string(sigint_effect, "stop",
 DEFINE_string(sighup_effect, "snapshot",
              "Optional; action to take when a SIGHUP signal is received: "
              "snapshot, stop or none.");
+DEFINE_string(log_dirs, "log", "directory of log file.");
+DEFINE_string(log_name, "log", "name of log file.");
 
+void initGlog()
+{
+	FLAGS_log_dirs = FLAGS_log_dirs + "\\";
+	//FLAGS_log_dir = ".\\log\\";
+	if (!boost::filesystem::exists(FLAGS_log_dirs))
+		_mkdir(FLAGS_log_dirs.c_str());
+
+	std::string LOG_INFO_FILE;
+	std::string LOG_WARNING_FILE;
+	std::string LOG_ERROR_FILE;
+	std::string LOG_FATAL_FILE;
+	//std::string now_time = boost::posix_time::to_iso_extended_string(boost::posix_time::second_clock::local_time());
+	//now_time[13] = '-';
+	//now_time[16] = '-';
+	LOG_INFO_FILE = FLAGS_log_dirs + FLAGS_log_name + ".";
+	google::SetLogDestination(google::GLOG_INFO, LOG_INFO_FILE.c_str());
+	LOG_WARNING_FILE = FLAGS_log_dirs + FLAGS_log_name + "_WARNING.";
+	google::SetLogDestination(google::GLOG_WARNING, LOG_WARNING_FILE.c_str());
+	LOG_ERROR_FILE = FLAGS_log_dirs + FLAGS_log_name + "_ERROR.";
+	google::SetLogDestination(google::GLOG_ERROR, LOG_ERROR_FILE.c_str());
+	LOG_FATAL_FILE = FLAGS_log_dirs + FLAGS_log_name + "_FATAL.";
+	google::SetLogDestination(google::GLOG_FATAL, LOG_FATAL_FILE.c_str());
+}
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
 typedef std::map<caffe::string, BrewFunction> BrewMap;
@@ -409,6 +435,7 @@ int main(int argc, char** argv) {
       "  time            benchmark model execution time");
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
+  initGlog();
   if (argc == 2) {
 #ifdef WITH_PYTHON_LAYER
     try {
