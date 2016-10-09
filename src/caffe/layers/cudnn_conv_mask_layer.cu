@@ -453,6 +453,41 @@ __global__ void max_among_six_spatial_bp_fast(const int nthreads,
 		}
 	}
 }
+
+
+template <typename Dtype>
+__global__ void mask_diff(const int nthreads,
+	const Dtype* const input_data,
+	Dtype* const output_diff, Dtype mv_fr,
+	const int num, const int channels,
+	const int height, const int width)
+{
+	CUDA_KERNEL_LOOP(index, nthreads) {
+		const int w_idx = index % width;
+		const int h_idx = index / width % height;
+		const int n_idx = index / width / height; 
+
+		Dtype sum = -1;
+
+		for (int ch_idx = 0; ch_idx < channels; ch_idx++)
+		{
+			int idx = (((n_idx*channels + ch_idx)*height + h_idx)*width + w_idx);
+			//sum += input_data[idx];
+			if (sum<input_data[idx])
+				sum = input_data[idx];
+		}
+
+		Dtype threshold = sum*mv_fr;
+
+		for (int ch_idx = 0; ch_idx < channels; ch_idx++)
+		{
+			int idx = (((n_idx*channels + ch_idx)*height + h_idx)*width + w_idx);
+			if (input_data[idx] <= threshold)
+				output_diff[idx] = 0;
+		}
+	}
+}
+
 template <typename Dtype>
 void CuDNNConvolutionMaskLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
@@ -536,6 +571,19 @@ void CuDNNConvolutionMaskLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
     // stream, by launching an empty kernel into the default (null) stream.
     // NOLINT_NEXT_LINE(whitespace/operators)
     sync_conv_groups_t<<<1, 1>>>();
+  }
+
+  if (this->phase_ == TEST)
+  {
+	  Dtype mv_fr = this->layer_param_.batch_norm_param().moving_average_fraction();
+	  int n_threads = bottom[0]->count() / bottom[0]->channels();
+
+	  mask_diff << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
+		  n_threads, bottom[0]->gpu_data(), bottom[0]->mutable_gpu_diff(),
+		  mv_fr,
+		  bottom[0]->num(), bottom[0]->channels(),
+		  bottom[0]->height(), bottom[0]->width()
+		  );
   }
 }
 

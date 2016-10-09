@@ -438,7 +438,12 @@ message ScaleRange{
 	optional uint32 min_length = 4 [default = 0];
 	optional uint32 max_length = 5 [default = 0];
 }
-
+// message for multi-scale image argumentation
+message RotateRange{
+	optional bool is_rotate = 1 [default = false];
+	optional int32 min_rotate = 2 [default = 0];
+	optional int32 max_rotate = 3 [default = 0];
+}
 // Message that stores parameters used to apply transformation
 // to the data layer's data
 message TransformationParameter {
@@ -469,6 +474,7 @@ message TransformationParameter {
 	INTER_LANCZOS4 = 2;
   }
   optional interpolation_type interpolation = 11 [default=INTER_CUBIC];
+  optional RotateRange rotate_param = 12;
 }
 
 // Message that stores parameters shared by loss layers

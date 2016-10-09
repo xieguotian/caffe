@@ -524,12 +524,39 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 			  h_off = (img_height - crop_size) / 2;
 			  w_off = (img_width - crop_size) / 2;
 		  }
+
+		  int min_rotate = param_.rotate_param().min_rotate();
+		  int max_rotate = param_.rotate_param().max_rotate();
+
+		  if (param_.has_rotate_param() &&
+			  param_.rotate_param().is_rotate() &&
+			  (min_rotate<=max_rotate)){
+			  int rotate_angle = 0;
+			  if (phase_==TRAIN)
+				rotate_angle = Rand(max_rotate - min_rotate + 1) + min_rotate;
+			  else
+				rotate_angle =  min_rotate;
+			  cv::Point center = cv::Point((w_off + crop_size) / 2, (h_off + crop_size) / 2);
+			  cv::Mat M = cv::getRotationMatrix2D(center, rotate_angle,1);
+			  cv::warpAffine(tmp_cv_img, tmp_cv_img, M,tmp_cv_img.size());
+		  }
 		  cv::Rect roi(w_off, h_off, crop_size, crop_size);
 		  cv_cropped_img = tmp_cv_img(roi);
 	  }
 	  else {
 		  CHECK_EQ(img_height, height);
 		  CHECK_EQ(img_width, width);
+		  int min_rotate = param_.rotate_param().min_rotate();
+		  int max_rotate = param_.rotate_param().max_rotate();
+
+		  if (param_.has_rotate_param() &&
+			  param_.rotate_param().is_rotate() &&
+			  (min_rotate <= max_rotate)){
+			  int rotate_angle = Rand(max_rotate - min_rotate + 1) + min_rotate;
+			  cv::Point center = cv::Point((img_width) / 2, (img_height) / 2);
+			  cv::Mat M = cv::getRotationMatrix2D(center, rotate_angle,1);
+			  cv::warpAffine(tmp_cv_img, tmp_cv_img, M, tmp_cv_img.size());
+		  }
 	  }
 
 	  CHECK(cv_cropped_img.data);
