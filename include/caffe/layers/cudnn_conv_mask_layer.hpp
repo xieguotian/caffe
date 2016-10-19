@@ -82,6 +82,8 @@ class CuDNNConvolutionMaskLayer : public ConvolutionLayer<Dtype> {
   static map <string, shared_ptr<Blob<Dtype>>> thread_caches_;
   string thread_id_;
   vector<shared_ptr<Blob<char>>> mask_caches_;
+
+  float factor_ = 1.0;
 };
 #endif
 

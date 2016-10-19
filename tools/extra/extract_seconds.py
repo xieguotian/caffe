@@ -42,6 +42,9 @@ def get_start_time(line_iterable, year):
         if line.find('Initializing solver from parameters') != -1:
             start_datetime = extract_datetime_from_line(line, year)
             break
+        elif line.find('Starting Optimization') != -1:
+            start_datetime = extract_datetime_from_line(line, year)
+            break
     return start_datetime
 
 

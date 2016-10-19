@@ -185,6 +185,13 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 #ifdef USE_OPENCV
 		cv::Mat cv_img;
 		DatumToCVMat(&datum, cv_img);
+		if (!cv_img.data)
+		{
+			transformed_blob->is_set_data(false);
+			return;
+		}
+		else
+			transformed_blob->is_set_data(true);
 		return Transform(cv_img, transformed_blob);
 #else
 		LOG(FATAL) << "resize image requires OpenCV; compile with USE_OPENCV.";
