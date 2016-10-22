@@ -308,11 +308,27 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 				int min_side = small_side*min_scale;
 				int max_side = small_side*max_scale;
 				float scale = float(Rand(max_side - min_side + 1) + min_side) / float(small_side);
-				//scale image
-				int resize_height = org_height*scale;
-				int resize_width = org_width*scale;
 
-				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+				if (param_.is_aspect_ration())
+				{
+					float aspect_ratio = float(Rand(8) + 9) / 12;
+					int resize_height = org_height*scale;
+					int resize_width = org_width*scale;
+					if (Rand(2) == 0)
+						resize_height = std::max((int)(org_height*scale*aspect_ratio), min_length);
+					else
+						resize_width = std::max((int)(org_width*scale*aspect_ratio), min_length);
+
+					cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+				}
+				else
+				{
+					//scale image
+					int resize_height = org_height*scale;
+					int resize_width = org_width*scale;
+
+					cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+				}
 			}
 			else
 			{
@@ -323,11 +339,27 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 				//int min_side = small_side*min_scale;
 				//int max_side = small_side*max_scale;
 				float scale = float(Rand(max_length - min_length + 1) + min_length) / float(small_side);
-				//scale image
-				int resize_height = org_height*scale;
-				int resize_width = org_width*scale;
+				
+				if (param_.is_aspect_ration())
+				{
+					float aspect_ratio = float(Rand(8) + 9) / 12;
+					int resize_height = org_height*scale;
+					int resize_width = org_width*scale;
+					if (Rand(2) == 0)
+						resize_height = std::max((int)(org_height*scale*aspect_ratio), min_length);
+					else
+						resize_width = std::max((int)(org_width*scale*aspect_ratio), min_length);
 
-				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+					cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+				}
+				else
+				{
+					//scale image
+					int resize_height = org_height*scale;
+					int resize_width = org_width*scale;
+
+					cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+				}
 			}
 		}
 		else if (phase_ == TEST)

@@ -475,6 +475,7 @@ message TransformationParameter {
   }
   optional interpolation_type interpolation = 11 [default=INTER_CUBIC];
   optional RotateRange rotate_param = 12;
+  optional bool is_aspect_ration = 13[default=false];
 }
 
 // Message that stores parameters shared by loss layers
