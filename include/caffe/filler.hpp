@@ -261,6 +261,33 @@ class BilinearFiller : public Filler<Dtype> {
   }
 };
 
+template <typename Dtype>
+class AdaptiveFiller : public Filler<Dtype> {
+public:
+	explicit AdaptiveFiller(const FillerParameter& param)
+		: Filler<Dtype>(param) {}
+	virtual void Fill(Blob<Dtype>* blob) {
+		CHECK(blob->count());
+		int fan_in = blob->count() / blob->num();
+		int fan_out = blob->count() / blob->channels();
+		Dtype n = fan_in;  // default to fan_in
+		if (this->filler_param_.variance_norm() ==
+			FillerParameter_VarianceNorm_AVERAGE) {
+			n = (fan_in + fan_out) / Dtype(2);
+		}
+		else if (this->filler_param_.variance_norm() ==
+			FillerParameter_VarianceNorm_FAN_OUT) {
+			n = fan_out;
+		}
+		float adaptive_scale = this->filler_param_.value();
+		Dtype std = sqrt(Dtype(adaptive_scale) / n);
+		caffe_rng_gaussian<Dtype>(blob->count(), Dtype(0), std,
+			blob->mutable_cpu_data());
+		CHECK_EQ(this->filler_param_.sparse(), -1)
+			<< "Sparsity not supported by this Filler.";
+	}
+};
+
 /**
  * @brief Get a specific filler from the specification given in FillerParameter.
  *
@@ -284,6 +311,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new MSRAFiller<Dtype>(param);
   } else if (type == "bilinear") {
     return new BilinearFiller<Dtype>(param);
+  } else if (type == "adaptive") {
+	  return new AdaptiveFiller<Dtype>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }

@@ -528,6 +528,112 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 		  }
 	  }
   }
+  else if (param_.has_rotate_num())
+  {
+	  int rotate_num = param_.rotate_num()+1;
+
+	  int h_off = 0;
+	  int w_off = 0;
+	  cv::Mat cv_cropped_img = tmp_cv_img;
+
+	  // calculate color shit vector.
+	  Dtype color_shift[3] = { 0, 0, 0 };
+
+	  for (int nrotate = 0; nrotate < rotate_num; nrotate++)
+	  {
+		  if (crop_size) {
+			  CHECK_EQ(crop_size, height);
+			  CHECK_EQ(crop_size, width);
+			  // We only do random crop when we do training.
+			  if (phase_ == TRAIN) {
+				  h_off = Rand(img_height - crop_size + 1);
+				  w_off = Rand(img_width - crop_size + 1);
+			  }
+			  else {
+				  h_off = (img_height - crop_size) / 2;
+				  w_off = (img_width - crop_size) / 2;
+			  }
+
+			  int min_rotate = param_.rotate_param().min_rotate();
+			  int max_rotate = param_.rotate_param().max_rotate();
+
+			  if (param_.has_rotate_param() &&
+				  param_.rotate_param().is_rotate() &&
+				  (min_rotate <= max_rotate)){
+				  int rotate_angle = nrotate*(float(max_rotate - min_rotate) / (rotate_num-1)) + min_rotate;
+				  //if (phase_ == TRAIN)
+				  // rotate_angle = Rand(max_rotate - min_rotate + 1) + min_rotate;
+				  //else
+				  // rotate_angle = min_rotate;
+				  cv::Point center = cv::Point((w_off + crop_size) / 2, (h_off + crop_size) / 2);
+				  cv::Mat M = cv::getRotationMatrix2D(center, rotate_angle, 1);
+				  cv::warpAffine(tmp_cv_img, tmp_cv_img, M, tmp_cv_img.size());
+			  }
+			  cv::Rect roi(w_off, h_off, crop_size, crop_size);
+			  cv_cropped_img = tmp_cv_img(roi);
+		  }
+		  else {
+			  CHECK_EQ(img_height, height);
+			  CHECK_EQ(img_width, width);
+			  int min_rotate = param_.rotate_param().min_rotate();
+			  int max_rotate = param_.rotate_param().max_rotate();
+
+			  if (param_.has_rotate_param() &&
+				  param_.rotate_param().is_rotate() &&
+				  (min_rotate <= max_rotate)){
+				  int rotate_angle = nrotate*(float(max_rotate - min_rotate) / (rotate_num-1)) + min_rotate;
+				  //int rotate_angle = Rand(max_rotate - min_rotate + 1) + min_rotate;
+				  cv::Point center = cv::Point((img_width) / 2, (img_height) / 2);
+				  cv::Mat M = cv::getRotationMatrix2D(center, rotate_angle, 1);
+				  cv::warpAffine(tmp_cv_img, tmp_cv_img, M, tmp_cv_img.size());
+			  }
+		  }
+
+		  CHECK(cv_cropped_img.data);
+
+		  //Dtype* transformed_data = transformed_blob->mutable_cpu_data();
+		  Dtype* transformed_data = transformed_blob->mutable_cpu_data() + transformed_blob->offset(nrotate);
+		  int top_index;
+		  for (int h = 0; h < height; ++h) {
+			  const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
+			  int img_index = 0;
+			  for (int w = 0; w < width; ++w) {
+				  for (int c = 0; c < img_channels; ++c) {
+					  if (do_mirror) {
+						  top_index = (c * height + h) * width + (width - 1 - w);
+					  }
+					  else {
+						  top_index = (c * height + h) * width + w;
+					  }
+					  // int top_index = (c * height + h) * width + w;
+					  Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
+					  if (has_mean_file) {
+						  int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
+						  if (use_crop_mean)
+						  {
+							  transformed_data[top_index] =
+								  (pixel - mean[top_index] + color_shift[c]) * scale;
+						  }
+						  else
+						  {
+							  transformed_data[top_index] =
+								  (pixel - mean[mean_index] + color_shift[c]) * scale;
+						  }
+					  }
+					  else {
+						  if (has_mean_values) {
+							  transformed_data[top_index] =
+								  (pixel - mean_values_[c] + color_shift[c]) * scale;
+						  }
+						  else {
+							  transformed_data[top_index] = (pixel + color_shift[c]) * scale;
+						  }
+					  }
+				  }
+			  }
+		  }
+	  }
+  }
   else
   {
 	  int h_off = 0;
@@ -571,7 +677,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 			  param_.rotate_param().is_rotate() &&
 			  (min_rotate<=max_rotate)){
 			  int rotate_angle = 0;
-			  if (phase_==TRAIN)
+			  if (phase_==TRAIN || min_rotate<max_rotate)
 				rotate_angle = Rand(max_rotate - min_rotate + 1) + min_rotate;
 			  else
 				rotate_angle =  min_rotate;
@@ -878,7 +984,8 @@ template <typename Dtype>
 void DataTransformer<Dtype>::InitRand() {
   const bool needs_rand = param_.mirror() ||
       (phase_ == TRAIN && param_.crop_size()) || 
-	  (phase_ == TRAIN && param_.multi_scale_param().is_multi_scale());
+	  (phase_ == TRAIN && param_.multi_scale_param().is_multi_scale()
+	  || (phase_ == TEST && param_.rotate_param().is_rotate()));
   if (needs_rand) {
     const unsigned int rng_seed = caffe_rng_rand();
     rng_.reset(new Caffe::RNG(rng_seed));

@@ -180,11 +180,37 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   weight_offset_ = conv_out_channels_ * kernel_dim_ / group_;
   // Propagate gradients to the parameters (as directed by backward pass).
   this->param_propagate_down_.resize(this->blobs_.size(), true);
+
+  is_direct_connect_ = this->layer_param_.has_direct_ratio();
+  if (is_direct_connect_)
+  {
+	  direct_ratio_ = this->layer_param_.direct_ratio();
+	  is_direct_intialized_ = false;
+  }
 }
 
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+	if (is_direct_connect_ && !is_direct_intialized_)
+	{
+		direct_num_ = std::min((int)((direct_ratio_)*(num_output_ / (1 - direct_ratio_))), bottom[0]->channels());
+		this->blobs_.push_back(shared_ptr<Blob<Dtype> >());
+		vector<int> idx_shape;
+		idx_shape.push_back(direct_num_);
+		int idx_param_idx = this->blobs_.size() - 1;
+		this->blobs_[idx_param_idx].reset(new Blob<Dtype>(idx_shape));
+
+		vector<int> idx_tmp;
+		for (int i = 0; i < bottom[0]->channels(); i++)
+			idx_tmp.push_back(i);
+		std::random_shuffle(idx_tmp.begin(), idx_tmp.end());
+		for (int i = 0; i < direct_num_; i++)
+			//direct_idx_.push_back(idx_tmp[i]);
+			this->blobs_[idx_param_idx]->mutable_cpu_data()[i] = idx_tmp[i];
+		is_direct_intialized_ = true;
+	}
+
   const int first_spatial_axis = channel_axis_ + 1;
   CHECK_EQ(bottom[0]->num_axes(), first_spatial_axis + num_spatial_axes_)
       << "bottom num_axes may not change.";
@@ -201,6 +227,9 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   compute_output_shape();
   vector<int> top_shape(bottom[0]->shape().begin(),
       bottom[0]->shape().begin() + channel_axis_);
+  if (is_direct_connect_)
+	  top_shape.push_back(num_output_ + direct_num_);
+  else
   top_shape.push_back(num_output_);
   for (int i = 0; i < num_spatial_axes_; ++i) {
     top_shape.push_back(output_shape_[i]);
@@ -240,6 +269,9 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
   col_buffer_.Reshape(col_buffer_shape_);
   bottom_dim_ = bottom[0]->count(channel_axis_);
+  if (is_direct_connect_)
+	  top_dim_ = top[0]->count(channel_axis_) * num_output_ / (direct_num_ + num_output_);
+  else
   top_dim_ = top[0]->count(channel_axis_);
   num_kernels_im2col_ = conv_in_channels_ * conv_out_spatial_dim_;
   num_kernels_col2im_ = reverse_dimensions() ? top_dim_ : bottom_dim_;

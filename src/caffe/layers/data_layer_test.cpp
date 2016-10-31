@@ -30,8 +30,13 @@ void DataTestLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   Datum& datum = *(reader_.full().peek());
   // Read if test on 10 crop view.
   test10crop_ = this->transform_param_.test10crop();
+  test_rotate_ = this->transform_param_.has_rotate_num();
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
+  if (test10crop_)
+	  top_shape[0] = batch_size;
+  else if (test_rotate_)
+	  top_shape[0] = this->transform_param_.rotate_num() + 1;
   this->transformed_data_.Reshape(top_shape);
   // Reshape top[0] and prefetch_data according to the batch_size.
   top_shape[0] = batch_size;
@@ -45,9 +50,22 @@ void DataTestLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // label
   if (test10crop_)
   {
-	  CHECK(batch_size % 10 == 0) << "batch size must be divided by 10 for test on 10 crop.";
+	  num_per_img_ = 10;
+	  CHECK(batch_size % num_per_img_ == 0) << "batch size must be divided by 10 for test on 10 crop.";
 	  if (this->output_labels_) {
-		  vector<int> label_shape(1, batch_size / 10.0);
+		  vector<int> label_shape(1, batch_size / num_per_img_);
+		  top[1]->Reshape(label_shape);
+		  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+			  this->prefetch_[i].label_.Reshape(label_shape);
+		  }
+	  }
+  }
+  else if (test_rotate_)
+  {
+	  num_per_img_ = this->transform_param_.rotate_num() + 1;
+	  CHECK(batch_size % num_per_img_ == 0) << "batch size must be divided by 10 for test on 10 crop.";
+	  if (this->output_labels_) {
+		  vector<int> label_shape(1, batch_size / num_per_img_);
 		  top[1]->Reshape(label_shape);
 		  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
 			  this->prefetch_[i].label_.Reshape(label_shape);
@@ -84,6 +102,8 @@ void DataTestLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   Datum& datum = *(reader_.full().peek());
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
+  if (test10crop_ || test_rotate_)
+	  top_shape[0] = num_per_img_;
   this->transformed_data_.Reshape(top_shape);
   // Reshape batch according to the batch_size.
   top_shape[0] = batch_size;
@@ -95,16 +115,16 @@ void DataTestLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   if (this->output_labels_) {
     top_label = batch->label_.mutable_cpu_data();
   }
-  if (test10crop_)
+  if (test10crop_ || test_rotate_)
   {
-	  for (int item_id = 0; item_id < batch_size / 10; ++item_id) {
+	  for (int item_id = 0; item_id < batch_size / num_per_img_; ++item_id) {
 		  timer.Start();
 		  // get a datum
 		  Datum& datum = *(reader_.full().pop("Waiting for data"));
 		  read_time += timer.MicroSeconds();
 		  timer.Start();
 		  // Apply data transformations (mirror, scale, crop...)
-		  int offset = batch->data_.offset(item_id*10);
+		  int offset = batch->data_.offset(item_id*num_per_img_);
 		  this->transformed_data_.set_cpu_data(top_data + offset);
 		  this->data_transformer_->Transform(datum, &(this->transformed_data_));
 		  // Copy label.

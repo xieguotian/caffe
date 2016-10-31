@@ -43,6 +43,26 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     // NOLINT_NEXT_LINE(whitespace/operators)
     sync_conv_groups<<<1, 1>>>();
   }
+
+  if (is_direct_connect_)
+  {
+	  int idx_param_idx = this->blobs_.size() - 1;
+	  for (int i = 0; i < bottom.size(); ++i)
+	  {
+		  const Dtype* bottom_data = bottom[i]->gpu_data();
+		  Dtype* top_data = top[i]->mutable_gpu_data();
+		  for (int idx = 0; idx < this->blobs_[idx_param_idx]->count(); ++idx)
+		  {
+			  int sel_idx = this->blobs_[idx_param_idx]->cpu_data()[idx];
+			  for (int n = 0; n < bottom[i]->num(); ++n)
+			  {
+				  caffe_copy(bottom[i]->count(2),
+					  bottom_data + bottom[i]->offset(n, sel_idx),
+					  top_data + top[i]->offset(n, idx + num_output_));
+			  }
+		  }
+	  }
+  }
 }
 
 template <typename Dtype>
@@ -109,6 +129,26 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // stream, by launching an empty kernel into the default (null) stream.
     // NOLINT_NEXT_LINE(whitespace/operators)
     sync_conv_groups<<<1, 1>>>();
+  }
+
+  if (is_direct_connect_)
+  {
+	  int idx_param_idx = this->blobs_.size() - 1;
+	  for (int i = 0; i < bottom.size(); ++i)
+	  {
+		  Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
+		  const Dtype* top_diff = top[i]->gpu_diff();
+		  for (int idx = 0; idx < this->blobs_[idx_param_idx]->count(); ++idx)
+		  {
+			  int sel_idx = this->blobs_[idx_param_idx]->cpu_data()[idx];
+			  for (int n = 0; n < bottom[i]->num(); ++n)
+			  {
+				  caffe_gpu_axpy(bottom[i]->count(2), (Dtype)1.0,
+					  top_diff + top[i]->offset(n, idx + num_output_),
+					  bottom_diff + bottom[i]->offset(n, sel_idx));
+			  }
+		  }
+	  }
   }
 }
 

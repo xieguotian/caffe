@@ -309,10 +309,10 @@ message ParamSpec {
   }
 
   // The multiplier on the global learning rate for this parameter.
-  optional float lr_mult = 3 [default = 1.0];
+  optional float lr_mult = 3 [default = 0.0];
 
   // The multiplier on the global weight decay for this parameter.
-  optional float decay_mult = 4 [default = 1.0];
+  optional float decay_mult = 4 [default = 0.0];
 }
 
 // NOTE
@@ -428,6 +428,7 @@ message LayerParameter {
   optional BinaryBoundingParameter binary_bounding_param = 8266722; 
   
   optional bool force_copy = 8266723 [default = false];
+  optional float direct_ratio = 8266724;
 }
 
 // message for multi-scale image argumentation
@@ -476,6 +477,7 @@ message TransformationParameter {
   optional interpolation_type interpolation = 11 [default=INTER_CUBIC];
   optional RotateRange rotate_param = 12;
   optional bool is_aspect_ration = 13[default=false];
+  optional uint32 rotate_num = 14;
 }
 
 // Message that stores parameters shared by loss layers

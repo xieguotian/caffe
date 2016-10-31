@@ -33,6 +33,8 @@ class DataTestLayer : public BasePrefetchingDataLayer<Dtype> {
 
   DataReader reader_;
   bool test10crop_;
+  bool test_rotate_;
+  int num_per_img_;
 };
 
 }  // namespace caffe
