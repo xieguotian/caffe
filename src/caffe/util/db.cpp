@@ -4,6 +4,7 @@
 #include "caffe/util/db_base64.hpp"
 #include <string>
 #include <ctime>
+#include <random>
 
 namespace caffe { namespace db {
 
@@ -114,9 +115,12 @@ void Cursor::shuffle()
 {
 	if (key_index_list.size() == 0)
 		get_key_from_db();
-	std::srand(std::time(0));
+	//std::srand(std::time(0));
 	LOG(INFO) << "shuffle data base";
-	std::random_shuffle(key_index_list.begin(), key_index_list.end());
+	//std::random_shuffle(key_index_list.begin(), key_index_list.end());
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::shuffle(key_index_list.begin(), key_index_list.end(), gen);
 }
 
 }  // namespace db

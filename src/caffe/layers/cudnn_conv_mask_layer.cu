@@ -62,12 +62,15 @@ __global__ void max_among_six_spatial(const int nthreads,
 		//max_value = val[0];
 		max_value = d[0];
 		max_pos = 0;
+		//max_value = d[4];
+		//max_pos = 4;
 		//d[0] *= 0.003 * factor; //1.25;
 		//d[1] *= 0.003 * factor; //1.25;
 		//d[2] *= 0.003 * factor; //1.25;
 		//d[3] *= 0.003 * factor; //1.25;
 		//d[4] *= 0.009 * factor; //2;
 		for (int i = 1; i < 6; i++)
+		//for (int i = 5; i < 6; i++)
 		{
 			//if (max_value < val[i])
 			if (max_value < d[i])
@@ -86,6 +89,70 @@ __global__ void max_among_six_spatial(const int nthreads,
 	}
 }
 
+template <typename Dtype>
+__global__ void spatial_relu(const int nthreads,
+	const Dtype* const input_data,
+	const int num, const int channels,
+	const int height, const int width,
+	Dtype* const output_data, char* const output_mask, Dtype factor)
+{
+	CUDA_KERNEL_LOOP(index, nthreads) {
+		const int w_idx = index % width;
+		const int h_idx = (index / width) % height;
+		const int ch_idx = (index / height / width) % channels;
+		const int num_idx = index / channels / height / width;
+
+		Dtype d[9];
+
+		Dtype max_value = -FLT_MAX;
+		int max_pos = -1;
+		int g_idx;
+		int tmp_w_idx;
+		int tmp_h_idx;
+		
+		char spatial_record = 0;
+		Dtype result = 0;
+		Dtype tmp_data = 0;
+		for (int i = 0; i < 3; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				g_idx = i * 3 + j;
+				tmp_w_idx = j - 1 + w_idx;
+				tmp_h_idx = i - 1 + h_idx;
+				if (tmp_w_idx < 0 || tmp_w_idx >= width || tmp_h_idx < 0 || tmp_h_idx >= height)
+					//d[g_idx] = 0;
+					tmp_data = 0;
+				else
+					//d[g_idx] = input_data[(((num_idx * 9 + g_idx)*channels + ch_idx)*height + tmp_h_idx)*width + tmp_w_idx];
+					tmp_data = input_data[(((num_idx * 9 + g_idx)*channels + ch_idx)*height + tmp_h_idx)*width + tmp_w_idx];
+
+				if (g_idx == 4)
+				{
+					result += tmp_data;
+				}
+				else
+				{
+					bool is_not_zero = tmp_data > 0;
+					if (is_not_zero)
+					{
+						result += tmp_data;
+
+						spatial_record = (spatial_record << 1) | 1;
+					}
+					else
+						spatial_record = (spatial_record << 1);
+				}
+			}
+		}
+
+		output_data[index] = result;
+		output_mask[index] = (char)spatial_record;
+		//output_data[index] = d[5];
+		//output_mask[index] = (char)5;
+
+	}
+}
 template <typename Dtype>
 void CuDNNConvolutionMaskLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
@@ -130,7 +197,8 @@ void CuDNNConvolutionMaskLayer<Dtype>::Forward_gpu(
 	int n_threads = top[i]->count();
 	//Dtype* mask_data = top[i * 2 + 1]->mutable_gpu_data();
 	char* mask_data = mask_caches_[i]->mutable_gpu_data();
-	max_among_six_spatial<Dtype> << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
+	//max_among_six_spatial<Dtype> << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
+	spatial_relu<Dtype> << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
 		n_threads, top_data, top[i]->num(), top[i]->channels(), top[i]->height(), top[i]->width(),
 		top[i]->mutable_gpu_data(), mask_data ,factor_
 		);
@@ -389,6 +457,55 @@ __global__ void max_among_six_spatial_bp(const int nthreads,
 }
 
 template <typename Dtype>
+__global__ void spatial_relu_bp(const int nthreads,
+	const Dtype* const input_diff,
+	const int num, const int channels,
+	const int height, const int width,
+	Dtype* const output_diff, const char* const output_mask, Dtype factor)
+{
+
+	CUDA_KERNEL_LOOP(index, nthreads) {
+		const int w_idx = index % width;
+		const int h_idx = (index / width) % height;
+		const int ch_idx = (index / height / width) % channels;
+		//const int g_idx = (index / height / width / channels) % 9;
+		const int num_idx = index / channels / height / width;// / 9;
+
+		//int j = g_idx % 3;
+		//int i = g_idx / 3;
+		Dtype diff_data = input_diff[index];
+		char sel_num = output_mask[index];
+		Dtype norm_factor = 1.0;
+
+		for (int i = 8; i >=0; i--)
+		{
+			int w = w_idx - 1 + (int)(i % 3);
+			int h = h_idx - 1 + (int)(i / 3);
+
+			if (i == 4)
+			{
+				if (w >= 0 && w < width && h >= 0 && h < height)
+				{
+					int index_t = (((num_idx * 9 + i)*channels + ch_idx)*height + h)*width + w;
+					output_diff[index_t] = diff_data;// *norm_factor;
+				}
+			}
+			else
+			{
+				bool is_not_zero = (sel_num & 1)>0;
+				sel_num = sel_num >> 1;
+				if (is_not_zero && w >= 0 && w < width && h >= 0 && h < height)
+				{
+					int index_t = (((num_idx * 9 + i)*channels + ch_idx)*height + h)*width + w;
+					output_diff[index_t] = diff_data;// *norm_factor;
+				}
+			}
+		}
+
+	}
+}
+
+template <typename Dtype>
 __global__ void max_among_six_spatial_bp_fast(const int nthreads,
 	const Dtype* const input_diff,
 	const int num, const int channels,
@@ -523,7 +640,8 @@ void CuDNNConvolutionMaskLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 	  int n_threads = top[i]->count() * 9;
 	  caffe_gpu_set(n_threads, (Dtype)0, caches_->mutable_gpu_data());
 	  const char* mask_data = mask_caches_[i]->gpu_data();
-	  max_among_six_spatial_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads / 9), CAFFE_CUDA_NUM_THREADS >> >(
+	  //max_among_six_spatial_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads / 9), CAFFE_CUDA_NUM_THREADS >> >(
+	  spatial_relu_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads / 9), CAFFE_CUDA_NUM_THREADS >> >(
 		  n_threads / 9, top[i]->gpu_diff(), top[i]->num(),
 		  top[i]->channels(), top[i]->height(), top[i]->width(),
 		  caches_->mutable_gpu_data(), mask_data, factor_); 

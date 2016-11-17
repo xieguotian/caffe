@@ -7,6 +7,7 @@
 #include "caffe/data_reader.hpp"
 #include "caffe/layers/data_layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include <random>
 
 namespace caffe {
 	vector<int> rand_sequence(vector<float>& ratio_vec)
@@ -45,8 +46,11 @@ namespace caffe {
 			}
 			result_sequence[i] = cur_idx;
 		}
-		std::srand(std::time(0));
-		std::random_shuffle(result_sequence.begin(), result_sequence.end());
+		//std::srand(std::time(0));
+		//std::random_shuffle(result_sequence.begin(), result_sequence.end());
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::shuffle(result_sequence.begin(), result_sequence.end(), gen);
 
 		//std::ofstream out_ran("tmp2.txt");
 		//for (int ri = 0; ri<result_sequence.size(); ++ri)
