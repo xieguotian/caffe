@@ -34,6 +34,9 @@ class PoolingLayer : public Layer<Dtype> {
             PoolingParameter_PoolMethod_MAX) ? 2 : 1;
   }
 
+  virtual void set_field_size(const vector<Blob<Dtype>*>& bottom,
+	  const vector<Blob<Dtype>*>& top);
+
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);

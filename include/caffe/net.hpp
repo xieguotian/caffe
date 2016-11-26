@@ -255,6 +255,26 @@ class Net {
 			  (boost::dynamic_pointer_cast<CuDNNConvolutionMaskLayer<Dtype> >(layers_[i]))->Release_caches();
 	  }
   }
+
+  vector<int> filed_size(string layer_name)
+  {
+	  int start = 0;
+	  int end = layers_.size();
+	  Dtype loss = 0;
+	  vector<int> info;
+	  for (int i = start; i <= end; ++i) {
+		  layers_[i]->set_field_size(bottom_vecs_[i], top_vecs_[i]);
+		  if (layer_names_[i] == layer_name)
+		  {
+			  info.push_back(top_vecs_[i][0]->kernel_size);
+			  info.push_back(top_vecs_[i][0]->stride);
+			  info.push_back(top_vecs_[i][0]->pad);
+
+			  break;
+		  }
+	  }
+	  return info;
+  }
  protected:
   // Helpers for Init.
   /// @brief Append a new top blob to the net.

@@ -319,6 +319,9 @@ class Layer {
   inline Phase phase() { return phase_; }
 
   virtual void Release_caches(){}
+
+  virtual void set_field_size(const vector<Blob<Dtype>*>& bottom,
+	  const vector<Blob<Dtype>*>& top);
  protected:
   /** The protobuf that stores the layer parameters */
   LayerParameter layer_param_;

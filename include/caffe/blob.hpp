@@ -275,6 +275,17 @@ class Blob {
 
   bool has_set_data() { return has_set_data_; }
   void is_set_data(bool has_set_data){ has_set_data_ = has_set_data; }
+
+  vector<int> field_info()
+  {
+	  vector<int> file_info;
+	  file_info.push_back(kernel_size);
+	  file_info.push_back(stride);
+	  file_info.push_back(pad);
+	  return file_info;
+  }
+
+  int pad, stride, kernel_size;
  protected:
   shared_ptr<SyncedMemory> data_;
   shared_ptr<SyncedMemory> diff_;

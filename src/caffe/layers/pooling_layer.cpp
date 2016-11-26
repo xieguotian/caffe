@@ -307,6 +307,19 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 }
 
 
+
+template <typename Dtype>
+void PoolingLayer<Dtype>::set_field_size(const vector<Blob<Dtype>*>& bottom,
+	const vector<Blob<Dtype>*>& top)
+{
+	for (int n = 0; n < bottom.size(); ++n)
+	{
+		top[n]->kernel_size = (kernel_h_ - 1)*bottom[n]->stride + bottom[n]->kernel_size;
+		top[n]->stride = stride_h_ * bottom[n]->stride;
+		top[n]->pad = bottom[n]->pad - pad_h_ * bottom[n]->stride;
+	}
+}
+
 #ifdef CPU_ONLY
 STUB_GPU(PoolingLayer);
 #endif

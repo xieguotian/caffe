@@ -374,6 +374,10 @@ class PythonCallback: public Solver<Dtype>::Callback {
   virtual void on_start() {
     on_start_();
   }
+  virtual void on_loss_ready()
+  {
+
+  }
 };
 template<typename Dtype>
 void Solver_add_callback(Solver<Dtype> * solver, bp::object on_start,
@@ -446,31 +450,33 @@ BOOST_PYTHON_MODULE(_caffe) {
 	.def("_set_input_image", &Net_SetInputImage)
 	.def("_get_conv_mask", &Net_GetMaskCaches)
 	.def("_set_conv_mask", &Net_SetMaskCaches)
-	.def("_", &Net_SetInputKeyFile)
+	.def("_set_input_key_file", &Net_SetInputKeyFile)
     .def("save", &Net_Save)
     .def("save_hdf5", &Net_SaveHDF5)
     .def("load_hdf5", &Net_LoadHDF5)
-	.def("release_mem",&Net<Dtype>::Release_mem);
+	.def("release_mem",&Net<Dtype>::Release_mem)
+	.def("get_field_size",&Net<Dtype>::filed_size);
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Net<Dtype>);
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
-    "Blob", bp::no_init)
-    .add_property("shape",
-        bp::make_function(
-            static_cast<const vector<int>& (Blob<Dtype>::*)() const>(
-                &Blob<Dtype>::shape),
-            bp::return_value_policy<bp::copy_const_reference>()))
-    .add_property("num",      &Blob<Dtype>::num)
-    .add_property("channels", &Blob<Dtype>::channels)
-    .add_property("height",   &Blob<Dtype>::height)
-    .add_property("width",    &Blob<Dtype>::width)
-    .add_property("count",    static_cast<int (Blob<Dtype>::*)() const>(
-        &Blob<Dtype>::count))
-    .def("reshape",           bp::raw_function(&Blob_Reshape))
-    .add_property("data",     bp::make_function(&Blob<Dtype>::mutable_cpu_data,
-          NdarrayCallPolicies()))
-    .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
-          NdarrayCallPolicies()));
+	  "Blob", bp::no_init)
+	  .add_property("shape",
+	  bp::make_function(
+	  static_cast<const vector<int>& (Blob<Dtype>::*)() const>(
+	  &Blob<Dtype>::shape),
+	  bp::return_value_policy<bp::copy_const_reference>()))
+	  .add_property("num", &Blob<Dtype>::num)
+	  .add_property("channels", &Blob<Dtype>::channels)
+	  .add_property("height", &Blob<Dtype>::height)
+	  .add_property("width", &Blob<Dtype>::width)
+	  .add_property("count", static_cast<int (Blob<Dtype>::*)() const>(
+	  &Blob<Dtype>::count))
+	  .def("reshape", bp::raw_function(&Blob_Reshape))
+	  .add_property("data", bp::make_function(&Blob<Dtype>::mutable_cpu_data,
+	  NdarrayCallPolicies()))
+	  .add_property("diff", bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
+	  NdarrayCallPolicies()))
+	  .add_property("field_info", bp::make_function(&Blob<Dtype>::field_info));
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Blob<Dtype>);
 
   bp::class_<LayerParameter>("LayerParameter", bp::no_init);

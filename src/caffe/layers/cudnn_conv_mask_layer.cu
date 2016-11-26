@@ -58,6 +58,7 @@ __global__ void max_among_six_spatial(const int nthreads,
 
 		//d[5] = max_value + d[4] + d[5] + d[6] + d[7] + d[8];
 		d[5] = (d[0] + d[1] + d[2] + d[3] - 3 * d[4]);
+		//d[6] = d[5] - d[4];
 
 		//max_value = val[0];
 		max_value = d[0];
@@ -70,6 +71,7 @@ __global__ void max_among_six_spatial(const int nthreads,
 		//d[3] *= 0.003 * factor; //1.25;
 		//d[4] *= 0.009 * factor; //2;
 		for (int i = 1; i < 6; i++)
+		//for (int i = 1; i < 7; i++)
 		//for (int i = 5; i < 6; i++)
 		{
 			//if (max_value < val[i])
@@ -197,8 +199,8 @@ void CuDNNConvolutionMaskLayer<Dtype>::Forward_gpu(
 	int n_threads = top[i]->count();
 	//Dtype* mask_data = top[i * 2 + 1]->mutable_gpu_data();
 	char* mask_data = mask_caches_[i]->mutable_gpu_data();
-	//max_among_six_spatial<Dtype> << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
-	spatial_relu<Dtype> << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
+	max_among_six_spatial<Dtype> << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
+	//spatial_relu<Dtype> << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
 		n_threads, top_data, top[i]->num(), top[i]->channels(), top[i]->height(), top[i]->width(),
 		top[i]->mutable_gpu_data(), mask_data ,factor_
 		);
@@ -268,6 +270,20 @@ __global__ void max_among_six_spatial_bp(const int nthreads,
 				g_idx_set[i] = i;
 			num_g_idx = 9;
 			norm_factor = 1.0;
+			break;
+		case 6:
+			int count = 0;
+			for (int i = 0; i < 9; i++)
+			{
+				if (i != 4)
+				{
+					g_idx_set[count] = i;
+					count++;
+				}
+			}
+			num_g_idx = 8;
+			norm_factor = 1.0;
+			break;
 		default:
 			break;
 		}
@@ -640,8 +656,8 @@ void CuDNNConvolutionMaskLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 	  int n_threads = top[i]->count() * 9;
 	  caffe_gpu_set(n_threads, (Dtype)0, caches_->mutable_gpu_data());
 	  const char* mask_data = mask_caches_[i]->gpu_data();
-	  //max_among_six_spatial_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads / 9), CAFFE_CUDA_NUM_THREADS >> >(
-	  spatial_relu_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads / 9), CAFFE_CUDA_NUM_THREADS >> >(
+	  max_among_six_spatial_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads / 9), CAFFE_CUDA_NUM_THREADS >> >(
+	  //spatial_relu_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads / 9), CAFFE_CUDA_NUM_THREADS >> >(
 		  n_threads / 9, top[i]->gpu_diff(), top[i]->num(),
 		  top[i]->channels(), top[i]->height(), top[i]->width(),
 		  caches_->mutable_gpu_data(), mask_data, factor_); 

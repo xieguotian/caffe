@@ -77,6 +77,90 @@ namespace caffe {
     }
   }
 
+  TYPED_TEST(BatchNormTorchLayerTest, TestForwardGlobal) {
+	  typedef typename TypeParam::Dtype Dtype;
+	  LayerParameter layer_param;
+	  layer_param.mutable_batch_norm_param()->set_use_global_stats(true);
+
+	  layer_param.mutable_scale_param()->set_bias_term(true);
+	  layer_param.mutable_scale_param()->mutable_filler()->set_type("constant");
+	  layer_param.mutable_scale_param()->mutable_filler()->set_value(0.5);
+	  layer_param.mutable_scale_param()->mutable_bias_filler()->set_type("constant");
+	  layer_param.mutable_scale_param()->mutable_bias_filler()->set_value(1);
+
+	  BatchNormTorchLayer<Dtype> layer(layer_param);
+	  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+
+	  // Test mean
+	  int num = this->blob_bottom_->num();
+	  int channels = this->blob_bottom_->channels();
+	  int height = this->blob_bottom_->height();
+	  int width = this->blob_bottom_->width();
+
+	  for (int j = 0; j < channels; ++j) {
+		  Dtype sum = 0, var = 0;
+		  for (int i = 0; i < num; ++i) {
+			  for (int k = 0; k < height; ++k) {
+				  for (int l = 0; l < width; ++l) {
+					  Dtype data = this->blob_top_->data_at(i, j, k, l);
+					  sum += data;
+					  std::cout << data;
+					  var += (data - 1) * (data - 1);
+				  }
+			  }
+		  }
+		  sum /= height * width * num;
+		  var /= height * width * num;
+
+		  const Dtype kErrorBound = 0.001;
+		  // expect zero mean
+		  EXPECT_NEAR(0 * 0.5 + 1, sum, kErrorBound);
+		  // expect unit variance
+		  EXPECT_NEAR(0.5*0.5, var, kErrorBound);
+	  }
+  }
+
+  TYPED_TEST(BatchNormTorchLayerTest, TestForwardScale) {
+	  typedef typename TypeParam::Dtype Dtype;
+	  LayerParameter layer_param;
+	  layer_param.mutable_scale_param()->set_bias_term(true);
+	  layer_param.mutable_scale_param()->mutable_filler()->set_type("constant");
+	  layer_param.mutable_scale_param()->mutable_filler()->set_value(0.5);
+	  layer_param.mutable_scale_param()->mutable_bias_filler()->set_type("constant");
+	  layer_param.mutable_scale_param()->mutable_bias_filler()->set_value(1);
+	  BatchNormTorchLayer<Dtype> layer(layer_param);
+	  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+	  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+
+	  // Test mean
+	  int num = this->blob_bottom_->num();
+	  int channels = this->blob_bottom_->channels();
+	  int height = this->blob_bottom_->height();
+	  int width = this->blob_bottom_->width();
+
+	  for (int j = 0; j < channels; ++j) {
+		  Dtype sum = 0, var = 0;
+		  for (int i = 0; i < num; ++i) {
+			  for (int k = 0; k < height; ++k) {
+				  for (int l = 0; l < width; ++l) {
+					  Dtype data = this->blob_top_->data_at(i, j, k, l);
+					  sum += data;
+					  std::cout << data;
+					  var += (data-1) * (data-1);
+				  }
+			  }
+		  }
+		  sum /= height * width * num;
+		  var /= height * width * num;
+
+		  const Dtype kErrorBound = 0.001;
+		  // expect zero mean
+		  EXPECT_NEAR(0*0.5+1, sum, kErrorBound);
+		  // expect unit variance
+		  EXPECT_NEAR(0.5*0.5, var, kErrorBound);
+	  }
+  }
   TYPED_TEST(BatchNormTorchLayerTest, TestGradient) {
     typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;
@@ -86,5 +170,17 @@ namespace caffe {
     checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
         this->blob_top_vec_);
   }
-
+  TYPED_TEST(BatchNormTorchLayerTest, TestGradientScale) {
+	  typedef typename TypeParam::Dtype Dtype;
+	  LayerParameter layer_param;
+	  layer_param.mutable_scale_param()->set_bias_term(true);
+	  layer_param.mutable_scale_param()->mutable_filler()->set_type("constant");
+	  layer_param.mutable_scale_param()->mutable_filler()->set_value(0.5);
+	  layer_param.mutable_scale_param()->mutable_bias_filler()->set_type("constant");
+	  layer_param.mutable_scale_param()->mutable_bias_filler()->set_value(1);
+	  BatchNormTorchLayer<Dtype> layer(layer_param);
+	  GradientChecker<Dtype> checker(1e-2, 1e-4);
+	  checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+		  this->blob_top_vec_);
+  }
 }  // namespace caffe

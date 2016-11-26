@@ -40,14 +40,20 @@ void BatchNormTorchLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 		  this->blobs_.resize(4);
 
     this->blobs_[0].reset(new Blob<Dtype>(sz));
+	caffe_set(this->blobs_[0]->count(), Dtype(0),
+	            this->blobs_[0]->mutable_cpu_data());
     this->blobs_[1].reset(new Blob<Dtype>(sz));
+	caffe_set(this->blobs_[1]->count(), Dtype(1),
+		this->blobs_[1]->mutable_cpu_data());
 	this->blobs_[3].reset(new Blob<Dtype>(sz));
     sz[0]=1;
     this->blobs_[2].reset(new Blob<Dtype>(sz));
-    for (int i = 0; i < 3; ++i) {
-      caffe_set(this->blobs_[i]->count(), Dtype(0),
-                this->blobs_[i]->mutable_cpu_data());
-    }
+	caffe_set(this->blobs_[2]->count(), Dtype(0),
+		this->blobs_[2]->mutable_cpu_data());
+    //for (int i = 0; i < 3; ++i) {
+    //  caffe_set(this->blobs_[i]->count(), Dtype(0),
+    //            this->blobs_[i]->mutable_cpu_data());
+    //}
 
 	//intial scale param
 	FillerParameter filler_param(scale_param.filler());

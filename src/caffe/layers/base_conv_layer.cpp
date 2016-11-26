@@ -421,6 +421,17 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_bias(Dtype* bias,
       input, bias_multiplier_.gpu_data(), 1., bias);
 }
 
+template <typename Dtype>
+void BaseConvolutionLayer<Dtype>::set_field_size(const vector<Blob<Dtype>*>& bottom,
+	const vector<Blob<Dtype>*>& top)
+{
+	for (int n = 0; n < bottom.size(); ++n)
+	{
+		top[n]->kernel_size = (kernel_shape_.cpu_data()[0] - 1)*bottom[n]->stride + bottom[n]->kernel_size;
+		top[n]->stride = stride_.cpu_data()[0] * bottom[n]->stride;
+		top[n]->pad = bottom[n]->pad - pad_.cpu_data()[0] * bottom[n]->stride;
+	}
+}
 #endif  // !CPU_ONLY
 
 INSTANTIATE_CLASS(BaseConvolutionLayer);

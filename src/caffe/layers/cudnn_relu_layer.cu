@@ -34,9 +34,9 @@ void CuDNNReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 __global__ void ReLUBackwardDiff(const int n, const Dtype* in_diff,
-	const Dtype* in_data, Dtype* out_diff) {
+	const Dtype* in_data, Dtype* out_diff, Dtype negative_slope) {
 	CUDA_KERNEL_LOOP(index, n) {
-		out_diff[index] = in_diff[index] * (in_data[index] > 0);
+		out_diff[index] = in_diff[index] * negative_slope*(in_data[index] < 0) + (2 - negative_slope) *in_diff[index] * (in_data[index] > 0);
 	}
 }
 
@@ -64,7 +64,8 @@ void CuDNNReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 	  tmp_diff.ReshapeLike(*bottom[0]);
 	  const int count = bottom[0]->count();
 	  ReLUBackwardDiff << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
-		  count, top_diff, top_diff, tmp_diff.mutable_gpu_diff()
+		  count, top_diff, top_diff, tmp_diff.mutable_gpu_diff(),
+		  (Dtype)ReLULayer<Dtype>::layer_param_.dropout_param().dropout_ratio()
 		  );
 	  top_diff = tmp_diff.gpu_diff();
   }
