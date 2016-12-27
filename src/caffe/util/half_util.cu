@@ -1,6 +1,6 @@
 #include <thrust/transform.h>
 #include <thrust/execution_policy.h>
-#include "util/half_util.hpp"
+#include "caffe/util/half_util.hpp"
 #include <cuda_fp16.h>
 
 namespace caffe {

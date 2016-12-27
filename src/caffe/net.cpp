@@ -18,7 +18,7 @@
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
-#include "util\half_util.hpp"
+#include "caffe/util\half_util.hpp"
 
 namespace caffe {
 

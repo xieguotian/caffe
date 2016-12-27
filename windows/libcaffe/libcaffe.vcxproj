@@ -40,6 +40,7 @@
   </PropertyGroup>
   <ImportGroup Label="ExtensionSettings" Condition="'$(CpuOnlyBuild)'=='false'">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA $(CudaVersion).props" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 7.5.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -131,6 +132,9 @@
     <ClCompile Include="..\..\src\caffe\layers\eltwise_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\elu_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\embed_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\entropy_cross_loss_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\entropy_loss_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\entropy_total_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\euclidean_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\exp_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\filter_layer.cpp" />
@@ -154,6 +158,7 @@
     <ClCompile Include="..\..\src\caffe\layers\pooling_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\power_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\prelu_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\prob_norm_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\reduction_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\relu_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\reshape_layer.cpp" />
@@ -165,6 +170,7 @@
     <ClCompile Include="..\..\src\caffe\layers\slice_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\softmax_binary_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\softmax_cross_entropy_loss_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\softmax_cross_entropy_m_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\softmax_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\softmax_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\split_layer.cpp" />
@@ -377,9 +383,14 @@
     <CudaCompile Include="..\..\src\caffe\layers\batch_norm_torch_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\col2img_mask_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\cudnn_conv_mask_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\entropy_cross_loss_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\entropy_loss_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\entropy_total_loss_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\prob_norm_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\softmax_binary_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\softmax_cross_entropy_loss_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\softmax_cross_entropy_m_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\SwapMaxLayer.cu" />
     <CudaCompile Include="..\..\src\caffe\util\half_util.cu" />
   </ItemGroup>
@@ -397,6 +408,7 @@
     <Import Project="..\..\..\NugetPackages\boost_date_time-vc120.1.59.0.0\build\native\boost_date_time-vc120.targets" Condition="Exists('..\..\..\NugetPackages\boost_date_time-vc120.1.59.0.0\build\native\boost_date_time-vc120.targets')" />
     <Import Project="..\..\..\NugetPackages\LevelDB-vc120.1.2.0.0\build\native\LevelDB-vc120.targets" Condition="Exists('..\..\..\NugetPackages\LevelDB-vc120.1.2.0.0\build\native\LevelDB-vc120.targets')" />
     <Import Project="..\..\..\NugetPackages\lmdb-v120-clean.0.9.14.0\build\native\lmdb-v120-clean.targets" Condition="Exists('..\..\..\NugetPackages\lmdb-v120-clean.0.9.14.0\build\native\lmdb-v120-clean.targets')" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 7.5.targets" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

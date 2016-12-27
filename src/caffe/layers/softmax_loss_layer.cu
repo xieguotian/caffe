@@ -17,7 +17,7 @@ __global__ void SoftmaxLossForwardGPU(const int nthreads,
     const int n = index / spatial_dim;
     const int s = index % spatial_dim;
     const int label_value = static_cast<int>(label[n * spatial_dim + s]);
-    if (has_ignore_label_ && label_value == ignore_label_) {
+	if (label_value<0 || (has_ignore_label_ && label_value == ignore_label_)) {
       loss[index] = 0;
       counts[index] = 0;
     } else {
@@ -75,7 +75,7 @@ __global__ void SoftmaxLossBackwardGPU(const int nthreads, const Dtype* top,
     const int s = index % spatial_dim;
     const int label_value = static_cast<int>(label[n * spatial_dim + s]);
 
-    if (has_ignore_label_ && label_value == ignore_label_) {
+    if (label_value<0 || (has_ignore_label_ && label_value == ignore_label_)) {
       for (int c = 0; c < channels; ++c) {
         bottom_diff[n * dim + c * spatial_dim + s] = 0;
       }

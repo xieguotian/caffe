@@ -581,7 +581,7 @@ void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int start_iter,
 		}
 	}
   } else {
-    int idx = (iter_ - start_iter) % average_loss;
+    int idx = (iter_ - start_iter) / param_.iter_size() % average_loss;
     smoothed_loss_ += (loss - losses_[idx]) / average_loss;
     losses_[idx] = loss;
 

@@ -6,7 +6,7 @@ modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
 version 2.1 of the License, or (at your option) any later version.  */
 
-#include "mkstemp.h"
+#include "caffe/mkstemp.h"
 #include <io.h>
 
 #include "boost/date_time/filetime_functions.hpp"

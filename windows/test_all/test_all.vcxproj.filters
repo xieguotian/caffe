@@ -233,6 +233,18 @@
     <ClCompile Include="..\..\src\caffe\test\test_batch_norm_torch_layer.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\test\test_entropy_with_loss_layer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\test\test_entropy_cross_with_loss_layer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\test\test_entropy_total_with_loss_layer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\test\test_prob_norm_layer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\test\test_caffe_main.hpp">

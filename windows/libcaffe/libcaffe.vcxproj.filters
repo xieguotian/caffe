@@ -366,6 +366,21 @@
     <ClCompile Include="..\..\src\caffe\layers\batch_norm_torch_layer.cpp">
       <Filter>src\layers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\softmax_cross_entropy_m_loss_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\entropy_loss_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\entropy_cross_loss_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\entropy_total_loss_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\prob_norm_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\proto\caffe.pb.h">
@@ -890,6 +905,21 @@
       <Filter>cu\layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\batch_norm_torch_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\softmax_cross_entropy_m_loss_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\entropy_loss_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\entropy_cross_loss_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\entropy_total_loss_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\prob_norm_layer.cu">
       <Filter>cu\layers</Filter>
     </CudaCompile>
   </ItemGroup>

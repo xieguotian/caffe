@@ -18,7 +18,7 @@
 
 #define HDF5_NUM_DIMS 4
 
-#include "mkstemp.h"
+#include "caffe/mkstemp.h"
 
 namespace caffe {
 

@@ -1,4 +1,4 @@
-#include "layers/SwapMaxLayer.hpp"
+#include "caffe/layers/SwapMaxLayer.hpp"
 
 #include "caffe/blob.hpp"
 #include "caffe/layer.hpp"

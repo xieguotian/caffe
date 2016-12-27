@@ -146,6 +146,18 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 		//}
 		is_color_shift = true;
 	}
+	else if (param_.color_shift())
+	{
+		float P[] = { -0.5836, -0.6948, 0.4203, 
+			-0.5808, -0.0045, -0.8140, 
+			-0.5675, 0.7192, 0.4009 };
+		float SqrtV[] = { 0.2175*255.0, 0.0188*255.0, 0.0045*255.0 };
+
+		memcpy(color_kl_cache_.P, P, sizeof(float)* 9);
+		memcpy(color_kl_cache_.SqrtV, SqrtV, sizeof(float)* 3);
+
+		is_color_shift = true;
+	}
   // If datum is encoded, decoded and transform the cv::image.
   if (datum.encoded()) {
 #ifdef USE_OPENCV
@@ -274,6 +286,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        Blob<Dtype>* transformed_blob) {
 	cv::Mat tmp_cv_img;
 	// random scale image
+	cv_img.convertTo(tmp_cv_img, CV_32F);
 	float min_scale = param_.multi_scale_param().min_scale();
 	float max_scale = param_.multi_scale_param().max_scale();
 	int min_length = param_.multi_scale_param().min_length();
@@ -299,6 +312,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 		}
 		if (phase_ == TRAIN)
 		{
+			
 			if (min_length == 0 || max_length == 0)
 			{
 				int org_height = cv_img.rows;
@@ -319,7 +333,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 					else
 						resize_width = std::max((int)(org_width*scale*aspect_ratio), min_length);
 
-					cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+					//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+					cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 				}
 				else
 				{
@@ -327,7 +342,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 					int resize_height = org_height*scale;
 					int resize_width = org_width*scale;
 
-					cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+					//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+					cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 				}
 			}
 			else
@@ -350,7 +366,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 					else
 						resize_width = std::max((int)(org_width*scale*aspect_ratio), min_length);
 
-					cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+					//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+					cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 				}
 				else
 				{
@@ -358,7 +375,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 					int resize_height = org_height*scale;
 					int resize_width = org_width*scale;
 
-					cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+					//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+					cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 				}
 			}
 		}
@@ -370,7 +388,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 				int org_width = cv_img.cols;
 				int resize_height = org_height*min_scale;
 				int resize_width = org_width*min_scale;
-				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+				//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+				cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 			}
 			else
 			{
@@ -381,7 +400,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 				int resize_height = org_height*scale_ratio;
 				int resize_width = org_width*scale_ratio;
 				//std::cout << resize_height << " " << resize_width <<std::endl;
-				cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+				//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+				cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 			}
 		}
 	}
@@ -404,7 +424,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   CHECK_LE(width, img_width);
   CHECK_GE(num, 1);
 
-  CHECK(tmp_cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
+  //CHECK(tmp_cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
 
   const Dtype scale = param_.scale();
   //const bool do_mirror = param_.mirror() && Rand(2);
@@ -705,11 +725,45 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 	  }
 
 	  CHECK(cv_cropped_img.data);
+	  cv::Mat gray_cropped_img;
+	  bool is_color_jitter = false;
+	  if (param_.color_jitter())
+	  {
+		  
+		  Dtype alpha;
+		  //brightness
+		  caffe_rng_uniform<Dtype>(1, -0.4, 0.4, &alpha);
+		  alpha += 1; 
+		  cv::Mat tmp_img = alpha*cv_cropped_img;
+		  
+		  // contrast
+		  caffe_rng_uniform<Dtype>(1, -0.4, 0.4, &alpha);
+		  alpha += 1;
+		  cv::cvtColor(tmp_img, gray_cropped_img, cv::COLOR_BGR2GRAY);
+		  tmp_img = alpha*tmp_img + 
+			  (1 - alpha)*cv::mean(gray_cropped_img)[0];
+
+		  //Saturation
+		  caffe_rng_uniform<Dtype>(1, -0.4, 0.4, &alpha);
+		  alpha += 1; 
+		  cv::cvtColor(tmp_img, gray_cropped_img, cv::COLOR_BGR2GRAY);
+		  cv::cvtColor(gray_cropped_img, gray_cropped_img, cv::COLOR_GRAY2BGR);
+		  tmp_img = tmp_img*alpha + (1 - alpha)*gray_cropped_img;
+		  
+		  is_color_jitter = true;
+		  cv_cropped_img = tmp_img;
+	  }
+	  cv::Mat cv_cropped_img_f32;
+	  cv_cropped_img.convertTo(cv_cropped_img_f32, CV_32F);
+	  cv_cropped_img = cv_cropped_img_f32;
 
 	  Dtype* transformed_data = transformed_blob->mutable_cpu_data();
 	  int top_index;
 	  for (int h = 0; h < height; ++h) {
-		  const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
+
+		  //const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
+		  const float* ptr = cv_cropped_img.ptr<float>(h);
+
 		  int img_index = 0;
 		  for (int w = 0; w < width; ++w) {
 			  for (int c = 0; c < img_channels; ++c) {
