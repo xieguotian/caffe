@@ -66,7 +66,8 @@ void EntropyTotalWithLossLayer<Dtype>::Reshape(
 		  (Dtype)1.0 / bottom[0]->channels(), 
 		  prob_history_.mutable_cpu_data());
 	  is_prob_history_init_ = true;
-	  LOG(INFO) << "prob history initialized.";
+	  if (is_prob_history_init_)
+		LOG(INFO) << "prob history initialized.";
   }
   vector<int> mul_shape;
   mul_shape.push_back(outer_num_);

@@ -111,6 +111,8 @@
     <ClCompile Include="..\..\src\caffe\layers\batch_reindex_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\bias_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\bnll_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\cluster_centroid_dist_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\cluster_centroid_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\concat_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\contrastive_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\conv_layer.cpp" />
@@ -147,6 +149,7 @@
     <ClCompile Include="..\..\src\caffe\layers\infogain_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\inner_product_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\input_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\kmeans_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\log_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\lrn_layer.cpp" />
@@ -381,11 +384,13 @@
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\batch_norm_opt_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\batch_norm_torch_layer.cu" />
-    <CudaCompile Include="..\..\src\caffe\layers\col2img_mask_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\cluster_centroid_dist_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\cluster_centroid_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\cudnn_conv_mask_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\entropy_cross_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\entropy_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\entropy_total_loss_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\kmeans_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\prob_norm_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\softmax_binary_loss_layer.cu" />

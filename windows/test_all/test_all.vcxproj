@@ -84,6 +84,7 @@
     <ClCompile Include="..\..\src\caffe\test\test_bias_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_blob.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_caffe_main.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_centroid_dist_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_common.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_concat_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_contrastive_loss_layer.cpp" />
@@ -114,6 +115,7 @@
     <ClCompile Include="..\..\src\caffe\test\test_inner_product_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_internal_thread.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_io.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_kmeans_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_layer_factory.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_lrn_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_math_functions.cpp" />

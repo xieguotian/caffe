@@ -30,7 +30,7 @@ class CentroidDistTest : public MultiDeviceTest<TypeParam> {
     blob_top_vec_.push_back(blob_top_);
   }
 	 virtual ~CentroidDistTest() { delete blob_bottom_; delete blob_top_; }
-  Blob<Dtype>* const blob_bottom_;
+  Blob<Dtype>*  blob_bottom_;
   Blob<Dtype>* const blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
@@ -56,25 +56,33 @@ TYPED_TEST(CentroidDistTest, TestForward) {
   for (int i = 0; i < layer.blobs()[0]->count(); ++i)
 	  EXPECT_EQ(layer.blobs()[0]->cpu_data()[i], centroid[i]);
 
-  for (int i = 0; i < layer.blobs()[1]->count();++i)
-	  EXPECT_EQ(layer.blobs()[1]->cpu_data()[i], 1);
+  //for (int i = 0; i < layer.blobs()[1]->count();++i)
+	 // EXPECT_EQ(layer.blobs()[1]->cpu_data()[i], 1);
 
-  Dtype result[] = { 2.5, 2.5, 0.5, 0.5 };
+  Dtype result[] = { 2.5/3, 2.5/3, 0.5/3, 0.5/3 };
   for (int i = 0; i < this->blob_top_->count(); ++i) 
-	  EXPECT_EQ(this->blob_top_->cpu_data()[i], result[i]) <<
+	  EXPECT_NEAR(this->blob_top_->cpu_data()[i], result[i],1e-4) <<
 	  "not equal: " << this->blob_top_->cpu_data()[i] << " vs " << result[i];
 }
 
 TYPED_TEST(CentroidDistTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
+  this->blob_bottom_ = new Blob<Dtype>(10, 3, 1, 1);
+  FillerParameter filler_param;
+  filler_param.set_std(1);
+  GaussianFiller<Dtype> filler(filler_param);
+  filler.Fill(this->blob_bottom_);
+  this->blob_bottom_vec_[0] = this->blob_bottom_;
   LayerParameter layer_param;
-  layer_param.mutable_cluster_centroid_param()->set_num_cluster(2);
+  layer_param.mutable_cluster_centroid_param()->set_num_cluster(3);
   layer_param.mutable_cluster_centroid_param()->set_dim(3);
-  SoftmaxLayer<Dtype> layer(layer_param);
+  layer_param.mutable_cluster_centroid_param()->set_scale(-10);
+  layer_param.mutable_softmax_param()->set_temperature(100);
+  layer_param.set_phase(TEST); 
+  layer_param.mutable_cluster_centroid_param()->mutable_centroid_filler()->set_type("gaussian");
+  ClusterCentroidDistLayer<Dtype> layer(layer_param);
   //Dtype centroid[] = { 0, 0, 1, 1, 0, 2 };
 	//memcpy(layer.blobs()[0]->mutable_cpu_data(), centroid, layer.blobs()[0]->count()*sizeof(Dtype));
-
-  layer_param.mutable_cluster_centroid_param()->mutable_centroid_filler()->set_type("gaussian");
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);

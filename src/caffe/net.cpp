@@ -421,7 +421,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   if (phase_ == Phase::TRAIN && opt_memory_) 
   {
 	  blob_diff_used_counter_.resize(blobs_.size(),0);
-
+	  // go through all tracks of  the network
 	  for (int layer_id = layers_.size() - 1; layer_id >= 0; layer_id--)
 	  {
 		  for (int bottom_id = 0; bottom_id < bottom_vecs_[layer_id].size(); ++bottom_id)
@@ -442,7 +442,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 			  blob_diff_used_counter_[blob_id] += 1;
 		  }
 	  }
-	  //shared memory
+	  //go trhough all tracks again and share memory
 	  shared_blobs_diff_index_.resize(blobs_.size());
 	  for (int shared_id = 0; shared_id < shared_blobs_diff_index_.size(); ++shared_id)
 		  shared_blobs_diff_index_[shared_id] = -1;
@@ -542,125 +542,26 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 	  LOG_IF(INFO, Caffe::root_solver()) << "diff cache size for train net is : " << shared_blobs_diff_.size();
 	  for (int i = 0; i < shared_blobs_diff_.size(); i++)
 		  LOG_IF(INFO, Caffe::root_solver()) << "cache id " << i << " size:" << shared_blobs_diff_[i]->count();
-	  /*
-	  // init mem optimization
-	  for (int type_id = 0; type_id < layer_types_.size(); ++type_id)
-	  {
-		  if (layer_types_[type_id] == "Convolution" || layer_types_[type_id] == "BatchNorm"
-			  || layer_types_[type_id] == "BatchNormOpt"
-			  || layer_types_[type_id] == "Pooling" || layer_types_[type_id] == "Eltwise"
-			  || layer_types_[type_id] == "Split" || layer_types_[type_id] == "Scale")
-		  {
-			  if (diff_caches_.find(layer_types_[type_id]) == diff_caches_.end())
-			  {
-				  diff_caches_[layer_types_[type_id]] = vector<Blob<Dtype>*>();
-				  diff_caches_used_[layer_types_[type_id]] = vector<int>();
-			  }
-		  }
-	  }
-	  used_cache_record_.resize(blobs_.size(), -1);
-	  layer_type_record_.resize(blobs_.size(), "");
-	  // init cache shape
-	  for (int i = layers_.size() - 1; i >= 0; i--)
-	  {
-		  if (layer_need_backward_[i])
-		  {
-			  if (diff_caches_.find(layer_types_[i]) != diff_caches_.end() && bottom_need_backward_[i][0]
-				  && bottom_vecs_[i][0] != top_vecs_[i][0])
-			  {
-				  int find_cache_id = -1;
-				  //vector<int> cache_used;
-				  // get cache according to layer type.
-				  //vector<Blob<Dtype>*> diff_cache = diff_caches_[layer_types_[i]];
-				  //cache_used = diff_caches_used_[layer_types_[i]];
 
-				  int share_bottom_id = -1;
-				  if (layer_types_[i] == "Eltwise")
-				  {
-					  share_bottom_id = 1;
-				  }
-				  else
-				  {
-					  share_bottom_id = 0;
-				  }
-				  //search free cache
-				  for (int ch_id = 0; ch_id < diff_caches_[layer_types_[i]].size(); ch_id++)
-				  {
-					  if (diff_caches_used_[layer_types_[i]][ch_id] < 0)
-					  {
-						  find_cache_id = ch_id;
-					  }
-
-				  }
-				  if (find_cache_id >= 0 && find_cache_id < diff_caches_[layer_types_[i]].size())
-				  {
-					  //get cache and resize it if it's smaller
-					  Blob<Dtype>* cache = diff_caches_[layer_types_[i]][find_cache_id];
-					  if (cache->count() < bottom_vecs_[i][share_bottom_id]->count())
-					  {
-						  cache->ReshapeLike(*bottom_vecs_[i][share_bottom_id]);
-						  LOG_IF(INFO, Caffe::root_solver()) << "reshape " << layer_types_[i] << " " << cache->count();
-					  }
-					  //bottom_vecs_[i][share_bottom_id]->ShareDiff_LE(*cache);
-
-					  //cache_used[find_cache_id] = bottom_id_vecs_[i][share_bottom_id];
-					  diff_caches_used_[layer_types_[i]][find_cache_id] = bottom_id_vecs_[i][share_bottom_id];
-					  used_cache_record_[bottom_id_vecs_[i][share_bottom_id]] = find_cache_id;
-					  layer_type_record_[bottom_id_vecs_[i][share_bottom_id]] = layer_types_[i];
-					  //LOG(INFO) << "cache resued " << layer_types_[i] << " id " << find_cache_id;
-				  }
-				  else
-				  {
-					  //create cache.
-					  Blob<Dtype>* cache = new Blob<Dtype>(
-						  bottom_vecs_[i][share_bottom_id]->num(),
-						  bottom_vecs_[i][share_bottom_id]->channels(),
-						  bottom_vecs_[i][share_bottom_id]->height(),
-						  bottom_vecs_[i][share_bottom_id]->width());
-
-					  diff_caches_[layer_types_[i]].push_back(cache);
-					  diff_caches_used_[layer_types_[i]].push_back(bottom_id_vecs_[i][share_bottom_id]);
-					  //LOG(INFO) << "create cache " << layer_types_[i] << " size " << diff_caches_[layer_types_[i]].size();
-					  //bottom_vecs_[i][share_bottom_id]->ShareDiff_LE(*cache);
-
-					  find_cache_id = diff_caches_used_[layer_types_[i]].size() - 1;
-					  used_cache_record_[bottom_id_vecs_[i][share_bottom_id]] = find_cache_id;
-					  layer_type_record_[bottom_id_vecs_[i][share_bottom_id]] = layer_types_[i];
-				  }
-			  }
-
-			  int share_bottom_id = -1;
-			  if (layer_type_record_[top_id_vecs_[i][0]] == "Eltwise")
-			  {
-				  share_bottom_id = 1;
-			  }
-			  else
-			  {
-				  share_bottom_id = 0;
-			  }
-			  if (bottom_vecs_[i][share_bottom_id] != top_vecs_[i][0])
-			  {
-				  for (int top_id = 0; top_id < top_vecs_[i].size(); ++top_id)
-				  {
-
-					  string layer_type = layer_type_record_[top_id_vecs_[i][top_id]];
-					  int used_id = used_cache_record_[top_id_vecs_[i][top_id]];
-					  //LOG(INFO) << "release " << layer_type << " at " << used_id;
-					  if (diff_caches_.find(layer_type) != diff_caches_.end() && used_id >= 0)
-					  {
-						  //if (diff_caches_used_.find(layer_type) != diff_caches_used_.end())
-						  //LOG(INFO) << "layer used " << layer_type;
-						  LOG(INFO) << "used cache_size " << diff_caches_used_[layer_type].size();
-						  diff_caches_used_[layer_type][used_id] = -1;
-					  }
-					  layer_type_record_[top_id_vecs_[i][top_id]] = "";
-					  used_cache_record_[top_id_vecs_[i][top_id]] = -1;
-				  }
-			  }
-		  }
-	  }
-	  */
   }
+  show_asum_debug_ = param.show_asum_of_weight_and_data();
+  if (show_asum_debug_)
+  {
+	  for (int layer_id = layers_.size() - 1; layer_id >= 0; layer_id--)
+	  {
+		  if (layer_types_[layer_id] == "Convolution" || layer_types_[layer_id] == "InnerProduct")
+		  {
+			  vector<Dtype> tmp;
+			  tmp.resize(4);
+			  show_asum_info_[layer_names_[layer_id]] = tmp;
+		  }
+	  }
+  }
+
+  signal_decay_ = param.signal_decay();
+  is_signal_decay_ = signal_decay_ > 0 ? true : false;
+  if (signal_decay_)
+	  LOG_IF(INFO, Caffe::root_solver()) << "signal decay is open.";
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
 }
 
@@ -862,6 +763,7 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     // (i.e., not given a param_name) or explicitly given a name that we
     // haven't already seen.
     param_owners_.push_back(-1);
+	param_not_share_diff.push_back(-1);
     if (param_name.size()) {
       param_names_index_[param_name] = net_param_id;
     }
@@ -876,6 +778,7 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     // Named param blob with name we've seen before: share params
     const int owner_net_param_id = param_names_index_[param_name];
     param_owners_.push_back(owner_net_param_id);
+	param_not_share_diff.push_back(-1);
     const pair<int, int>& owner_index =
         param_layer_indices_[owner_net_param_id];
     const int owner_layer_id = owner_index.first;
@@ -908,10 +811,14 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     }
     const int learnable_param_id = learnable_param_ids_[owner_net_param_id];
     learnable_param_ids_.push_back(learnable_param_id);
+	bool share_not = true;
     if (param_spec->has_lr_mult()) {
       if (has_params_lr_[learnable_param_id]) {
-        CHECK_EQ(param_spec->lr_mult(), params_lr_[learnable_param_id])
-            << "Shared param '" << param_name << "' has mismatched lr_mult.";
+        //CHECK_EQ(param_spec->lr_mult(), params_lr_[learnable_param_id])
+        //    << "Shared param '" << param_name << "' has mismatched lr_mult.";
+		  if (param_spec->lr_mult() != params_lr_[learnable_param_id])
+			  //param_not_share_diff.push_back(1);
+			  share_not = false;
       } else {
         has_params_lr_[learnable_param_id] = true;
         params_lr_[learnable_param_id] = param_spec->lr_mult();
@@ -919,14 +826,20 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     }
     if (param_spec->has_decay_mult()) {
       if (has_params_decay_[learnable_param_id]) {
-        CHECK_EQ(param_spec->decay_mult(),
-                 params_weight_decay_[learnable_param_id])
-            << "Shared param '" << param_name << "' has mismatched decay_mult.";
+        //CHECK_EQ(param_spec->decay_mult(),
+        //         params_weight_decay_[learnable_param_id])
+        //    << "Shared param '" << param_name << "' has mismatched decay_mult.";
+		  if (param_spec->decay_mult() != params_weight_decay_[learnable_param_id])
+			  //param_not_share_diff.push_back(1);
+			  share_not = false;
       } else {
         has_params_decay_[learnable_param_id] = true;
         params_weight_decay_[learnable_param_id] = param_spec->decay_mult();
       }
     }
+	param_not_share_diff.push_back(share_not?-1:1);
+	if (!share_not)
+		LOG(INFO) << "don't share diff because param_spec not equal.";
   }
 }
 
@@ -959,21 +872,7 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
 			  blobs_[blob_id]->ShareData_LE(*shared_blobs_[cache_idx]);
 		  }
 	  }
-	  //if (phase_ == Phase::TRAIN && half_support_)
-	  //{
-		 // for (int bi = 0; bi < bottom_vecs_[i].size(); ++bi)
-		 // {
-			//  int blob_id = bottom_id_vecs_[i][bi];
-			//  //if (half_blobs_[blob_id]->count() < blobs_[blob_id]->count())
-			//	  //half_blobs_[blob_id]->ReshapeLike(*blobs_[blob_id]);
 
-			//  THCHalf2Float(
-			//	  blobs_[blob_id]->mutable_gpu_data(),
-			//	  static_cast<half*>(half_blobs_[blob_id]->mutable_gpu_data()),
-			//	  blobs_[blob_id]->count());
-		 // }
-	  //}
-    // LOG(ERROR) << "Forwarding " << layer_names_[i];
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
@@ -1041,30 +940,7 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
 	  if (layer_need_backward_[i]) {
-		  //if (((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_&& !layer_need_backward_[i]))
-			 // && layer_types_[i] != "Split")
-		  //if ((phase_ == Phase::TRAIN && opt_memory_)
-			 // && layer_types_[i] != "Reshape")
-		  //{
-			 // //share cache meory.
-			 // for (int bi = 0; bi < bottom_vecs_[i].size(); bi++)
-			 // {
-				//  int blob_id = bottom_id_vecs_[i][bi];
-				//  int cache_idx = shared_blobs_diff_index_[blob_id];
-				//  // if in-place, don't borrow the shared memory again.
-				//  if (top_vecs_[i].size()>bi && top_vecs_[i][bi] == bottom_vecs_[i][bi])
-				//  {
-				//	  continue;
-				//  }
 
-				//  if (shared_blobs_diff_[cache_idx]->count() < blobs_[blob_id]->count())
-				//  {
-				//	  shared_blobs_diff_[cache_idx]->ReshapeLike(*blobs_[blob_id]);
-				//	  LOG_IF(INFO, Caffe::root_solver()) << "diff reshape " << layer_types_[i] << " " << shared_blobs_diff_[cache_idx]->count();
-				//  }
-				//  blobs_[blob_id]->ShareDiff_LE(*shared_blobs_diff_[cache_idx]);
-			 // }
-		  //}
 		  if ((phase_ == Phase::TRAIN && opt_memory_)
 			  && layer_types_[i] != "Reshape" && layer_types_[i] != "Flatten")
 		  {
@@ -1117,8 +993,6 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
 		   for (int bi = 0; bi < bottom_vecs_[i].size(); ++bi)
 		   {
 		    int blob_id = bottom_id_vecs_[i][bi];
-		    //if (half_blobs_[blob_id]->count() < blobs_[blob_id]->count())
-		  	  //half_blobs_[blob_id]->ReshapeLike(*blobs_[blob_id]);
 
 		    THCHalf2Float<Dtype>(
 		  	  blobs_[blob_id]->mutable_gpu_data(),
@@ -1126,114 +1000,46 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
 		  	  blobs_[blob_id]->count());
 		   }
 		  }
-		  /*
-		  if (opt_memory_)
+
+		  Dtype decay_mult = layers_[i]->layer_param().decay_mult();
+		  // if need signal decay, decay the diff of signal.
+		  if (is_signal_decay_ && decay_mult>0 && (layer_types_[i] == "Convolution" || layer_types_[i] == "InnerProduct"))
 		  {
-			  // find cache for bottom vector.
-			  if (diff_caches_.find(layer_types_[i]) != diff_caches_.end() && bottom_need_backward_[i][0]
-				  && bottom_vecs_[i][0]!=top_vecs_[i][0])
+			  for (int ti = 0; ti < top_vecs_[i].size(); ++ti)
 			  {
-				  int find_cache_id = -1;
-				  //vector<int> cache_used;
-				  // get cache according to layer type.
-				  //vector<Blob<Dtype>*> diff_cache = diff_caches_[layer_types_[i]];
-				  //cache_used = diff_caches_used_[layer_types_[i]];
-
-				  int share_bottom_id = -1;
-				  if (layer_types_[i] == "Eltwise")
-				  {
-					  share_bottom_id = 1;
-				  }
-				  else
-				  {
-					  share_bottom_id = 0;
-				  }
-				  //search free cache
-				  for (int ch_id = 0; ch_id < diff_caches_[layer_types_[i]].size(); ch_id++)
-				  {
-					  if (diff_caches_used_[layer_types_[i]][ch_id] < 0)
-					  {
-						  find_cache_id = ch_id;
-					  }
-
-				  }
-				  if (find_cache_id >= 0 && find_cache_id < diff_caches_[layer_types_[i]].size())
-				  {
-					  //get cache and resize it if it's smaller
-					  Blob<Dtype>* cache = diff_caches_[layer_types_[i]][find_cache_id];
-					  if (cache->count() < bottom_vecs_[i][share_bottom_id]->count())
-					  {
-						  cache->ReshapeLike(*bottom_vecs_[i][share_bottom_id]);
-						  LOG_IF(INFO, Caffe::root_solver()) << "reshape2 " << layer_types_[i] << " " << cache->count();
-					  }
-					  bottom_vecs_[i][share_bottom_id]->ShareDiff_LE(*cache);
-
-					  //cache_used[find_cache_id] = bottom_id_vecs_[i][share_bottom_id];
-					  diff_caches_used_[layer_types_[i]][find_cache_id] = bottom_id_vecs_[i][share_bottom_id];
-					  used_cache_record_[bottom_id_vecs_[i][share_bottom_id]] = find_cache_id;
-					  layer_type_record_[bottom_id_vecs_[i][share_bottom_id]] = layer_types_[i];
-					  //LOG(INFO) << "cache resued " << layer_types_[i] << " id " << find_cache_id;
-				  }
-				  else
-				  {
-					  //create cache.
-					  Blob<Dtype>* cache = new Blob<Dtype>(
-						  bottom_vecs_[i][share_bottom_id]->num(),
-						  bottom_vecs_[i][share_bottom_id]->channels(),
-						  bottom_vecs_[i][share_bottom_id]->height(),
-						  bottom_vecs_[i][share_bottom_id]->width());
-
-					  diff_caches_[layer_types_[i]].push_back(cache);
-					  diff_caches_used_[layer_types_[i]].push_back(bottom_id_vecs_[i][share_bottom_id]);
-					  //LOG(INFO) << "create cache " << layer_types_[i] << " size " << diff_caches_[layer_types_[i]].size();
-					  bottom_vecs_[i][share_bottom_id]->ShareDiff_LE(*cache);
-
-					  find_cache_id = diff_caches_used_[layer_types_[i]].size() - 1;
-					  used_cache_record_[bottom_id_vecs_[i][share_bottom_id]] = find_cache_id;
-					  layer_type_record_[bottom_id_vecs_[i][share_bottom_id]] = layer_types_[i];
+				  Dtype sgd_decay = signal_decay_ * decay_mult;
+				  switch (Caffe::mode()) {
+				  case Caffe::CPU:
+					  caffe_axpy(top_vecs_[i][ti]->count(),
+						  sgd_decay,
+						  top_vecs_[i][ti]->cpu_data(),
+						  top_vecs_[i][ti]->mutable_cpu_diff());
+					  break;
+				  case Caffe::GPU:
+#ifndef CPU_ONLY
+					  caffe_gpu_axpy(top_vecs_[i][ti]->count(),
+						  sgd_decay,
+						  top_vecs_[i][ti]->gpu_data(),
+						  top_vecs_[i][ti]->mutable_gpu_diff());
+#else
+					  NO_GPU;
+#endif
+					  break;
 				  }
 			  }
 		  }
-		  */
+
 		  layers_[i]->Backward(
 			  top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
+		  if (show_asum_debug_)
+		  {
+			  show_asum_info_[layer_names_[i]][0] = bottom_vecs_[i][0]->asum_data() / bottom_vecs_[i][0]->count();
+			  show_asum_info_[layer_names_[i]][1] = bottom_vecs_[i][0]->asum_diff() / bottom_vecs_[i][0]->count();
+			  show_asum_info_[layer_names_[i]][2] = layers_[i]->blobs()[0]->asum_data() / layers_[i]->blobs()[0]->count();
+			  show_asum_info_[layer_names_[i]][3] = layers_[i]->blobs()[0]->asum_diff() / layers_[i]->blobs()[0]->count();
+		  }
 		  if (debug_info_) { BackwardDebugInfo(i); }
 
-		  /*
-		  // release cache
-
-		  if (opt_memory_)
-		  {
-			  int share_bottom_id = -1;
-			  if (layer_type_record_[top_id_vecs_[i][0]] == "Eltwise")
-			  {
-				  share_bottom_id = 1;
-			  }
-			  else
-			  {
-				  share_bottom_id = 0;
-			  }
-			  if (bottom_vecs_[i][share_bottom_id] != top_vecs_[i][0])
-			  {
-				  for (int top_id = 0; top_id < top_vecs_[i].size(); ++top_id)
-				  {
-
-					  string layer_type = layer_type_record_[top_id_vecs_[i][top_id]];
-					  int used_id = used_cache_record_[top_id_vecs_[i][top_id]];
-					  //LOG(INFO) << "release " << layer_type << " at " << used_id;
-					  if (diff_caches_.find(layer_type) != diff_caches_.end() && used_id >= 0)
-					  {
-						  //if (diff_caches_used_.find(layer_type) != diff_caches_used_.end())
-						  //LOG(INFO) << "layer used " << layer_type;
-						  //LOG(INFO) << "used cache_size " << diff_caches_used_[layer_type].size();
-						  diff_caches_used_[layer_type][used_id] = -1;
-					  }
-					  layer_type_record_[top_id_vecs_[i][top_id]] = "";
-					  used_cache_record_[top_id_vecs_[i][top_id]] = -1;
-				  }
-			  }
-		  }
-		  */
 	  }
   }
 
@@ -1606,7 +1412,8 @@ void Net<Dtype>::ShareWeights() {
   for (int i = 0; i < params_.size(); ++i) {
     if (param_owners_[i] < 0) { continue; }
     params_[i]->ShareData(*params_[param_owners_[i]]);
-    params_[i]->ShareDiff(*params_[param_owners_[i]]);
+	if (param_not_share_diff[i]<0)
+		params_[i]->ShareDiff(*params_[param_owners_[i]]);
   }
 }
 

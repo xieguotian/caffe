@@ -46,6 +46,12 @@ namespace caffe{
 		Blob<Dtype> square_cluster_;
 		float scale;
 
+		bool initialized_;
+		int init_count_;
+		Blob<Dtype> top_cache_;
+		Blob<Dtype> bottom_cache_;
+		float T;
+		bool use_T_;
 		//Blob<Dtype> temp_diff_;
 	};
 }

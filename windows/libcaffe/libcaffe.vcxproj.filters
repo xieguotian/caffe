@@ -381,6 +381,15 @@
     <ClCompile Include="..\..\src\caffe\layers\prob_norm_layer.cpp">
       <Filter>src\layers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\cluster_centroid_dist_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\cluster_centroid_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\kmeans_loss_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\proto\caffe.pb.h">
@@ -883,9 +892,6 @@
     <CudaCompile Include="..\..\src\caffe\layers\batch_norm_opt_layer.cu">
       <Filter>cu\layers</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\..\src\caffe\layers\col2img_mask_layer.cu">
-      <Filter>cu\layers</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\SwapMaxLayer.cu">
       <Filter>cu\layers</Filter>
     </CudaCompile>
@@ -920,6 +926,15 @@
       <Filter>cu\layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\prob_norm_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\cluster_centroid_dist_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\cluster_centroid_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\kmeans_loss_layer.cu">
       <Filter>cu\layers</Filter>
     </CudaCompile>
   </ItemGroup>

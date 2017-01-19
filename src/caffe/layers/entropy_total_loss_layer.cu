@@ -74,17 +74,19 @@ void EntropyTotalWithLossLayer<Dtype>::Forward_gpu(
 	  //caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, 1, bottom[0]->channels(), outer_num_,
 		 // (Dtype)(1.0 - momemtum_) / outer_num_, num_mul_.gpu_data(),
 		 // prob_data, (Dtype)0.0, prob_cache);
-	  caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, 1, bottom[0]->channels(), outer_num_,
-	   (Dtype)(1.0 - momemtum_), num_mul_.gpu_data(),
-	   prob_data, (Dtype)0.0, prob_cache);
+	  //caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, 1, bottom[0]->channels(), outer_num_,
+	  // (Dtype)(1.0 - momemtum_), num_mul_.gpu_data(),
+	  // prob_data, (Dtype)0.0, prob_cache);
 	  //caffe_gpu_mul(cache_.count(), prob_data, cache_.gpu_diff(), cache_.mutable_gpu_data());
 	  //caffe_gpu_powx(prob_.count(), prob_data, (Dtype)1, cache_.mutable_gpu_diff());
+	  caffe_gpu_scale(prob_.count(), (Dtype)100, prob_data, cache_.mutable_gpu_diff());
+	  caffe_gpu_mul(cache_.count(), prob_data, cache_.gpu_diff(), cache_.mutable_gpu_diff());
 	  ///*caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, 1, bottom[0]->channels(), outer_num_,
 		 // (Dtype)(1.0 - momemtum_), num_mul_.gpu_data(),
 		 // cache_.gpu_data(), (Dtype)0.0, prob_cache); */
-	  //caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, 1, bottom[0]->channels(), outer_num_,
-		 // (Dtype)(1.0 - momemtum_), num_mul_.gpu_data(),
-		 // cache_.gpu_diff(), (Dtype)0.0, prob_cache);
+	  caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, 1, bottom[0]->channels(), outer_num_,
+		  (Dtype)(1.0 - momemtum_), num_mul_.gpu_data(),
+		  cache_.gpu_diff(), (Dtype)0.0, prob_cache);
   }
 
   //m*p(t-1)+(1-m)*prob_cache into prob_history_data
@@ -155,8 +157,8 @@ void EntropyTotalWithLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 		//caffe_gpu_mul(bottom[0]->count(), cache_.gpu_diff(), bottom_diff, bottom_diff);
 		//caffe_gpu_add_scalar(cache_.count(), (Dtype)-2, cache_.mutable_gpu_diff());
 		//caffe_gpu_div(cache_.count(), cache_.gpu_diff(), prob_data, cache_.mutable_gpu_diff());
-		//caffe_gpu_scal(cache_.count(), (Dtype)1.0, cache_.mutable_gpu_diff());
-		//caffe_gpu_mul(bottom[0]->count(), cache_.gpu_diff(), bottom_diff, bottom_diff);
+		caffe_gpu_scal(cache_.count(), (Dtype)200, prob_data);
+		caffe_gpu_mul(bottom[0]->count(), prob_data, bottom_diff, bottom_diff);
 
 		caffe_gpu_gemm(CblasNoTrans, CblasNoTrans, outer_num_, prob_history_.count(), 1, (Dtype)1.0,
 			num_mul_.mutable_gpu_data(), log_prob_data, (Dtype)0.0, prob_data);
@@ -170,6 +172,12 @@ void EntropyTotalWithLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 		loss_weight /= (Dtype)temperature_;
 	}
     caffe_gpu_scal(prob_.count(), loss_weight , bottom_diff);
+
+	//////debug
+	for (int i = 0; i < 20; ++i)
+		LOG(INFO) << "#" << i << ": " << prob_history_.cpu_data()[i] << "," 
+		<<bottom[0]->cpu_data()[i] << "," << bottom[0]->cpu_diff()[i];
+
   }
 }
 

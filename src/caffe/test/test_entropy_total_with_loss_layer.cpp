@@ -22,8 +22,8 @@ class EntropyTotalWithLossLayerTest : public MultiDeviceTest<TypeParam> {
 
  protected:
 	 EntropyTotalWithLossLayerTest()
-      : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1)),
-        blob_bottom_label_(new Blob<Dtype>(10, 1, 1, 1)),
+      : blob_bottom_data_(new Blob<Dtype>(100, 100, 1, 1)),
+        blob_bottom_label_(new Blob<Dtype>(100, 1, 1, 1)),
         blob_top_loss_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;
@@ -54,7 +54,8 @@ TYPED_TEST_CASE(EntropyTotalWithLossLayerTest, TestDtypesAndDevices);
 TYPED_TEST(EntropyTotalWithLossLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  layer_param.add_loss_weight(3);
+  layer_param.add_loss_weight(10);
+  layer_param.mutable_softmax_param()->set_temperature(1);
   EntropyTotalWithLossLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
@@ -66,9 +67,9 @@ TYPED_TEST(EntropyTotalWithLossLayerTest, TestGradient2) {
 	LayerParameter layer_param;
 	layer_param.add_loss_weight(3);
 	EntropyTotalWithLossLayer<Dtype> layer(layer_param);
-	GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
-	this->blob_bottom_vec_[0] = new Blob<Dtype>(10, 5, 2, 3);
-	this->blob_bottom_vec_[1] = new Blob<Dtype>(10, 1, 2, 3);
+	GradientChecker<Dtype> checker(1e-2, 1e-5, 1701); 
+	this->blob_bottom_vec_[0] = new Blob<Dtype>(100, 5, 2, 3);
+	this->blob_bottom_vec_[1] = new Blob<Dtype>(100, 1, 2, 3);
 	// fill the values
 	FillerParameter filler_param;
 	filler_param.set_std(10);

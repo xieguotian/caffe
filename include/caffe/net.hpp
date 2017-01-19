@@ -340,6 +340,7 @@ class Net {
   vector<Dtype> blob_loss_weights_;
   vector<vector<int> > param_id_vecs_;
   vector<int> param_owners_;
+  vector<int> param_not_share_diff;
   vector<string> param_display_names_;
   vector<pair<int, int> > param_layer_indices_;
   map<string, int> param_names_index_;
@@ -380,6 +381,11 @@ class Net {
   //vector<int> used_cache_record_;
   bool opt_memory_;
   bool opt_test_shared_memory_;
+  bool show_asum_debug_;
+  map<string, vector<Dtype>> show_asum_info_;
+
+  bool is_signal_decay_;
+  Dtype signal_decay_;
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 

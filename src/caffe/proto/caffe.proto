@@ -104,6 +104,8 @@ message NetParameter {
   optional bool opt_memory = 200 [default = false];
   optional bool opt_test_shared_memory = 201 [default = false];
   optional bool opt_fp16 = 202 [default = false];
+  optional bool show_asum_of_weight_and_data = 203 [default = false];
+  optional float signal_decay = 204 [default = 0]; // The single decay.
 }
 
 // NOTE
@@ -251,6 +253,8 @@ message SolverParameter {
   }
   // DEPRECATED: use type instead of solver_type
   optional SolverType solver_type = 30 [default = SGD];
+  
+  optional float signal_decay = 101 [default = 0]; // The single decay.
 }
 
 // A message that stores the solver snapshots
@@ -429,6 +433,7 @@ message LayerParameter {
   
   optional bool force_copy = 8266723 [default = false];
   optional float direct_ratio = 8266724;
+  optional float decay_mult = 8266725 [default = 0];
 }
 
 // message for multi-scale image argumentation

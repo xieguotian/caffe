@@ -194,7 +194,8 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 	if (is_direct_connect_ && !is_direct_intialized_)
 	{
-		direct_num_ = std::min((int)((direct_ratio_)*(num_output_ / (1 - direct_ratio_))), bottom[0]->channels());
+		//direct_num_ = std::min((int)((direct_ratio_)*(num_output_ / (1 - direct_ratio_))), bottom[0]->channels());
+		direct_num_ = std::min((int)(direct_ratio_), bottom[0]->channels());
 		this->blobs_.push_back(shared_ptr<Blob<Dtype> >());
 		vector<int> idx_shape;
 		idx_shape.push_back(direct_num_);

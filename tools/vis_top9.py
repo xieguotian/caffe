@@ -131,12 +131,12 @@ with open(img_list) as fid:
         neuron_val = net.blobs[blob_name].data[0].copy()
 
         out_shape = neuron_val.shape
-        print out_shape
+        #print out_shape
         neuron_val = neuron_val.reshape((out_shape[0],out_shape[1]*out_shape[2]))
-        print (neuron_val[:,0]*np.log(neuron_val[:,0]+0.000000000001)).sum()
-        print neuron_val.sum()
-        plt.plot(neuron_val)
-        plt.show()
+        #print (neuron_val[:,0]*np.log(neuron_val[:,0]+0.000000000001)).sum()
+        #print neuron_val.sum()
+        #plt.plot(neuron_val)
+        #plt.show()
         max_idx = neuron_val.argmax(axis=1)
         tmp_max_idx = max_idx + np.arange(out_shape[0])*(out_shape[1]*out_shape[2])
         max_idx = np.array(np.unravel_index(tmp_max_idx,out_shape)).transpose()
