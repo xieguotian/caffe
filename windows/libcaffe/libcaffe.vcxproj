@@ -171,6 +171,7 @@
     <ClCompile Include="..\..\src\caffe\layers\sigmoid_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\silence_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\slice_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\smooth_L1_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\softmax_binary_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\softmax_cross_entropy_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\softmax_cross_entropy_m_loss_layer.cpp" />
@@ -393,6 +394,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\kmeans_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\prob_norm_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\smooth_L1_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\softmax_binary_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\softmax_cross_entropy_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\softmax_cross_entropy_m_loss_layer.cu" />

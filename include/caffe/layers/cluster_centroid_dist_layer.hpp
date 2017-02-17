@@ -20,7 +20,9 @@ namespace caffe{
 
 		virtual inline const char* type() const { return "ClusterCentroidDist"; }
 		virtual inline int ExactNumBottomBlobs() const { return 1; }
-		virtual inline int ExactNumTopBlobs() const { return 1; }
+		//virtual inline int ExactNumTopBlobs() const { return 1; }
+		virtual inline int MinTopBlobs() const { return 1; }
+		virtual inline int MaxTopBlobs() const { return 2; }
 
 	protected:
 		virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -53,6 +55,10 @@ namespace caffe{
 		float T;
 		bool use_T_;
 		//Blob<Dtype> temp_diff_;
+		bool is_sample_base_cls;
+		bool is_spatial_;
+		Blob<Dtype> transposed_bottom_;
+		int num_samp_;
 	};
 }
 

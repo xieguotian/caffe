@@ -27,7 +27,7 @@ class SoftmaxLayer : public Layer<Dtype> {
   virtual inline const char* type() const { return "Softmax"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
-
+  void set_temperture(float temp){ temperature_ = temp; }
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -49,6 +49,7 @@ class SoftmaxLayer : public Layer<Dtype> {
   /// temperture for distilling.
   bool use_T_;
   float temperature_;
+  Blob<Dtype> cache_;
 };
 
 }  // namespace caffe

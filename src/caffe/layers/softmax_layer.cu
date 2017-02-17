@@ -89,7 +89,7 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 	Dtype* bottom_data;
 	if (use_T_)
 	{
-		bottom_data = bottom[0]->mutable_gpu_diff();
+		bottom_data = cache_.mutable_gpu_data();//bottom[0]->mutable_gpu_diff();
 		caffe_copy(bottom[0]->count(), bottom[0]->gpu_data(), bottom_data);
 		caffe_gpu_scal(bottom[0]->count(), (Dtype)1.0 / temperature_, bottom_data);
 	}
@@ -129,8 +129,8 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       CAFFE_CUDA_NUM_THREADS>>>(count, outer_num_, channels, inner_num_,
       scale_data, top_data);
 
-  if (use_T_)
-	  caffe_gpu_set(bottom[0]->count(), (Dtype)0.0, bottom[0]->mutable_gpu_diff());
+  //if (use_T_)
+	 // caffe_gpu_set(bottom[0]->count(), (Dtype)0.0, bottom[0]->mutable_gpu_diff());
 }
 
 template <typename Dtype>

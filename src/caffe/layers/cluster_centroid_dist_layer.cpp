@@ -26,6 +26,9 @@ namespace caffe{
 
 		use_T_ = this->layer_param_.softmax_param().temperature() != 0;
 		T = this->layer_param_.softmax_param().temperature();
+
+		is_sample_base_cls = this->layer_param_.binary_bounding_param().update_centroid();
+
 	}
 
 	template <typename Dtype>
@@ -36,7 +39,13 @@ namespace caffe{
 		top_shape[0] = bottom[0]->num();
 		top_shape[1] = num_cluster_;
 		top[0]->Reshape(top_shape);
-		
+		if (is_sample_base_cls)
+		{
+			vector<int> top_shape2(1);
+			top_shape2[0] = bottom[0]->num();
+			top[1]->Reshape(top_shape2);
+		}
+
 		vector<int> square_shape(2);
 		square_shape[0] = bottom[0]->num();
 		square_shape[1] = bottom[0]->channels();
@@ -56,6 +65,17 @@ namespace caffe{
 
 		top_cache_.ReshapeLike(*top[0]);
 		bottom_cache_.ReshapeLike(*bottom[0]);
+		num_samp_ = bottom[0]->num();
+
+		is_spatial_ = bottom[0]->height() > 1 || bottom[0]->width() > 1;
+		if (is_spatial_)
+		{
+			vector<int> transpose_shape(2);
+			transpose_shape[0] = bottom[0]->num()*bottom[0]->height()*bottom[0]->width();
+			transpose_shape[1] = bottom[0]->channel();
+			transposed_bottom_.Reshape(transpose_shape);
+			num_samp_ = transposed_bottom_.num();
+		}
 	}
 
 	template <typename Dtype>

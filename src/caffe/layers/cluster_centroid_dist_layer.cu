@@ -23,6 +23,38 @@ namespace caffe{
 	//	}
 	//}
 	
+#define BLOCK_DIM 16
+
+	// This kernel is optimized to ensure all global reads and writes are coalesced,
+	// and to avoid bank conflicts in shared memory.  This kernel is up to 11x faster
+	// than the naive kernel below.  Note that the shared memory array is sized to 
+	// (BLOCK_DIM+1)*BLOCK_DIM.  This pads each row of the 2D block in shared memory 
+	// so that bank conflicts do not occur when threads address the array column-wise.
+	__global__ void transpose(float *odata, float *idata, int width, int height)
+	{
+		__shared__ float block[BLOCK_DIM][BLOCK_DIM + 1];
+
+		// read the matrix tile into shared memory
+		unsigned int xIndex = blockIdx.x * BLOCK_DIM + threadIdx.x;
+		unsigned int yIndex = blockIdx.y * BLOCK_DIM + threadIdx.y;
+		if ((xIndex < width) && (yIndex < height))
+		{
+			unsigned int index_in = yIndex * width + xIndex;
+			block[threadIdx.y][threadIdx.x] = idata[index_in];
+		}
+
+		__syncthreads();
+
+		// write the transposed matrix tile to global memory
+		xIndex = blockIdx.y * BLOCK_DIM + threadIdx.x;
+		yIndex = blockIdx.x * BLOCK_DIM + threadIdx.y;
+		if ((xIndex < height) && (yIndex < width))
+		{
+			unsigned int index_out = yIndex * height + xIndex;
+			odata[index_out] = block[threadIdx.x][threadIdx.y];
+		}
+	}
+
 	template <typename Dtype>
 	void ClusterCentroidDistLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 		const vector<Blob<Dtype>*>& top)
@@ -61,20 +93,33 @@ namespace caffe{
 		Dtype* top_data = top[0]->mutable_gpu_data();
 		const Dtype* centroid_data = this->blobs_[0]->gpu_data();
 
-		if (!initialized_)
+		if (is_sample_base_cls)
 		{
-			if (init_count_ >= this->blobs_[0]->count())
+			caffe_copy(bottom[0]->count(), bottom_data, this->blobs_[0]->mutable_gpu_data());
+			for (int i = 0; i < top[1]->count(); ++i)
 			{
-				initialized_ = true;
-				LOG(INFO) << "intial centroid complete.";
+				top[1]->mutable_cpu_data()[i] = i;
 			}
-			else
+		}
+		else
+		{
+			if (!initialized_)
 			{
-				int count = min(bottom[0]->count(), this->blobs_[0]->count() - init_count_);
-				caffe_copy(count, bottom_data, this->blobs_[0]->mutable_gpu_data() + init_count_);
-				init_count_ += count;
-				LOG(INFO) << init_count_;
-				return;
+				if (init_count_ >= this->blobs_[0]->count())
+				{
+					initialized_ = true;
+					LOG(INFO) << "intial centroid complete.";
+				}
+				else
+				{
+					int count = min(bottom[0]->count(), this->blobs_[0]->count() - init_count_);
+					caffe_copy(count, bottom_data, this->blobs_[0]->mutable_gpu_data() + init_count_);
+					caffe_rng_gaussian<Dtype>(top[0]->count(), Dtype(0),
+						Dtype(1), top[0]->mutable_cpu_data());
+					init_count_ += count;
+					LOG(INFO) << init_count_;
+					return;
+				}
 			}
 		}
 		// square of data.
@@ -86,7 +131,8 @@ namespace caffe{
 		caffe_gpu_gemm(
 			CblasNoTrans,
 			CblasNoTrans,
-			bottom[0]->num(),
+			num_samp_,
+			//bottom[0]->num(),
 			1,
 			centroid_dim_,
 			(Dtype)0.5, // / centroid_dim_,
@@ -98,7 +144,8 @@ namespace caffe{
 		caffe_gpu_gemm(
 			CblasNoTrans,
 			CblasNoTrans,
-			bottom[0]->num(),
+			//bottom[0]->num(),
+			num_samp_,
 			num_cluster_,
 			1,
 			(Dtype)1.0,
@@ -111,7 +158,8 @@ namespace caffe{
 		caffe_gpu_gemm(
 			CblasNoTrans,
 			CblasTrans,
-			bottom[0]->num(),
+			//bottom[0]->num(),
+			num_samp_,
 			num_cluster_,
 			centroid_dim_,
 			(Dtype)-1.0, // / centroid_dim_,
@@ -143,7 +191,8 @@ namespace caffe{
 		//span along feat num
 		caffe_gpu_gemm(CblasNoTrans,
 			CblasNoTrans, 
-			bottom[0]->num(),
+			//bottom[0]->num(),
+			num_samp_,
 			num_cluster_, 
 			1,
 			(Dtype)0.5,
@@ -164,9 +213,23 @@ namespace caffe{
 	{ 
 		Dtype* bottom_diff = bottom[0]->mutable_gpu_diff(); 
 		Dtype* centroid_diff = this->blobs_[0]->mutable_gpu_diff();
+
+		if (is_sample_base_cls)
+		{
+		}
+		else{
+			if (!initialized_)
+			{
+				caffe_gpu_set(bottom[0]->count(), (Dtype)0, bottom_diff);
+				caffe_gpu_set(this->blobs_[0]->count(), (Dtype)0, centroid_diff);
+				return;
+			}
+		}
+
 		//const Dtype* top_diff = temp_diff_.gpu_data();
 		caffe_gpu_div(top[0]->count(), top[0]->gpu_diff(), top[0]->gpu_data(), top_cache_.mutable_gpu_data());
 		caffe_gpu_scal(top[0]->count(), (Dtype)(scale / 2.0), top_cache_.mutable_gpu_data());
+
 		const Dtype* top_diff = top_cache_.gpu_data(); //top[0]->gpu_diff();
 		//const Dtype* top_diff = top[0]->gpu_diff();
 		const Dtype* centroid_data = this->blobs_[0]->gpu_data();
@@ -175,11 +238,6 @@ namespace caffe{
 		//const Dtype* bottom_data = bottom_cache_.gpu_diff(); //= bottom[0]->gpu_data();
 		const Dtype* bottom_data = bottom[0]->gpu_data();
 
-		if (!initialized_)
-		{
-			caffe_gpu_set(bottom[0]->count(), (Dtype)0, bottom_diff);
-			return;
-		}
 		//**************propagate diff to centroid***************
 		// dot top_diff with feat data.
 		if (this->param_propagate_down_[0]){
@@ -221,13 +279,16 @@ namespace caffe{
 				column_.gpu_data(),
 				ones_.gpu_data(),
 				(Dtype)0.0,
-				centroid_diff
+				//centroid_diff
+				square_cluster_.mutable_gpu_diff()
 				);
 
 			// multipy with centroid data
-			caffe_gpu_mul(this->blobs_[0]->count(), centroid_diff, centroid_data, centroid_diff);
+			//caffe_gpu_mul(this->blobs_[0]->count(), centroid_diff, centroid_data, centroid_diff);
+			caffe_gpu_mul(this->blobs_[0]->count(), square_cluster_.mutable_gpu_diff(), centroid_data, square_cluster_.mutable_gpu_diff());
 			// sum all diff
-			caffe_gpu_sub(this->blobs_[0]->count(), centroid_diff, square_cluster_.gpu_data(), centroid_diff);
+			caffe_gpu_sub(this->blobs_[0]->count(), square_cluster_.mutable_gpu_diff(), square_cluster_.gpu_data(), square_cluster_.mutable_gpu_diff());
+			caffe_gpu_add(this->blobs_[0]->count(), square_cluster_.mutable_gpu_diff(), centroid_diff, centroid_diff);
 		}
 
 		if (propagate_down[0])
@@ -278,6 +339,11 @@ namespace caffe{
 			//sum all diff
 			caffe_gpu_sub(bottom[0]->count(), bottom_diff, square_feat_.gpu_data(), bottom_diff);
 		}
+
+		//Dtype scalar_factor = (top[0]->asum_diff() / top[0]->count()) / (bottom[0]->asum_diff() / bottom[0]->count());//top_cache_.asum_data();
+		//LOG(INFO) << "scale:" << scalar_factor << "," << bottom[0]->cpu_diff()[0] << "," << top[0]->cpu_diff()[0] << "," << top[0]->cpu_data()[0];
+		//caffe_gpu_scal(top[0]->count(), (Dtype)scalar_factor, bottom[0]->mutable_gpu_diff());
+
 		//caffe_gpu_div(bottom[0]->count(), bottom_diff, bottom_cache_.gpu_data(), bottom_diff);
 		//caffe_gpu_mul(bottom[0]->count(), bottom_diff, bottom_cache_.gpu_diff(), bottom_cache_.mutable_gpu_data());
 		//caffe_gpu_gemm(

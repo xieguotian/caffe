@@ -130,6 +130,16 @@ class SoftmaxCrossEntropyLossLayer : public LossLayer<Dtype> {
   /// temperture for distilling.
   bool use_T_;
   float temperature_;
+  Blob<Dtype> prob_org_;
+  shared_ptr<Layer<Dtype> > softmax_layer_org_;
+  vector<Blob<Dtype>*> softmax_bottom_vec_org_;
+  vector<Blob<Dtype>*> softmax_top_vec_org_;
+  Blob<Dtype> label_;
+  vector<Blob<Dtype>*> softmax_bottom_vec_label_;
+  vector<Blob<Dtype>*> softmax_top_vec_label_;
+
+  Dtype update_step_;
+  bool is_update_T_;
 };
 
 }  // namespace caffe

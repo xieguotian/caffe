@@ -35,8 +35,10 @@ template <typename Dtype>
 void SoftmaxCrossEntropyLossLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   softmax_layer_->Forward(softmax_bottom_vec_, softmax_top_vec_);
+  softmax_layer_->Forward(softmax_bottom_vec_label_, softmax_top_vec_label_);
   const Dtype* prob_data = prob_.gpu_data();
   const Dtype* label = bottom[1]->gpu_data();
+  label = label_.gpu_data();
   
   // Since this memory is not used for anything until it is overwritten
   // on the backward pass, we use it here to avoid having to allocate new GPU
@@ -70,9 +72,17 @@ void SoftmaxCrossEntropyLossLayer<Dtype>::Forward_gpu(
 
   top[0]->mutable_cpu_data()[0] = loss / get_normalizer(normalization_,
 	  valid_count);
-  if (top.size() == 2) {
-    top[1]->ShareData(prob_);
+  if (is_update_T_ && top.size() == 2)
+  {
+	  top[1]->mutable_cpu_data()[0] = this->blobs_[0]->cpu_data()[0];
   }
+  else
+  {
+	  if (top.size() == 2) {
+		  top[1]->ShareData(prob_);
+	  }
+  }
+
 }
 
 
@@ -87,14 +97,15 @@ void SoftmaxCrossEntropyLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*
     Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
     const Dtype* prob_data = prob_.gpu_data();
     const Dtype* label = bottom[1]->gpu_data();
+	label = label_.gpu_data();
 
 	caffe_gpu_sub(bottom[0]->count(), prob_data, label, bottom_diff);
 	if (has_ignore_label_ && bottom.size() == 3)
 		caffe_gpu_mul(bottom[0]->count(), bottom_diff, prob_.gpu_diff(), bottom_diff);
-	if (use_T_)
-	{
-		caffe_gpu_scal(bottom[0]->count(), (Dtype)1.0 / temperature_, bottom_diff);
-	}
+	//if (use_T_)
+	//{
+	//	caffe_gpu_scal(bottom[0]->count(), (Dtype)1.0 / temperature_, bottom_diff);
+	//}
 
 	// Since this memory is never used for anything else,
 	// we use to to avoid allocating new GPU memory.
@@ -109,9 +120,29 @@ void SoftmaxCrossEntropyLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*
 		valid_count /= bottom[0]->channels();
 	}
 
-    const Dtype loss_weight = top[0]->cpu_diff()[0] /
+	softmax_layer_org_->Forward(softmax_bottom_vec_org_, softmax_top_vec_org_);
+	softmax_layer_org_->Forward(softmax_bottom_vec_label_, softmax_top_vec_label_);
+	label = label_.gpu_data();
+	caffe_gpu_sub(prob_org_.count(), prob_org_.gpu_data(), label, prob_org_.mutable_gpu_data());
+	Dtype diff_sum;
+	Dtype prob_org_sum;
+	caffe_gpu_asum(bottom[0]->count(), bottom_diff, &diff_sum);
+	caffe_gpu_asum(bottom[0]->count(), prob_org_.gpu_data(), &prob_org_sum);
+	Dtype scale_factor = prob_org_sum / diff_sum;
+
+    const Dtype loss_weight = scale_factor * top[0]->cpu_diff()[0] /
 		get_normalizer(normalization_, valid_count);
     caffe_gpu_scal(prob_.count(), loss_weight , bottom_diff);
+
+	if (is_update_T_ && this->blobs_[0]->cpu_data()[0]>1)
+	{
+		//LOG(INFO) << this->blobs_[0]->mutable_cpu_data()[0] << "," << update_step_;
+		this->blobs_[0]->mutable_cpu_data()[0] = this->blobs_[0]->cpu_data()[0] - update_step_;
+	}
+	else if (is_update_T_ && this->blobs_[0]->cpu_data()[0] < 1)
+	{
+		this->blobs_[0]->mutable_cpu_data()[0] = 1;
+	}
   }
 }
 

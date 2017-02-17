@@ -105,7 +105,10 @@ device_id = args.device_id
 # load net and read receptive field info
 caffe.set_mode_gpu()
 caffe.set_device(device_id)
-net = caffe.Net(net_proto,net_param,caffe.TEST)
+if net_param=="":
+    net = caffe.Net(net_proto,caffe.TEST)
+else:
+    net = caffe.Net(net_proto,net_param,caffe.TEST)
 info = net.get_field_size(layer_name)
 kernel_size = info[0]
 stride = info[1]

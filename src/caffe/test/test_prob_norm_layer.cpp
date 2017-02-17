@@ -19,7 +19,7 @@ class ProbNormLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
  protected:
 	 ProbNormLayerTest()
-      : blob_bottom_(new Blob<Dtype>(2, 1000, 2, 3)),
+      : blob_bottom_(new Blob<Dtype>(2, 10, 2, 3)),
         blob_top_(new Blob<Dtype>()) {
     // fill the values
     FillerParameter filler_param;
@@ -52,8 +52,8 @@ TYPED_TEST(ProbNormLayerTest, TestForward) {
           sum += this->blob_top_->data_at(i, j, k, l);
 		//EXPECT_LE(this->blob_top_->data_at(i, j, k, l), -FLT_MAX);
         }
-        EXPECT_GE(-sum, 0.999);
-        EXPECT_LE(-sum, 1.001);
+        EXPECT_GE(sum, 0.999);
+        EXPECT_LE(sum, 1.001);
 
       }
     }
@@ -63,7 +63,7 @@ TYPED_TEST(ProbNormLayerTest, TestForward) {
 TYPED_TEST(ProbNormLayerTest, TestForward_T) {
 	typedef typename TypeParam::Dtype Dtype;
 	LayerParameter layer_param;
-	float temperature = 10;
+	float temperature = 0.001; 
 	layer_param.mutable_softmax_param()->set_temperature(temperature);
 
 	ProbNormLayer<Dtype> layer(layer_param);
@@ -77,8 +77,8 @@ TYPED_TEST(ProbNormLayerTest, TestForward_T) {
 				for (int j = 0; j < this->blob_top_->channels(); ++j) {
 					sum += this->blob_top_->data_at(i, j, k, l);
 				}
-				EXPECT_GE(-sum*temperature, 0.999);
-				EXPECT_LE(-sum*temperature, 1.001);
+				EXPECT_GE(sum*temperature, 0.999);
+				EXPECT_LE(sum*temperature, 1.001);
 				// Test exact values
 				//Dtype scale = 0;
 				//for (int j = 0; j < this->blob_bottom_->channels(); ++j) {
@@ -109,10 +109,10 @@ TYPED_TEST(ProbNormLayerTest, TestGradient) {
 TYPED_TEST(ProbNormLayerTest, TestGradient_T) {
 	typedef typename TypeParam::Dtype Dtype;
 	LayerParameter layer_param;
-	float temperature = 0.0001;
+	float temperature = 0.001;
 	layer_param.mutable_softmax_param()->set_temperature(temperature);
 	ProbNormLayer<Dtype> layer(layer_param);
-	GradientChecker<Dtype> checker(1e-3, 1e-3);
+	GradientChecker<Dtype> checker(1e-2, 1e-3);
 	checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
 		this->blob_top_vec_);
 }
