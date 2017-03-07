@@ -366,14 +366,17 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 					else
 						resize_width = std::max((int)(org_width*scale*aspect_ratio), min_length);
 
+					// set to cropsize
+					resize_height = std::max(resize_height, min_length);
+					resize_width = std::max(resize_width, min_length);
 					//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 					cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 				}
 				else
 				{
-					//scale image
-					int resize_height = org_height*scale;
-					int resize_width = org_width*scale;
+					//scale image and set to cropsize
+					int resize_height = std::max((int)(org_height*scale), min_length);
+					int resize_width = std::max((int)(org_width*scale), min_length);
 
 					//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 					cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
@@ -397,8 +400,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 				int org_width = cv_img.cols;
 				int small_side = std::min(org_height, org_width);
 				float scale_ratio = float(min_length) / float(small_side);
-				int resize_height = org_height*scale_ratio;
-				int resize_width = org_width*scale_ratio;
+				int resize_height = std::max((int)(org_height*scale_ratio),min_length);
+				int resize_width = std::max((int)(org_width*scale_ratio),min_length);
 				//std::cout << resize_height << " " << resize_width <<std::endl;
 				//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 				cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
@@ -990,8 +993,8 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
 		  CHECK_GE(max_length, min_length);
 		  int min_side = std::min(img_height, img_width);
 		  float scale = float(min_length)/float(min_side);
-		  img_height = img_height*scale;
-		  img_width = img_width* scale;
+		  img_height = std::max((int)(img_height*scale),min_length);
+		  img_width = std::max((int)(img_width* scale),min_length);
 	  }
 	  else
 	  {

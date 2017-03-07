@@ -557,7 +557,8 @@ BOOST_PYTHON_MODULE(_caffe) {
 	  //.add_property("all_nets", &TrainManager<Dtype>::all_nets)
 	  .add_property("test_net",&TrainManager<Dtype>::test_net)
 	  .def("Train", &TrainManager<Dtype>::Train)
-	  .def("Init", &TrainManager<Dtype>::Init);
+	  .def("Init", &TrainManager<Dtype>::Init)
+	  .def("ShareTrainedLayersWith", &TrainManager<Dtype>::ShareTrainedLayersWith);
   // boost python expects a void (missing) return value, while import_array
   // returns NULL for python3. import_array1() forces a void return value.
   import_array1();

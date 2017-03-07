@@ -50,7 +50,7 @@ void SoftmaxCrossEntropyLossLayer<Dtype>::Forward_gpu(
   if (bottom.size() == 3)
 	  hard_label = bottom[2]->gpu_data();
 
-  cross_entropy_kernel<Dtype> << <bottom[0]->count(), CAFFE_CUDA_NUM_THREADS >> >(
+  cross_entropy_kernel<Dtype> << <CAFFE_GET_BLOCKS(bottom[0]->count()), CAFFE_CUDA_NUM_THREADS >> >(
 	  bottom[0]->count(),
 	  prob_data, label, 
 	  loss_data, counts, 

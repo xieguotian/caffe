@@ -8,7 +8,7 @@
 #include "lmdb.h"
 
 #include "caffe/util/db.hpp"
-
+#include <windows.h>
 namespace caffe { namespace db {
 
 inline void MDB_CHECK(int mdb_status) {
@@ -44,6 +44,10 @@ class LMDBCursor : public Cursor {
 		  //delete mdb_key_.mv_data;
 	  mdb_key_.mv_data = key_char;//key.c_str();
 	  mdb_key_.mv_size = key.length();
+
+#ifdef _MSC_VER
+	  VirtualUnlock(mdb_value_.mv_data, mdb_value_.mv_size);
+#endif
 	  int mdb_status = mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, MDB_SET_KEY);
 	  if (mdb_status == MDB_NOTFOUND) {
 		  valid_ = false;
@@ -56,6 +60,10 @@ class LMDBCursor : public Cursor {
   }
  private:
   void Seek(MDB_cursor_op op) {
+#ifdef _MSC_VER
+	  if (op != MDB_FIRST)
+		VirtualUnlock(mdb_value_.mv_data, mdb_value_.mv_size);
+#endif
     int mdb_status = mdb_cursor_get(mdb_cursor_, &mdb_key_, &mdb_value_, op);
     if (mdb_status == MDB_NOTFOUND) {
       valid_ = false;

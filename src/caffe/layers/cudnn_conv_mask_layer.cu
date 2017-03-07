@@ -161,6 +161,7 @@ void CuDNNConvolutionMaskLayer<Dtype>::Forward_gpu(
   const Dtype* weight = this->blobs_[0]->gpu_data();
 
   shared_ptr<Blob<Dtype>> caches_;
+  thread_id_ = boost::lexical_cast<std::string>(boost::this_thread::get_id());
   caches_ = thread_caches_[thread_id_];
   
   for (int i = 0; i < bottom.size(); ++i) {
@@ -648,6 +649,7 @@ void CuDNNConvolutionMaskLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
     bias_diff = this->blobs_[1]->mutable_gpu_diff();
   }
   shared_ptr<Blob<Dtype>> caches_;
+  thread_id_ = boost::lexical_cast<std::string>(boost::this_thread::get_id());
   caches_ = thread_caches_[thread_id_];
 
   for (int i = 0; i < top.size(); ++i) {

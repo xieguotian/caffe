@@ -255,6 +255,8 @@ message SolverParameter {
   optional SolverType solver_type = 30 [default = SGD];
   
   optional float signal_decay = 101 [default = 0]; // The single decay.
+  
+  optional bool snapshot_initialization = 10001 [default = false];
 }
 
 // A message that stores the solver snapshots
@@ -979,6 +981,7 @@ message PoolingParameter {
   // If global_pooling then it will pool over the size of the bottom by doing
   // kernel_h = bottom->height and kernel_w = bottom->width
   optional bool global_pooling = 12 [default = false];
+  optional bool ceil_mode = 13 [default = true];
 }
 
 message PowerParameter {

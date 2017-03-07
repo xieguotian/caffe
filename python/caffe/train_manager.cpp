@@ -76,20 +76,30 @@ namespace caffe{
 	}
 
 	template<typename Dtype>
-	shared_ptr<TrainManager<Dtype>> Train_Init_Load(string solver_proto, string gpu_ids, string snapshot, string weights){
-		shared_ptr<TrainManager<Dtype>> train(new TrainManager<Dtype>(solver_proto,gpu_ids,snapshot,weights));
+	shared_ptr<TrainManager<Dtype>> Train_Init_Load(string solver_proto, string gpu_ids, string snapshot, string weights, string log_name){
+		shared_ptr<TrainManager<Dtype>> train(new TrainManager<Dtype>(solver_proto,gpu_ids,snapshot,weights, log_name));
 		return train;
 	}
 
 	template shared_ptr<TrainManager<float>> Train_Init();
 	template shared_ptr<TrainManager<double>> Train_Init();
-	template shared_ptr<TrainManager<float>> Train_Init_Load(string solver_proto, string gpu_ids, string snapshot, string weights);
-	template shared_ptr<TrainManager<double>> Train_Init_Load(string solver_proto, string gpu_ids, string snapshot, string weights);
+	template shared_ptr<TrainManager<float>> Train_Init_Load(string solver_proto, string gpu_ids, string snapshot, string weights,string log_name);
+	template shared_ptr<TrainManager<double>> Train_Init_Load(string solver_proto, string gpu_ids, string snapshot, string weights, string log_name);
+
+	template<> bool TrainManager<float>::is_log_init_ = false;
+	template<> bool TrainManager<double>::is_log_init_ = false; 
 
 	template<typename Dtype>
-	shared_ptr<Net<Dtype>> TrainManager<Dtype>::Init(string solver_proto, string gpu_ids, string snapshot, string weights)
+	shared_ptr<Net<Dtype>> TrainManager<Dtype>::Init(string solver_proto, string gpu_ids, string snapshot, string weights, string log_name)
 	{
-		::google::InitGoogleLogging("TrainManager");
+		if (log_name == "")
+			log_name = "TrainManager";
+
+		if (!is_log_init_)
+		{
+			::google::InitGoogleLogging(log_name.c_str());
+			is_log_init_ = true;
+		}
 
 		CHECK_GT(solver_proto.size(), 0) << "Need a solver definition to train.";
 		CHECK(!snapshot.size() || !weights.size())
@@ -192,5 +202,20 @@ namespace caffe{
 		}
 	}
 
+	template<typename Dtype>
+	void TrainManager<Dtype>::ShareTrainedLayersWith(const Net<Dtype>* other)
+	{
+		if (gpus.size() > 1)
+		{
+			for (int i = 1; i < syncs.size(); ++i)
+			{
+				syncs[i]->solver()->net()->ShareTrainedLayersWith(other);
+			}
+			root_sync->solver()->net()->ShareTrainedLayersWith(other);
+		}
+		else{
+			solver_->net()->ShareTrainedLayersWith(other);
+		}
+	}
 	INSTANTIATE_CLASS(TrainManager);
 }

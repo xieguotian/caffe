@@ -15,8 +15,8 @@ namespace caffe{
 	class TrainManager {
 	public:
 		inline TrainManager(){ solver_.reset(); }
-		inline TrainManager(string solver_proto, string gpu_ids = "", string snapshot = "", string weights = ""){ solver_.reset(); Init(solver_proto, gpu_ids, snapshot, weights); }
-		shared_ptr<Net<Dtype>> Init(string sover_proto, string gpu_ids = "", string snapshot = "", string weights = "");
+		inline TrainManager(string solver_proto, string gpu_ids = "", string snapshot = "", string weights = "",string log_name=""){ solver_.reset(); Init(solver_proto, gpu_ids, snapshot, weights,log_name); }
+		shared_ptr<Net<Dtype>> Init(string sover_proto, string gpu_ids = "", string snapshot = "", string weights = "", string log_name="");
 		shared_ptr<Net<Dtype>> Train(int iterations, shared_ptr<Net<Dtype>> net=NULL);
 		inline shared_ptr<Net<Dtype>> net(){ return solver_->net(); }
 		inline vector<shared_ptr<Net<Dtype>>> all_nets(){
@@ -29,15 +29,17 @@ namespace caffe{
 			return results;
 		}
 		inline shared_ptr<Net<Dtype>> test_net(){ return solver_->test_nets()[0]; }
+		void ShareTrainedLayersWith(const Net<Dtype>* other);
 	private:
 		shared_ptr<Solver<Dtype>> solver_;
 		std::vector<int> gpus;
 		vector<shared_ptr<P2PSync<Dtype>>> syncs;
 		shared_ptr<P2PSync<Dtype>> root_sync;
+		static bool is_log_init_;
 	};
 
 	template<typename Dtype>
-	shared_ptr<TrainManager<Dtype>> Train_Init_Load(string solver_proto, string gpu_ids="", string snapshot="", string weights="");
+	shared_ptr<TrainManager<Dtype>> Train_Init_Load(string solver_proto, string gpu_ids="", string snapshot="", string weights="",string log_name="");
 	template<typename Dtype>
 	shared_ptr<TrainManager<Dtype>> Train_Init();
 }

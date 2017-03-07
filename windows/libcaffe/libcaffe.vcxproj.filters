@@ -393,6 +393,9 @@
     <ClCompile Include="..\..\src\caffe\layers\smooth_L1_loss_layer.cpp">
       <Filter>src\layers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\transpose_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\proto\caffe.pb.h">
@@ -943,8 +946,14 @@
     <CudaCompile Include="..\..\src\caffe\layers\smooth_L1_loss_layer.cu">
       <Filter>cu\layers</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\transpose_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="..\..\src\caffe\proto\caffe.proto">
+      <Filter>src\proto</Filter>
+    </None>
   </ItemGroup>
 </Project>

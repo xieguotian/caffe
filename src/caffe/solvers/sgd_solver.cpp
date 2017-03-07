@@ -222,6 +222,16 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<float>& net_params_lr = this->net_->params_lr();
   Dtype momentum = this->param_.momentum();
   Dtype local_rate = rate * net_params_lr[param_id];
+  static bool first_use_local_rate = true;
+  if (net_params_lr[param_id] < 0)
+  {
+	  local_rate = GetLocalLR(-net_params_lr[param_id]);
+	  if (first_use_local_rate)
+	  {
+		  LOG(INFO) << "param use local learning rate: " << net_params_lr[param_id] << ", param id: " << param_id << ",learning rate:" << local_rate;
+		  first_use_local_rate = false;
+	  }
+  }
   // Compute the update to history, then copy it to the parameter diff.
   switch (Caffe::mode()) {
   case Caffe::CPU: {
@@ -353,6 +363,63 @@ void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
   H5Fclose(file_hid);
 }
 
+template <typename Dtype>
+Dtype SGDSolver<Dtype>::GetLocalLR(Dtype local_lr) {
+	Dtype local_param = 100 * 1.0 / floor(local_lr);
+	Dtype rate = local_lr - floor(local_lr);
+
+	const string& lr_policy = this->param_.lr_policy();
+	if (lr_policy == "fixed") {
+		//rate = this->param_.base_lr();
+	}
+	else if (lr_policy == "step") {
+		this->current_step_ = this->iter_ / this->param_.stepsize();
+		//rate = this->param_.base_lr() *
+			//pow(this->param_.gamma(), this->current_step_);
+		rate = rate * pow(local_param, this->current_step_);
+	}
+	else if (lr_policy == "exp") {
+		//rate = this->param_.base_lr() * pow(this->param_.gamma(), this->iter_);
+		rate = rate * pow(local_param, this->iter_);
+	}
+	else if (lr_policy == "inv") {
+		//rate = this->param_.base_lr() *
+		//	pow(Dtype(1) + this->param_.gamma() * this->iter_,
+		//	-this->param_.power());
+		rate = rate * pow(Dtype(1) + local_param * this->iter_, -this->param_.power());
+	}
+	//else if (lr_policy == "multistep") {
+	//	if (this->current_step_ < this->param_.stepvalue_size() &&
+	//		this->iter_ >= this->param_.stepvalue(this->current_step_)) {
+	//		this->current_step_++;
+	//		LOG(INFO) << "MultiStep Status: Iteration " <<
+	//			this->iter_ << ", step = " << this->current_step_;
+	//	}
+	//	if (this->param_.step_lr_size()>this->current_step_)
+	//	{
+	//		rate = this->param_.step_lr(this->current_step_);
+	//	}
+	//	else
+	//	{
+	//		rate = this->param_.base_lr() *
+	//			pow(this->param_.gamma(), this->current_step_ - this->param_.step_lr_size());
+	//	}
+	//}
+	//else if (lr_policy == "poly") {
+	//	rate = this->param_.base_lr() * pow(Dtype(1.) -
+	//		(Dtype(this->iter_) / Dtype(this->param_.max_iter())),
+	//		this->param_.power());
+	//}
+	//else if (lr_policy == "sigmoid") {
+	//	rate = this->param_.base_lr() * (Dtype(1.) /
+	//		(Dtype(1.) + exp(-this->param_.gamma() * (Dtype(this->iter_) -
+	//		Dtype(this->param_.stepsize())))));
+	//}
+	else {
+		LOG(FATAL) << "Unknown learning rate policy: " << lr_policy;
+	}
+	return rate;
+}
 INSTANTIATE_CLASS(SGDSolver);
 REGISTER_SOLVER_CLASS(SGD);
 

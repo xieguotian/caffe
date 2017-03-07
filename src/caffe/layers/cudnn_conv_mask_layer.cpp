@@ -57,6 +57,7 @@ void CuDNNConvolutionMaskLayer<Dtype>::LayerSetUp(
   //workspaceSizeInBytes = 0;
   //workspaceData = NULL;
   caches_mutex_.lock();
+  thread_id_ = boost::lexical_cast<std::string>(boost::this_thread::get_id());
   if (workspaceData.find(thread_id_) == workspaceData.end())
   {
 	  workspaceSizeInBytes[thread_id_] = 0;
@@ -280,7 +281,7 @@ void CuDNNConvolutionMaskLayer<Dtype>::Reshape(
   caches_mutex_.lock();
   if (thread_caches_.find(thread_id_) == thread_caches_.end())
   {
-	  thread_caches_[thread_id_] = shared_ptr<Blob<Dtype>>(new Blob<Dtype>());//.reset(new Blob<Dtype>());
+	  thread_caches_[thread_id_].reset(new Blob<Dtype>()); //= shared_ptr<Blob<Dtype>>(new Blob<Dtype>());//.reset(new Blob<Dtype>());
   }
   caches_mutex_.unlock();
 
@@ -301,7 +302,7 @@ template <typename Dtype>
 CuDNNConvolutionMaskLayer<Dtype>::~CuDNNConvolutionMaskLayer() {
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
-
+  thread_id_ = boost::lexical_cast<std::string>(boost::this_thread::get_id());
   for (int i = 0; i < bottom_descs_.size(); i++) {
     cudnnDestroyTensorDescriptor(bottom_descs_[i]);
     cudnnDestroyTensorDescriptor(top_descs_[i]);
@@ -322,6 +323,7 @@ CuDNNConvolutionMaskLayer<Dtype>::~CuDNNConvolutionMaskLayer() {
 	  cudaFree(workspaceData[thread_id_]);
 	  workspaceData[thread_id_] = NULL;
   }
+  thread_caches_[thread_id_].reset();
   caches_mutex_.unlock();
   delete [] stream_;
   delete [] handle_;

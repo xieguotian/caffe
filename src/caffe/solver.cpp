@@ -215,6 +215,12 @@ void Solver<Dtype>::Step(int iters) {
         break;
       }
     }
+	// Save a snapshot if intialized snapshot is true
+	if ((param_.snapshot()
+		&& iter_== 0
+		&& Caffe::root_solver()) && param_.snapshot_initialization()) {
+		Snapshot();
+	}
 
     for (int i = 0; i < callbacks_.size(); ++i) {
       callbacks_[i]->on_start();

@@ -88,7 +88,12 @@ parser.add_argument(
     default=0,
     help="device id"
 )
-
+parser.add_argument(
+    "--test_num",
+    type=int,
+    default=-1,
+    help="test number"
+)
 args = parser.parse_args()
 net_proto = args.net_proto
 net_param = args.net_param
@@ -98,6 +103,8 @@ img_list = args.img_list
 save_name = layer_name + "_" + args.save_png
 is_vis_diff = args.is_vis_diff
 blob_name = args.blob_name
+test_num = args.test_num
+
 if blob_name=="":
     blob_name=layer_name
 device_id = args.device_id
@@ -127,6 +134,8 @@ with open(img_list) as fid:
     for ix,line in enumerate(fid):
         #if ix>2000:
             #break
+        if test_num>0 and ix>test_num:
+            break
         img_name = line.split('\t')[0].strip()
         image_name = dataset + img_name[9:]
         net._set_input_image(image_name,0)

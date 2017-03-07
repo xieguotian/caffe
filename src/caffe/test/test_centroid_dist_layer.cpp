@@ -45,6 +45,8 @@ TYPED_TEST(CentroidDistTest, TestForward) {
   LayerParameter layer_param;
   layer_param.mutable_cluster_centroid_param()->set_num_cluster(2);
   layer_param.mutable_cluster_centroid_param()->set_dim(3);
+  layer_param.mutable_binary_bounding_param()->set_not_initialed(false);
+  layer_param.set_phase(TEST);
 
   ClusterCentroidDistLayer<Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -59,7 +61,7 @@ TYPED_TEST(CentroidDistTest, TestForward) {
   //for (int i = 0; i < layer.blobs()[1]->count();++i)
 	 // EXPECT_EQ(layer.blobs()[1]->cpu_data()[i], 1);
 
-  Dtype result[] = { 2.5/3, 2.5/3, 0.5/3, 0.5/3 };
+  Dtype result[] = { sqrt(5.0 / 2.0), sqrt(5.0 / 2.0), sqrt(1.0 / 2.0), sqrt(1.0 / 2.0) };
   for (int i = 0; i < this->blob_top_->count(); ++i) 
 	  EXPECT_NEAR(this->blob_top_->cpu_data()[i], result[i],1e-4) <<
 	  "not equal: " << this->blob_top_->cpu_data()[i] << " vs " << result[i];
@@ -78,6 +80,7 @@ TYPED_TEST(CentroidDistTest, TestGradient) {
   layer_param.mutable_cluster_centroid_param()->set_dim(3);
   layer_param.mutable_cluster_centroid_param()->set_scale(-10);
   layer_param.mutable_softmax_param()->set_temperature(100);
+  layer_param.mutable_binary_bounding_param()->set_not_initialed(false);
   layer_param.set_phase(TEST); 
   layer_param.mutable_cluster_centroid_param()->mutable_centroid_filler()->set_type("gaussian");
   ClusterCentroidDistLayer<Dtype> layer(layer_param);

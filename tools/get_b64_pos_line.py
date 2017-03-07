@@ -20,11 +20,17 @@ parser.add_argument(
     default=-1,
     help="label for all data"
 )
+parser.add_argument(
+    "--save_repeat",
+    action='store_true',
+    help="save repeat key"
+)
 args = parser.parse_args()
 
 file_name = args.b64_file_name
 save_name = args.save_name
 set_label = args.label
+save_repeat = args.save_repeat
 
 prefix = os.path.splitext(os.path.basename(file_name))[0]
 if save_name=="":
@@ -56,13 +62,16 @@ with open(file_name) as fid:
             count+=1
             if (count)%1000==0:
                 print "process %d"%(count)
-            print >> fout, '%s\t%d\t%d'%(key,label,pos)
+            if save_repeat:
+                print >> fout, '%s\t%d\t%d'%(key,label,pos)
             if(key in all_key):
                 repeat_key.append(key)
-                print key
+                if save_repeat:
+                    print key
             else:
                 all_key.add(key)
-
+                if (not save_repeat):
+                    print >> fout, '%s\t%d\t%d'%(key,label,pos)
 if not len(repeat_key)==0:
     with open(prefix+'_repeat_log.txt','w') as fid:
         for key in repeat_key:

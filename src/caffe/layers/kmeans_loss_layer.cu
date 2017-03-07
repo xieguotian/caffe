@@ -9,20 +9,28 @@ namespace caffe {
 
 template<typename Dtype>
 __global__ void max_along_channel(const int nthreads, const int channels,
-	const Dtype* distance, Dtype *pos, Dtype* max_value)
+	const Dtype* distance, Dtype *pos, Dtype* max_value, const Dtype* label=NULL)
 {
 	CUDA_KERNEL_LOOP(index, nthreads) {
 		Dtype maxval = -FLT_MAX;
 		const Dtype* dist_data = distance + index*channels;
-		for (int ch = 0; ch < channels; ++ch)
+		if (label == NULL)
 		{
-			if (maxval < dist_data[ch])
+			for (int ch = 0; ch < channels; ++ch)
 			{
-				maxval = dist_data[ch];
-				pos[index] = ch;
+				if (maxval < dist_data[ch])
+				{
+					maxval = dist_data[ch];
+					pos[index] = ch;
+				}
 			}
+			max_value[index] = maxval;
 		}
-		max_value[index] = maxval;
+		else
+		{
+			pos[index] = label[index];
+			max_value[index] = dist_data[(int)label[index]];
+		}
 	}
 }
 template <typename Dtype>
@@ -31,11 +39,16 @@ void KmeansLossLayer<Dtype>::Forward_gpu(
 	//cluster_centroid_dist_layer->Forward(distance_bottom_vec_, distance_top_vec_);
 	const Dtype* distance_data = bottom[0]->gpu_data(); //distance_.gpu_data();
 	const int nthreads = bottom[0]->num();
+	Dtype* label = NULL;
+	if (bottom.size() > 1)
+		label = bottom[1]->mutable_gpu_data();
+
 	max_along_channel<Dtype> << <CAFFE_GET_BLOCKS(nthreads),
 		CAFFE_CUDA_NUM_THREADS >> >(nthreads, bottom[0]->channels(),
 		distance_data,
 		pos_.mutable_gpu_data(),
-		max_value_set_.mutable_gpu_data()
+		max_value_set_.mutable_gpu_data(),
+		label
 		);
 
 	Dtype loss = max_value_set_.asum_data();

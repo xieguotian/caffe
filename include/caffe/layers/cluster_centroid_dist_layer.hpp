@@ -56,8 +56,9 @@ namespace caffe{
 		bool use_T_;
 		//Blob<Dtype> temp_diff_;
 		bool is_sample_base_cls;
-		bool is_spatial_;
-		Blob<Dtype> transposed_bottom_;
+		//bool is_spatial_;
+		//Blob<Dtype> transposed_bottom_;
+		//Blob<Dtype> transposed_top_;
 		int num_samp_;
 	};
 }
