@@ -102,9 +102,9 @@ void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   for (int i = 0; i < top.size(); ++i) {
     const int filler_id = (fillers_.size() > 1) ? i : 0;
-    if (refill_[filler_id]) {
+    //if (refill_[filler_id]) {
       fillers_[filler_id]->Fill(top[i]);
-    }
+    //}
   }
 }
 

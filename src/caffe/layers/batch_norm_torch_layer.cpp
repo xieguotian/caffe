@@ -12,7 +12,7 @@ void BatchNormTorchLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   BatchNormParameter bn_param = this->layer_param_.batch_norm_param();
   const ScaleParameter& scale_param = this->layer_param_.scale_param();
-  moving_average_fraction_ = bn_param.moving_average_fraction();
+  moving_average_fraction_ = 1- bn_param.moving_average_fraction();
   use_global_stats_ = this->phase_ == TEST;
   if (bn_param.has_use_global_stats())
 	  use_global_stats_ = bn_param.use_global_stats();

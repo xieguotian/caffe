@@ -310,7 +310,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   opt_test_shared_memory_ = param.opt_test_shared_memory();
   shared_blobs_.clear();
   shared_record_.clear();
-  if (phase_ == Phase::TEST && opt_test_shared_memory_ || phase_ == Phase::TRAIN && opt_memory_)
+  if ((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_))
   {
 	  shared_blobs_index_.resize(blobs_.size());
 	  for (int shared_id = 0; shared_id < shared_blobs_index_.size(); ++shared_id)
