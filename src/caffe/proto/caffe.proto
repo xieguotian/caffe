@@ -106,6 +106,7 @@ message NetParameter {
   optional bool opt_fp16 = 202 [default = false];
   optional bool show_asum_of_weight_and_data = 203 [default = false];
   optional float signal_decay = 204 [default = 0]; // The single decay.
+  optional float accuracy = 205 [default = -1];
 }
 
 // NOTE

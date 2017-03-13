@@ -437,6 +437,15 @@ void Solver<Dtype>::Test(const int test_net_id) {
     }
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
               << mean_score << loss_msg_stream.str();
+
+	if (output_name == "accuracy")
+	{
+		if (net_->set_accuracy(mean_score))
+		{
+			save_best_model();
+			LOG(INFO) << "current best accuracy is: " << net_->best_accuracy();
+		}
+	}
   }
 }
 
@@ -456,6 +465,29 @@ void Solver<Dtype>::Snapshot() {
   }
 
   SnapshotSolverState(model_filename);
+}
+
+template <typename Dtype>
+void Solver<Dtype>::save_best_model()
+{
+	CHECK(Caffe::root_solver());
+	string model_filename;
+	NetParameter net_param;
+	switch (param_.snapshot_format()) {
+	case caffe::SolverParameter_SnapshotFormat_BINARYPROTO:
+		model_filename = param_.snapshot_prefix() + "_best.caffemodel";
+		LOG(INFO) << "save best model to binary proto file " << model_filename;
+		net_->ToProto(&net_param, param_.snapshot_diff());
+		WriteProtoToBinaryFile(net_param, model_filename);
+		break;
+	case caffe::SolverParameter_SnapshotFormat_HDF5:
+		model_filename = param_.snapshot_prefix() + "_best.caffemodel.h5";
+		LOG(INFO) << "save best model to HDF5 file " << model_filename;
+		net_->ToHDF5(model_filename, param_.snapshot_diff());
+		break;
+	default:
+		LOG(FATAL) << "Unsupported snapshot format.";
+	}
 }
 
 template <typename Dtype>

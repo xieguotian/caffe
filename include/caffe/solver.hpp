@@ -118,6 +118,8 @@ class Solver {
 			  show_result[j]->count()*sizeof(Dtype));
 	  }
   }
+
+  void save_best_model();
  protected:
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;

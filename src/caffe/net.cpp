@@ -52,6 +52,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       << "root_net_ needs to be set for all non-root solvers";
   // Set phase from the state.
   phase_ = in_param.state().phase();
+  best_accuracy_ = in_param.accuracy();
   // Filter layers based on their include/exclude rules and
   // the current NetState.
   NetParameter filtered_param;
@@ -1322,6 +1323,7 @@ template <typename Dtype>
 void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
   param->Clear();
   param->set_name(name_);
+  param->set_accuracy(best_accuracy_);
   // Add bottom and top
   DLOG(INFO) << "Serializing " << layers_.size() << " layers";
   for (int i = 0; i < layers_.size(); ++i) {

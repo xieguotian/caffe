@@ -275,6 +275,17 @@ class Net {
 	  }
 	  return info;
   }
+
+  bool set_accuracy(Dtype accuracy)
+  {
+	  if (best_accuracy_ <= accuracy)
+	  {
+		  best_accuracy_ = accuracy;
+		  return true;
+	  }
+	  return false;
+  }
+  Dtype best_accuracy(){ return best_accuracy_; }
  protected:
   // Helpers for Init.
   /// @brief Append a new top blob to the net.
@@ -386,6 +397,7 @@ class Net {
 
   bool is_signal_decay_;
   Dtype signal_decay_;
+  Dtype best_accuracy_;
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 
