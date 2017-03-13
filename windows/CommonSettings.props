@@ -6,7 +6,7 @@
     <!--NOTE: CpuOnlyBuild and UseCuDNN flags can't be set at the same time.-->
     <CpuOnlyBuild>false</CpuOnlyBuild>
     <UseCuDNN>true</UseCuDNN>
-    <CudaVersion>7.5</CudaVersion>
+    <CudaVersion>8.0</CudaVersion>
     <!-- NOTE: If Python support is enabled, PythonDir (below) needs to be
          set to the root of your Python installation. If your Python installation
          does not contain debug libraries, debug build will not work. -->
@@ -20,8 +20,8 @@
          Setting proper architecture is important to mimize your run and compile time. -->
     <CudaArchitecture>compute_35,sm_35;compute_52,sm_52</CudaArchitecture>
     <!-- CuDNN 3 and 4 are supported -->
-    <CuDnnPath>$(SolutionDir)\..\3rdparty</CuDnnPath>
-    <ScriptsDir>$(SolutionDir)\scripts</ScriptsDir>
+    <CuDnnPath>$(SolutionDir)..\3rdparty</CuDnnPath>
+    <ScriptsDir>$(SolutionDir)scripts</ScriptsDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(CpuOnlyBuild)'=='false'">
     <CudaDependencies>cublas.lib;cuda.lib;curand.lib;cudart.lib</CudaDependencies>
@@ -38,11 +38,11 @@
     <IntDir>$(BuildDir)\Int\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup>
-    <LibraryPath>$(OutDir);$(CUDA_PATH_V7_5)\lib\$(Platform);$(LibraryPath)</LibraryPath>
-    <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\caffe\proto;$(CUDA_PATH_V7_5)\include;$(IncludePath);$(SolutionDir)\..\include\caffe</IncludePath>
+    <LibraryPath>$(OutDir);$(CUDA_PATH_V8_0)\lib\$(Platform);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\caffe\proto;$(CUDA_PATH_V8_0)\include;$(IncludePath);$(SolutionDir)..\include\caffe</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(PythonSupport)'=='true'">
-    <PythonDir>C:\Anaconda\</PythonDir>
+    <PythonDir>C:\Anaconda</PythonDir>
     <LibraryPath>$(PythonDir)\libs;$(LibraryPath)</LibraryPath>
     <IncludePath>$(PythonDir)\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
