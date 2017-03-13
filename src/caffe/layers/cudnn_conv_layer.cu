@@ -16,6 +16,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 		caffe_copy(this->blobs_[0]->count(),
 			this->blobs_[0]->gpu_data(),
 			w_history_.mutable_gpu_data());
+		is_history_init_ = true;
 			//this->blobs_[idx_param_idx]->mutable_gpu_data());
 	}
 	if (is_incremental_)

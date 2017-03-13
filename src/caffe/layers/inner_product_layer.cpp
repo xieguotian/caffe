@@ -52,6 +52,20 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
   }  // parameter initialization
   this->param_propagate_down_.resize(this->blobs_.size(), true);
+
+  is_incremental_ = this->layer_param_.incremental();
+  if (is_incremental_)
+  {
+	  this->blobs_.push_back(shared_ptr<Blob<Dtype> >());
+	  vector<int> idx_shape;
+	  int idx_param_idx = this->blobs_.size() - 1;
+	  this->blobs_[idx_param_idx].reset(new Blob<Dtype>(this->blobs_[0]->shape()));
+	  shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
+		  this->layer_param_.inner_product_param().weight_filler()));
+	  weight_filler->Fill(this->blobs_[idx_param_idx].get());
+	  w_history_.ReshapeLike(*this->blobs_[0]);
+	  is_history_init_ = false;
+  }
 }
 
 template <typename Dtype>
