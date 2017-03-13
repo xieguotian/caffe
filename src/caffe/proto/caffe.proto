@@ -436,6 +436,7 @@ message LayerParameter {
   optional bool force_copy = 8266723 [default = false];
   optional float direct_ratio = 8266724;
   optional float decay_mult = 8266725 [default = 0];
+  optional bool incremental = 8266726 [default = false];
 }
 
 // message for multi-scale image argumentation

@@ -1211,9 +1211,17 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
     DLOG(INFO) << "Copying source layer " << source_layer_name;
     vector<shared_ptr<Blob<Dtype> > >& target_blobs =
         layers_[target_layer_id]->blobs();
-    CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
-        << "Incompatible number of blobs for layer " << source_layer_name;
-    for (int j = 0; j < target_blobs.size(); ++j) {
+    //CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
+    //    << "Incompatible number of blobs for layer " << source_layer_name;
+	if (target_blobs.size() != source_layer.blobs_size())
+	{
+		LOG(WARNING) << "number of bolbs for layer " << source_layer_name
+			<< "not eqaul.";
+	}
+	int num_blobs = target_blobs.size();
+
+    //for (int j = 0; j < target_blobs.size(); ++j) {
+	for (int j = 0; j < num_blobs; ++j) {
       if (!target_blobs[j]->ShapeEquals(source_layer.blobs(j))) {
         Blob<Dtype> source_blob;
         const bool kReshape = true;

@@ -10,6 +10,22 @@ __global__ void sync_conv_groups() { }
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+	if (is_incremental_ && !is_history_init_)
+	{
+		int idx_param_idx = this->blobs_.size() - 1;
+		caffe_copy(this->blobs_[0]->count(),
+			this->blobs_[0]->gpu_data(),
+			w_history_.mutable_gpu_data());
+			//this->blobs_[idx_param_idx]->mutable_gpu_data());
+	}
+	if (is_incremental_)
+	{
+		int idx_param_idx = this->blobs_.size() - 1;
+		caffe_gpu_add(this->blobs_[0]->count(),
+			w_history_.gpu_data(),
+			this->blobs_[idx_param_idx]->gpu_data(),
+			this->blobs_[0]->mutable_gpu_data());
+	}
   const Dtype* weight = this->blobs_[0]->gpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->gpu_data();
@@ -149,6 +165,13 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 			  }
 		  }
 	  }
+  }
+  if (is_incremental_)
+  {
+	  int idx_param_idx = this->blobs_.size() - 1;
+	  caffe_copy(this->blobs_[0]->count(),
+		  this->blobs_[0]->gpu_diff(),
+		  this->blobs_[idx_param_idx]->mutable_gpu_diff());
   }
 }
 

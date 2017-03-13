@@ -64,6 +64,10 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   size_t workspaceSizeInBytes;  // size of underlying storage
   void *workspaceData;  // underlying storage
   void **workspace;  // aliases into workspaceData
+
+  bool is_incremental_;
+  Blob<Dtype> w_history_;
+  bool is_history_init_;
 };
 #endif
 

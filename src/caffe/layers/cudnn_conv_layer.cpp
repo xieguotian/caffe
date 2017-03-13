@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "caffe/layers/cudnn_conv_layer.hpp"
-
+#include "caffe\filler.hpp"
 namespace caffe {
 
 // Set to three for the benefit of the backward pass, which
@@ -85,6 +85,21 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
   }
 
   handles_setup_ = true;
+
+  is_incremental_ = this->layer_param_.incremental();
+  if (is_incremental_)
+  {
+	  this->blobs_.push_back(shared_ptr<Blob<Dtype> >());
+	  vector<int> idx_shape;
+	  //idx_shape.push_back(direct_num_);
+	  int idx_param_idx = this->blobs_.size() - 1;
+	  this->blobs_[idx_param_idx].reset(new Blob<Dtype>(this->blobs_[0]->shape()));
+	  shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
+		  this->layer_param_.convolution_param().weight_filler()));
+	  weight_filler->Fill(this->blobs_[idx_param_idx].get());
+	  w_history_.ReshapeLike(*this->blobs_[0]);
+	  is_history_init_ = false;
+  }
 }
 
 template <typename Dtype>
