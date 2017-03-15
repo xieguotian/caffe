@@ -38,8 +38,8 @@
     <IntDir>$(BuildDir)\Int\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup>
-    <LibraryPath>$(OutDir);$(CUDA_PATH_V8_0)\lib\$(Platform);$(LibraryPath)</LibraryPath>
-    <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\caffe\proto;$(CUDA_PATH_V8_0)\include;$(IncludePath);$(SolutionDir)..\include\caffe</IncludePath>
+    <LibraryPath>$(OutDir);$(CUDA_PATH_V7_5)\lib\$(Platform);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\caffe\proto;$(CUDA_PATH_V7_5)\include;$(IncludePath);$(SolutionDir)..\include\caffe</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(PythonSupport)'=='true'">
     <PythonDir>C:\Anaconda</PythonDir>

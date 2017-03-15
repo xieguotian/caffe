@@ -32,6 +32,9 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
   this->transformed_data_.Reshape(top_shape);
+  //this->transform_par_.reset(new TransformParallel<Dtype>(transform_param_, this->phase_));
+  //this->transform_par_->Reshape(top_shape);
+
   // Reshape top[0] and prefetch_data according to the batch_size.
   top_shape[0] = batch_size;
   top[0]->Reshape(top_shape);
@@ -83,6 +86,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
   this->transformed_data_.Reshape(top_shape);
+  //this->transform_par_->Reshape(top_shape);
   // Reshape batch according to the batch_size.
   top_shape[0] = batch_size;
   batch->data_.Reshape(top_shape);
@@ -112,6 +116,7 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 		datum = *(reader_.full().pop("Waiting for data"));
 		this->data_transformer_->Transform(datum, &(this->transformed_data_));
 	}
+	//this->transform_par_->TransformOne(&datum, top_data + offset);
     // Copy label.
     if (this->output_labels_) {
       top_label[item_id] = datum.label();
@@ -127,12 +132,111 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
     reader_.free().push(const_cast<Datum*>(&datum));
   }
+  //this->transform_par_->CheckCompleted();
+  //this->transform_par_->return_datum(&reader_.free());
   timer.Stop();
   batch_timer.Stop();
+  
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
   DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
+
+template<typename Dtype>
+TransformParallel<Dtype>::TransformParallel(const TransformationParameter& param, Phase phase, int num_cache, int num_trans){
+	cache_size_ = num_cache;
+	for (int i = 0; i < cache_size_; i++)
+	{
+		transform_data_free_.push(new Blob<Dtype>());
+	}
+
+	num_transformer_ = num_trans;
+	transformers_set_.resize(num_transformer_);
+	for (int i = 0; i < num_transformer_; i++)
+	{
+		transformers_set_[i] = new TransformThread<Dtype>(param, phase);
+		transformers_set_[i]->init(&transform_data_full_, &transform_data_free_,&datum_free_);
+	}
+
+}
+
+template<typename Dtype>
+void TransformParallel<Dtype>::Reshape(vector<int> shape)
+{
+	for (int i = 0; i < cache_size_; i++)
+	{
+		Blob<Dtype>* cache_tmp = transform_data_free_.pop();
+		cache_tmp->Reshape(shape);
+		transform_data_free_.push(cache_tmp);
+	}
+}
+
+template<typename Dtype>
+void TransformParallel<Dtype>::TransformOne(Datum* datum, Dtype* transformed_data)
+{
+	Blob<Dtype>* transform_data = transform_data_free_.pop();
+	transform_data->set_cpu_data(transformed_data);
+	std::pair<Datum*, Blob<Dtype>*> transform_data_pair(datum, transform_data);
+	transform_data_full_.push(transform_data_pair);
+}
+
+template<typename Dtype>
+bool TransformParallel<Dtype>::CheckCompleted(){
+	while (!(transform_data_free_.size() == cache_size_))
+	{
+	}
+	return true;
+}
+
+template<typename Dtype>
+TransformParallel<Dtype>::~TransformParallel()
+{
+	for (int i = 0; i < transformers_set_.size(); i++)
+	{
+		transformers_set_[i]->StopInternalThread();
+		delete transformers_set_[i];
+	}
+	std::pair<Datum*, Blob<Dtype>*> tmp_pair;
+	while (transform_data_full_.try_pop(&tmp_pair))
+	{
+		delete tmp_pair.second;
+	}
+
+	Blob<Dtype>* tmp_data;
+	while (transform_data_free_.try_pop(&tmp_data))
+	{
+		delete tmp_data;
+	}
+}
+
+template<typename Dtype>
+void TransformThread<Dtype>::InternalThreadEntry()
+{
+	while (true)
+	{
+		std::pair<Datum*, Blob<Dtype>*> data_pair = transform_data_full_->pop();
+		Datum* data_tmp = data_pair.first;
+		Blob<Dtype>* transform_data = data_pair.second;
+		this->Transform(*data_tmp, transform_data);
+		transform_data_free_->push(const_cast<Blob<Dtype>*>(transform_data));
+		datum_free_->push(const_cast<Datum*>(data_tmp));
+	}
+}
+
+template<typename Dtype>
+void TransformThread<Dtype>::init(
+	BlockingQueue<std::pair<Datum*, Blob<Dtype>*>>* transform_full,
+	BlockingQueue<Blob<Dtype>*>* transform_free,
+	BlockingQueue<Datum*>* datum_free)
+{
+	transform_data_full_ = transform_full;
+	transform_data_free_ = transform_free;
+	datum_free_ = datum_free;
+	InitRand();
+	StartInternalThread();
+}
+INSTANTIATE_CLASS(TransformThread);
+INSTANTIATE_CLASS(TransformParallel);
 
 INSTANTIATE_CLASS(DataLayer);
 REGISTER_LAYER_CLASS(Data);

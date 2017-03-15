@@ -50,6 +50,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </UndefinePreprocessorDefinitions>
+      <OpenMPSupport Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</OpenMPSupport>
     </ClCompile>
     <PreBuildEvent>
       <Command>"$(ScriptsDir)\PythonPreBuild.cmd" "$(SolutionDir)" "$(ProtocDir)" "$(OutDir)"</Command>

@@ -13,6 +13,57 @@
 #include "caffe/util/db.hpp"
 
 namespace caffe {
+	template<typename Dtype>
+	class TransformThread : public DataTransformer<Dtype>, public InternalThread
+	{
+	public:
+		TransformThread(const TransformationParameter& param, Phase phase):
+			DataTransformer<Dtype>(param,phase)
+		{
+		}
+		void init(
+			BlockingQueue<std::pair<Datum*, Blob<Dtype>*>>* transform_full,
+			BlockingQueue<Blob<Dtype>*>* transform_free,
+			BlockingQueue<Datum*>* datum_free);
+
+		~TransformThread(){
+			StopInternalThread();
+		}
+	protected:
+		virtual void InternalThreadEntry();
+
+		BlockingQueue<std::pair<Datum*, Blob<Dtype>*>>* transform_data_full_;
+		BlockingQueue<Blob<Dtype>*>* transform_data_free_;
+		BlockingQueue<Datum*>* datum_free_;
+	};
+
+	template<typename Dtype>
+	class TransformParallel{
+	public:
+		explicit TransformParallel(const TransformationParameter& param, Phase phase, int num_cache = 200, int num_trans = 10);
+
+		void Reshape(vector<int> shape);
+
+		void TransformOne(Datum* datum, Dtype* transformed_data);
+		bool CheckCompleted();
+		~TransformParallel();
+		void return_datum(BlockingQueue<Datum*>* datum_queue)
+		{
+			Datum* tmp_datum;
+			while (datum_free_.try_pop(&tmp_datum))
+			{
+				datum_queue->push(tmp_datum);
+			}
+		}
+	protected:
+		int num_transformer_;
+		int cache_size_;
+		vector<TransformThread<Dtype>*> transformers_set_;
+		BlockingQueue<std::pair<Datum*, Blob<Dtype>*>> transform_data_full_;
+		BlockingQueue<Blob<Dtype>*> transform_data_free_;
+		BlockingQueue<Datum*> datum_free_;
+	};
+
 
 template <typename Dtype>
 class DataLayer : public BasePrefetchingDataLayer<Dtype> {
@@ -36,6 +87,8 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual void load_batch(Batch<Dtype>* batch);
 
   DataReader reader_;
+
+  shared_ptr<TransformParallel<Dtype>> transform_par_;
 };
 
 }  // namespace caffe

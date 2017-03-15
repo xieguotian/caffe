@@ -1217,9 +1217,9 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
 	if (target_blobs.size() != source_layer.blobs_size())
 	{
 		LOG(WARNING) << "number of bolbs for layer " << source_layer_name
-			<< "not eqaul.";
+			<< " not eqaul. " << target_blobs.size() << " vs " << source_layer.blobs_size();
 	}
-	int num_blobs = target_blobs.size();
+	int num_blobs = std::min((int)target_blobs.size(), (int)source_layer.blobs_size());
 
     //for (int j = 0; j < target_blobs.size(); ++j) {
 	for (int j = 0; j < num_blobs; ++j) {
