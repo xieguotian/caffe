@@ -732,7 +732,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 	  CHECK(cv_cropped_img.data);
 	  cv::Mat gray_cropped_img;
 	  bool is_color_jitter = false;
-	  if (param_.color_jitter())
+	  if (phase_ == TRAIN && param_.color_jitter())
 	  {
 		  
 		  Dtype alpha;

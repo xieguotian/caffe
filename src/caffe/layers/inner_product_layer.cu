@@ -9,13 +9,17 @@ namespace caffe {
 template <typename Dtype>
 void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-	if (is_incremental_ && !is_history_init_)
+	if (is_incremental_ && (!is_history_init_ || caffe::is_refresh_incremental))
 	{
 		int idx_param_idx = this->blobs_.size() - 1;
 		caffe_copy(this->blobs_[0]->count(),
 			this->blobs_[0]->gpu_data(),
 			w_history_.mutable_gpu_data());
 		is_history_init_ = true;
+		if (caffe::is_refresh_incremental)
+		{
+			caffe_gpu_set(this->blobs_[idx_param_idx]->count(), (Dtype)0, this->blobs_[idx_param_idx]->mutable_gpu_data());
+		}
 		//this->blobs_[idx_param_idx]->mutable_gpu_data());
 	}
 	if (is_incremental_)

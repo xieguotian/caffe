@@ -180,8 +180,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         << "Memory required for data: " << memory_used_ * sizeof(Dtype);
     const int param_size = layer_param.param_size();
     const int num_param_blobs = layers_[layer_id]->blobs().size();
-    CHECK_LE(param_size, num_param_blobs)
-        << "Too many params specified for layer " << layer_param.name();
+	if (this->phase_==TRAIN)
+		CHECK_LE(param_size, num_param_blobs)
+			<< "Too many params specified for layer " << layer_param.name();
     ParamSpec default_param_spec;
     for (int param_id = 0; param_id < num_param_blobs; ++param_id) {
       const ParamSpec* param_spec = (param_id < param_size) ?
@@ -1144,9 +1145,17 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
     DLOG(INFO) << "Copying source layer " << source_layer_name;
     vector<shared_ptr<Blob<Dtype> > >& target_blobs =
         layers_[target_layer_id]->blobs();
-    CHECK_EQ(target_blobs.size(), source_layer->blobs().size())
-        << "Incompatible number of blobs for layer " << source_layer_name;
-    for (int j = 0; j < target_blobs.size(); ++j) {
+    //CHECK_EQ(target_blobs.size(), source_layer->blobs().size())
+    //    << "Incompatible number of blobs for layer " << source_layer_name;
+	if (target_blobs.size() != source_layer->blobs().size())
+	{
+		LOG(WARNING) << "number of bolbs for layer " << source_layer_name
+			<< " not eqaul. " << target_blobs.size() << " vs " << source_layer->blobs().size();
+	}
+	int num_blobs = std::min((int)target_blobs.size(), (int)source_layer->blobs().size());
+
+    //for (int j = 0; j < target_blobs.size(); ++j) {
+	for (int j = 0; j < num_blobs; ++j) {
       Blob<Dtype>* source_blob = source_layer->blobs()[j].get();
       CHECK(target_blobs[j]->shape() == source_blob->shape())
           << "Cannot share param " << j << " weights from layer '"

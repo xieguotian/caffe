@@ -86,10 +86,10 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 
   handles_setup_ = true;
 
-  is_incremental_ = this->layer_param_.incremental();
+  is_incremental_ = this->layer_param_.incremental() && this->phase_ == TRAIN;
   if (is_incremental_)
   {
-	  this->blobs_.push_back(shared_ptr<Blob<Dtype> >());
+	  this->blobs_.push_back(shared_ptr<Blob<Dtype> >()) ;
 	  vector<int> idx_shape;
 	  //idx_shape.push_back(direct_num_);
 	  int idx_param_idx = this->blobs_.size() - 1;

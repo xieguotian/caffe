@@ -233,6 +233,7 @@ void Solver<Dtype>::Step(int iters) {
       loss += net_->ForwardBackward();
     }
     loss /= param_.iter_size();
+
     // average the loss across iterations for smoothed reporting
     UpdateSmoothedLoss(loss, start_iter, average_loss);
     if (display) {
@@ -272,6 +273,13 @@ void Solver<Dtype>::Step(int iters) {
     for (int i = 0; i < callbacks_.size(); ++i) {
       callbacks_[i]->on_gradients_ready();
     }
+
+	if (caffe::is_refresh_incremental && Caffe::root_solver())
+	{
+		caffe::is_refresh_incremental = false;
+		LOG(INFO) << "refresh_incremental completed.";
+	}
+
     ApplyUpdate();
 
     // Increment the internal iter_ counter -- its value should always indicate
@@ -442,6 +450,8 @@ void Solver<Dtype>::Test(const int test_net_id) {
 	{
 		if (net_->set_accuracy(mean_score))
 		{
+			caffe::is_refresh_incremental = true;
+			LOG(INFO) << "require refreshing incremental because we get a better model";
 			save_best_model();
 			LOG(INFO) << "current best accuracy is: " << net_->best_accuracy();
 		}

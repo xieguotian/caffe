@@ -53,7 +53,7 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }  // parameter initialization
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 
-  is_incremental_ = this->layer_param_.incremental();
+  is_incremental_ = this->layer_param_.incremental() && this->phase_==TRAIN;
   if (is_incremental_)
   {
 	  this->blobs_.push_back(shared_ptr<Blob<Dtype> >());
