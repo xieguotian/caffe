@@ -74,7 +74,7 @@ void KmeansLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 		//distance_.mutable_gpu_diff(),
 		bottom[0]->mutable_gpu_diff(),
 		pos_.gpu_data(),
-		- top[0]->cpu_diff()[0]/nthreads);
+		-top[0]->cpu_diff()[0]/nthreads);
 	//cluster_centroid_dist_layer->Backward(distance_top_vec_, propagate_down, distance_bottom_vec_);
 }
 

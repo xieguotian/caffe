@@ -40,7 +40,7 @@ namespace caffe {
 	template<typename Dtype>
 	class TransformParallel{
 	public:
-		explicit TransformParallel(const TransformationParameter& param, Phase phase, int num_cache = 200, int num_trans = 10);
+		explicit TransformParallel(const TransformationParameter& param, Phase phase, int num_cache = 100, int num_trans = 3);
 
 		void Reshape(vector<int> shape);
 
