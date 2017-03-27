@@ -224,9 +224,9 @@ namespace caffe{
 	{
 		const Dtype* input = bottom[0]->gpu_data();
 		Dtype* output = top[0]->mutable_gpu_data();
-		const Dtype* weight = this->blobs_[3]->gpu_data();
+		const Dtype* weight = is_affine_? NULL: this->blobs_[3]->gpu_data();
 		Dtype* bias = NULL;
-		if (has_bias_term_)
+		if (!is_affine_ && has_bias_term_)
 			bias = this->blobs_[4]->mutable_gpu_data();
 		Dtype* runningMean = this->blobs_[0]->mutable_gpu_data();
 		Dtype* runningVar = this->blobs_[1]->mutable_gpu_data();
@@ -333,13 +333,13 @@ namespace caffe{
 		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom)
 	{
 		const Dtype* input = bottom[0]->gpu_data();
-		Dtype* gradInput = bottom[0]->mutable_gpu_diff();
+		Dtype* gradInput = propagate_down[0] ? bottom[0]->mutable_gpu_diff() : NULL;
 		const Dtype* gradOutput = top[0]->gpu_diff();
-		Dtype* gradWeight = this->blobs_[3]->mutable_gpu_diff();
+		Dtype* gradWeight = is_affine_ ? NULL : this->blobs_[3]->mutable_gpu_diff();
 		Dtype* gradBias = NULL;
-		if (has_bias_term_)
+		if (!is_affine_ && has_bias_term_)
 			gradBias = this->blobs_[4]->mutable_gpu_diff();
-		const Dtype* weight = this->blobs_[3]->gpu_data();
+		const Dtype* weight = is_affine_ ? NULL : this->blobs_[3]->gpu_data();
 		const Dtype* runningMean = this->blobs_[0]->gpu_data();
 		const Dtype* runningVar = this->blobs_[1]->gpu_data();
 		const Dtype* saveMean = mean_.gpu_data();

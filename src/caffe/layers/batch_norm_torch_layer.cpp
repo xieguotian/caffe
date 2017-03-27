@@ -13,6 +13,7 @@ void BatchNormTorchLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   BatchNormParameter bn_param = this->layer_param_.batch_norm_param();
   const ScaleParameter& scale_param = this->layer_param_.scale_param();
   moving_average_fraction_ = 1- bn_param.moving_average_fraction();
+  is_affine_ = bn_param.affine();
   use_global_stats_ = this->phase_ == TEST;
   if (bn_param.has_use_global_stats())
 	  use_global_stats_ = bn_param.use_global_stats();
@@ -27,9 +28,21 @@ void BatchNormTorchLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 	  vector<int> sz;
 	  sz.push_back(channels_);
 	  has_bias_term_ = false;
-	  if (this->layer_param_.scale_param().bias_term())
+	  if (!is_affine_ && this->layer_param_.scale_param().bias_term())
 	  {
 		  this->blobs_.resize(5);
+
+		  this->blobs_[3].reset(new Blob<Dtype>(sz));
+		  //intial scale param
+		  FillerParameter filler_param(scale_param.filler());
+		  if (!scale_param.has_filler()) {
+			  // Default to unit (1) filler for identity operation.
+			  filler_param.set_type("constant");
+			  filler_param.set_value(1);
+		  }
+		  shared_ptr<Filler<Dtype> > filler(GetFiller<Dtype>(filler_param));
+		  filler->Fill(this->blobs_[3].get());
+
 		  this->blobs_[4].reset(new Blob<Dtype>(sz));
 		  //initial bias param.
 		  shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(scale_param.bias_filler()));
@@ -37,7 +50,26 @@ void BatchNormTorchLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 		  has_bias_term_ = true;
 	  }
 	  else
-		  this->blobs_.resize(4);
+	  {
+		  if (!is_affine_)
+		  {
+			  this->blobs_.resize(4);
+			  this->blobs_[3].reset(new Blob<Dtype>(sz));
+			  //intial scale param
+			  FillerParameter filler_param(scale_param.filler());
+			  if (!scale_param.has_filler()) {
+				  // Default to unit (1) filler for identity operation.
+				  filler_param.set_type("constant");
+				  filler_param.set_value(1);
+			  }
+			  shared_ptr<Filler<Dtype> > filler(GetFiller<Dtype>(filler_param));
+			  filler->Fill(this->blobs_[3].get());
+		  }
+		  else
+		  {
+			  this->blobs_.resize(3);
+		  }
+	  }
 
     this->blobs_[0].reset(new Blob<Dtype>(sz));
 	caffe_set(this->blobs_[0]->count(), Dtype(0),
@@ -45,7 +77,6 @@ void BatchNormTorchLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     this->blobs_[1].reset(new Blob<Dtype>(sz));
 	caffe_set(this->blobs_[1]->count(), Dtype(1),
 		this->blobs_[1]->mutable_cpu_data());
-	this->blobs_[3].reset(new Blob<Dtype>(sz));
     sz[0]=1;
     this->blobs_[2].reset(new Blob<Dtype>(sz));
 	caffe_set(this->blobs_[2]->count(), Dtype(0),
@@ -55,15 +86,6 @@ void BatchNormTorchLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     //            this->blobs_[i]->mutable_cpu_data());
     //}
 
-	//intial scale param
-	FillerParameter filler_param(scale_param.filler());
-	if (!scale_param.has_filler()) {
-		// Default to unit (1) filler for identity operation.
-		filler_param.set_type("constant");
-		filler_param.set_value(1);
-	}
-	shared_ptr<Filler<Dtype> > filler(GetFiller<Dtype>(filler_param));
-	filler->Fill(this->blobs_[3].get());
   }
 }
 

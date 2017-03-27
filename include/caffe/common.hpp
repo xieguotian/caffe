@@ -183,7 +183,6 @@ class Caffe {
 };
 
 vector<string> string_split(const string str, const char split_char = ' ');
-static bool is_refresh_incremental = false;
 }  // namespace caffe
 
 #endif  // CAFFE_COMMON_HPP_

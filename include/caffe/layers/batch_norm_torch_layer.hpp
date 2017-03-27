@@ -69,6 +69,7 @@ class BatchNormTorchLayer : public Layer<Dtype> {
   int channels_,spatial_dim_;
   Dtype eps_;
   bool has_bias_term_;
+  bool is_affine_;
   // extra temporarary variables is used to carry out sums/broadcasting
   // using BLAS
   //Blob<Dtype> batch_sum_multiplier_;
