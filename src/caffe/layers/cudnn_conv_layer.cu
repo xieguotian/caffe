@@ -101,6 +101,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->gpu_diff();
+	const Dtype* top_data = top[i]->gpu_data();
     // Backward through cuDNN in parallel over groups and gradients.
     for (int g = 0; g < this->group_; g++) {
       // Gradient w.r.t. bias.
@@ -151,7 +152,35 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // NOLINT_NEXT_LINE(whitespace/operators)
     sync_conv_groups<<<1, 1>>>();
   }
-
+  for (int i = 0; i < top.size(); ++i) {
+	  const Dtype* top_diff = top[i]->gpu_diff();
+	  const Dtype* top_data = top[i]->gpu_data();
+	  // Backward through cuDNN in parallel over groups and gradients.
+	  for (int g = 0; g < this->group_; g++) {
+		  // Gradient w.r.t. weights.
+		  if (this->param_propagate_down_[0]) {
+			  const Dtype* bottom_data = bottom[i]->gpu_data();
+			  // backpropagate  signal decay.
+			  Dtype decay_mult = this->layer_param_.decay_mult();
+			  if (decay_mult > 0)
+			  {
+				  CUDNN_CHECK(cudnnConvolutionBackwardFilter(
+					  handle_[1 * this->group_ + g],
+					  //cudnn::dataType<Dtype>::one,
+					  &decay_mult,
+					  bottom_descs_[i], bottom_data + bottom_offset_ * g,
+					  //top_descs_[i], top_diff + top_offset_ * g,
+					  top_descs_[i], top_data + top_offset_*g,
+					  conv_descs_[i],
+					  bwd_filter_algo_[i], workspace[1 * this->group_ + g],
+					  workspace_bwd_filter_sizes_[i],
+					  cudnn::dataType<Dtype>::one,
+					  filter_desc_, weight_diff + this->weight_offset_ * g));
+			  }
+		  }
+	  }
+	  sync_conv_groups << <1, 1 >> >();
+  }
   if (is_direct_connect_)
   {
 	  int idx_param_idx = this->blobs_.size() - 1;

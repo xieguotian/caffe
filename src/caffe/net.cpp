@@ -1003,33 +1003,33 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
 		   }
 		  }
 
-		  Dtype decay_mult = layers_[i]->layer_param().decay_mult();
-		  // if need signal decay, decay the diff of signal.
-		  if (is_signal_decay_ && decay_mult>0 && (layer_types_[i] == "Convolution" || layer_types_[i] == "InnerProduct"))
-		  {
-			  for (int ti = 0; ti < top_vecs_[i].size(); ++ti)
-			  {
-				  Dtype sgd_decay = signal_decay_ * decay_mult;
-				  switch (Caffe::mode()) {
-				  case Caffe::CPU:
-					  caffe_axpy(top_vecs_[i][ti]->count(),
-						  sgd_decay,
-						  top_vecs_[i][ti]->cpu_data(),
-						  top_vecs_[i][ti]->mutable_cpu_diff());
-					  break;
-				  case Caffe::GPU:
-#ifndef CPU_ONLY
-					  caffe_gpu_axpy(top_vecs_[i][ti]->count(),
-						  sgd_decay,
-						  top_vecs_[i][ti]->gpu_data(),
-						  top_vecs_[i][ti]->mutable_gpu_diff());
-#else
-					  NO_GPU;
-#endif
-					  break;
-				  }
-			  }
-		  }
+//		  Dtype decay_mult = layers_[i]->layer_param().decay_mult();
+//		  // if need signal decay, decay the diff of signal.
+//		  if (is_signal_decay_ && decay_mult>0 && (layer_types_[i] == "Convolution" || layer_types_[i] == "InnerProduct"))
+//		  {
+//			  for (int ti = 0; ti < top_vecs_[i].size(); ++ti)
+//			  {
+//				  Dtype sgd_decay = signal_decay_ * decay_mult;
+//				  switch (Caffe::mode()) {
+//				  case Caffe::CPU:
+//					  caffe_axpy(top_vecs_[i][ti]->count(),
+//						  sgd_decay,
+//						  top_vecs_[i][ti]->cpu_data(),
+//						  top_vecs_[i][ti]->mutable_cpu_diff());
+//					  break;
+//				  case Caffe::GPU:
+//#ifndef CPU_ONLY
+//					  caffe_gpu_axpy(top_vecs_[i][ti]->count(),
+//						  sgd_decay,
+//						  top_vecs_[i][ti]->gpu_data(),
+//						  top_vecs_[i][ti]->mutable_gpu_diff());
+//#else
+//					  NO_GPU;
+//#endif
+//					  break;
+//				  }
+//			  }
+//		  }
 
 		  layers_[i]->Backward(
 			  top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);

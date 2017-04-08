@@ -109,19 +109,50 @@ void BatchNormTorchLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void BatchNormTorchLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+	const Dtype* input = bottom[0]->cpu_data();
+	Dtype* output = top[0]->mutable_cpu_data();
+	const Dtype* weight = this->blobs_[3]->cpu_data();
+	Dtype* bias = NULL;
+	if (has_bias_term_)
+		bias = this->blobs_[4]->mutable_cpu_data();
+	Dtype* runningMean = this->blobs_[0]->mutable_cpu_data();
+	Dtype* runningVar = this->blobs_[1]->mutable_cpu_data();
 
+	int nInput = bottom[0]->count() / spatial_dim_;
+	if (use_global_stats_) {
+#pragma omp parallel for
+		for (int n = 0; n < nInput; n++)
+		{
+			const Dtype* input_data = input + n*spatial_dim_;
+			Dtype* output_data = output + n*spatial_dim_;
+			int ch = n % channels_;
+			Dtype mean = runningMean[ch];
+			Dtype invstd = 1 / sqrt(runningVar[ch] + eps_);
+			Dtype w = weight == NULL ? 1 : weight[ch];
+			Dtype b = bias == NULL ? 0 : bias[ch];
+
+			for (int i = 0; i < spatial_dim_; i++)
+			{
+				output_data[i] = (input_data[i] - mean) * invstd * w + b;
+			}
+		}
+	}
+	else
+	{
+		NOT_IMPLEMENTED;
+	}
 }
 
 template <typename Dtype>
 void BatchNormTorchLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<Dtype>*>& bottom) {
-
+	NOT_IMPLEMENTED;
 }
 
 
 #ifdef CPU_ONLY
-STUB_GPU(BatchNormTorch);
+STUB_GPU(BatchNormTorchLayer);
 #endif
 
 INSTANTIATE_CLASS(BatchNormTorchLayer);

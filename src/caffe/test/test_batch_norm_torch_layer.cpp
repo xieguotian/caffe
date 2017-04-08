@@ -22,7 +22,7 @@ namespace caffe {
     typedef typename TypeParam::Dtype Dtype;
    protected:
 	   BatchNormTorchLayerTest()
-        : blob_bottom_(new Blob<Dtype>(5, 2, 3, 4)),
+        : blob_bottom_(new Blob<Dtype>(100, 2, 3, 4)),
           blob_top_(new Blob<Dtype>()) {
       // fill the values
       FillerParameter filler_param;
@@ -105,7 +105,7 @@ namespace caffe {
 				  for (int l = 0; l < width; ++l) {
 					  Dtype data = this->blob_top_->data_at(i, j, k, l);
 					  sum += data;
-					  std::cout << data;
+					  //std::cout << data;
 					  var += (data - 1) * (data - 1);
 				  }
 			  }
@@ -161,6 +161,7 @@ namespace caffe {
 		  EXPECT_NEAR(0.5*0.5, var, kErrorBound);
 	  }
   }
+ 
   TYPED_TEST(BatchNormTorchLayerTest, TestGradient) {
     typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;

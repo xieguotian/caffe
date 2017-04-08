@@ -143,7 +143,9 @@ __global__ void spatial_relu(const int nthreads,
 						spatial_record = (spatial_record << 1) | 1;
 					}
 					else
+					{
 						spatial_record = (spatial_record << 1);
+					}
 				}
 			}
 		}
@@ -200,11 +202,27 @@ void CuDNNConvolutionMaskLayer<Dtype>::Forward_gpu(
 	int n_threads = top[i]->count();
 	//Dtype* mask_data = top[i * 2 + 1]->mutable_gpu_data();
 	char* mask_data = mask_caches_[i]->mutable_gpu_data();
-	max_among_six_spatial<Dtype> << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
-	//spatial_relu<Dtype> << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
+	if (this->layer_param_.conv_mask_param().use_spatial())
+	{
+		static bool first_log = true;
+		if (first_log)
+		{
+			first_log = false;
+			LOG(INFO) << "use spatial_reul forward";
+		}
+		spatial_relu<Dtype> << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
 		n_threads, top_data, top[i]->num(), top[i]->channels(), top[i]->height(), top[i]->width(),
-		top[i]->mutable_gpu_data(), mask_data ,factor_
-		);
+			top[i]->mutable_gpu_data(), mask_data, factor_
+			);
+	}
+	else
+	{
+		max_among_six_spatial<Dtype> << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
+			//spatial_relu<Dtype> << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
+			n_threads, top_data, top[i]->num(), top[i]->channels(), top[i]->height(), top[i]->width(),
+			top[i]->mutable_gpu_data(), mask_data, factor_
+			);
+	}
   }
 
 }
@@ -658,11 +676,27 @@ void CuDNNConvolutionMaskLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 	  int n_threads = top[i]->count() * 9;
 	  caffe_gpu_set(n_threads, (Dtype)0, caches_->mutable_gpu_data());
 	  const char* mask_data = mask_caches_[i]->gpu_data();
-	  max_among_six_spatial_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads / 9), CAFFE_CUDA_NUM_THREADS >> >(
-	  //spatial_relu_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads / 9), CAFFE_CUDA_NUM_THREADS >> >(
+	  if (this->layer_param_.conv_mask_param().use_spatial())
+	  {
+		  static bool first_log = true;
+		  if (first_log)
+		  {
+			  first_log = false;
+			  LOG(INFO) << "use spatial_reul backward";
+		  }
+		  spatial_relu_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads / 9), CAFFE_CUDA_NUM_THREADS >> >(
 		  n_threads / 9, top[i]->gpu_diff(), top[i]->num(),
-		  top[i]->channels(), top[i]->height(), top[i]->width(),
-		  caches_->mutable_gpu_data(), mask_data, factor_); 
+			  top[i]->channels(), top[i]->height(), top[i]->width(),
+			  caches_->mutable_gpu_data(), mask_data, factor_);
+	  }
+	  else
+	  {
+		  max_among_six_spatial_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads / 9), CAFFE_CUDA_NUM_THREADS >> >(
+			  //spatial_relu_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads / 9), CAFFE_CUDA_NUM_THREADS >> >(
+			  n_threads / 9, top[i]->gpu_diff(), top[i]->num(),
+			  top[i]->channels(), top[i]->height(), top[i]->width(),
+			  caches_->mutable_gpu_data(), mask_data, factor_);
+	  }
 	  //int block_threads = (n_threads + 450 - 1) / 450;
 	  ////int block_threads = (n_threads + 512 - 1) / 512;
 	  //max_among_six_spatial_bp_fast<Dtype> <<<block_threads, 450>>>(

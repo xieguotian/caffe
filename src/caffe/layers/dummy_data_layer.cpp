@@ -59,7 +59,8 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     // Refill on each iteration iff not using a constant filler,
     // but use the inverse of this rule for the first run.
     refill_.resize(1);
-    refill_[0] = (strcmp(filler_param.type().c_str(), "constant") == 0);
+    //refill_[0] = (strcmp(filler_param.type().c_str(), "constant") == 0);
+	refill_[0] = (strcmp(filler_param.type().c_str(), "positive_unitball") == 0);
     fillers_.resize(1);
     fillers_[0].reset(GetFiller<Dtype>(filler_param));
   } else {
@@ -69,8 +70,10 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       fillers_[i].reset(GetFiller<Dtype>(param.data_filler(i)));
       // Refill on each iteration iff not using a constant filler,
       // but use the inverse of this rule for the first run.
-      refill_[i] =
-          (strcmp(param.data_filler(i).type().c_str(), "constant") == 0);
+      //refill_[i] =
+      //    (strcmp(param.data_filler(i).type().c_str(), "constant") == 0);
+	  refill_[i] =
+	      (strcmp(param.data_filler(i).type().c_str(), "positive_unitball") == 0);
     }
   }
   for (int i = 0; i < num_top; ++i) {
@@ -88,13 +91,13 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       top[i]->Reshape(param.shape(shape_index));
     }
   }
-  // Run Forward once, with refill_ inverted, to fill the constant Blobs.
-  this->Forward(bottom, top);
-  // Invert the inverted refill_ values to refill the desired (non-constant)
-  // Blobs in every usual forward pass.
-  for (int i = 0; i < refill_.size(); ++i) {
-    refill_[i] = !refill_[i];
-  }
+  //// Run Forward once, with refill_ inverted, to fill the constant Blobs.
+  //this->Forward(bottom, top);
+  //// Invert the inverted refill_ values to refill the desired (non-constant)
+  //// Blobs in every usual forward pass.
+  //for (int i = 0; i < refill_.size(); ++i) {
+  //  refill_[i] = !refill_[i];
+  //}
 }
 
 template <typename Dtype>
@@ -104,6 +107,34 @@ void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const int filler_id = (fillers_.size() > 1) ? i : 0;
     //if (refill_[filler_id]) {
       fillers_[filler_id]->Fill(top[i]);
+	  if (refill_[filler_id] && this->layer_param_.dummy_data_param().is_prob_threshold())
+	  {
+		  for (int n = 0; n < top[i]->num(); n++)
+		  {
+			  Dtype max = -1;
+			  int max_pos = -1;
+			  Dtype* top_data = top[i]->mutable_cpu_data() + top[i]->channels()*n;
+			  for (int ch = 0; ch < top[i]->channels(); ch++)
+			  {
+				  if (max<top_data[ch])
+				  {
+					  max = top_data[ch];
+					  max_pos = ch;
+				  }
+				  top_data[ch] = (Dtype)0.0;
+			  }
+			  top_data[max_pos] = (Dtype)1.0;
+		  }
+		  static bool is_first = true;
+
+		  if (is_first)
+		  {
+			  Dtype* top_data = top[i]->mutable_cpu_data();
+			  for (int ch = 0; ch < top[i]->channels(); ch++)
+				  LOG(INFO) << top_data[ch];
+			  is_first = false;
+		  }
+	  }
     //}
   }
 }
