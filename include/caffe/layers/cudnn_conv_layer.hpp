@@ -68,6 +68,10 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   bool is_incremental_;
   Blob<Dtype> w_history_;
   bool is_history_init_;
+
+  Blob<Dtype> sign_weight_;
+  Blob<Dtype> sum_cache_;
+  Blob<Dtype> sum_result_;
 };
 #endif
 

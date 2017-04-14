@@ -165,6 +165,7 @@ void Blob<Dtype>::ShareDiff_LE(const Blob& other) {
 template <> void Blob<unsigned int>::Update() { NOT_IMPLEMENTED; }
 template <> void Blob<int>::Update() { NOT_IMPLEMENTED; }
 template <> void Blob<char>::Update() { NOT_IMPLEMENTED; }
+template <> void Blob<unsigned char>::Update() { NOT_IMPLEMENTED; }
 
 template <typename Dtype>
 void Blob<Dtype>::Update() {
@@ -203,6 +204,11 @@ template <> int Blob<int>::asum_data() const {
 }
 
 template <> char Blob<char>::asum_data() const {
+	NOT_IMPLEMENTED;
+	return 0;
+}
+
+template <> unsigned char Blob<unsigned char>::asum_data() const {
 	NOT_IMPLEMENTED;
 	return 0;
 }
@@ -247,6 +253,11 @@ template <> char Blob<char>::asum_diff() const {
 	return 0;
 }
 
+template <> unsigned char Blob<unsigned char>::asum_diff() const {
+	NOT_IMPLEMENTED;
+	return 0;
+}
+
 template <typename Dtype>
 Dtype Blob<Dtype>::asum_diff() const {
   if (!diff_) { return 0; }
@@ -283,6 +294,11 @@ template <> int Blob<int>::sumsq_data() const {
 }
 
 template <> char Blob<char>::sumsq_data() const {
+	NOT_IMPLEMENTED;
+	return 0;
+}
+
+template <> unsigned char Blob<unsigned char>::sumsq_data() const {
 	NOT_IMPLEMENTED;
 	return 0;
 }
@@ -329,6 +345,11 @@ template <> char Blob<char>::sumsq_diff() const {
 	return 0;
 }
 
+template <> unsigned char Blob<unsigned char>::sumsq_diff() const {
+	NOT_IMPLEMENTED;
+	return 0;
+}
+
 template <typename Dtype>
 Dtype Blob<Dtype>::sumsq_diff() const {
   Dtype sumsq;
@@ -368,6 +389,10 @@ template <> void Blob<char>::scale_data(char scale_factor) {
 	NOT_IMPLEMENTED;
 }
 
+template <> void Blob<unsigned char>::scale_data(unsigned char scale_factor) {
+	NOT_IMPLEMENTED;
+}
+
 template <typename Dtype>
 void Blob<Dtype>::scale_data(Dtype scale_factor) {
   Dtype* data;
@@ -402,6 +427,10 @@ template <> void Blob<int>::scale_diff(int scale_factor) {
 }
 
 template <> void Blob<char>::scale_diff(char scale_factor) {
+	NOT_IMPLEMENTED;
+}
+
+template <> void Blob<unsigned char>::scale_diff(unsigned char scale_factor) {
 	NOT_IMPLEMENTED;
 }
 
@@ -588,6 +617,7 @@ INSTANTIATE_CLASS(Blob);
 template class Blob<int>;
 template class Blob<unsigned int>;
 template class Blob<char>;
+template class Blob<unsigned char>;
 //template class Blob<half>;
 
 }  // namespace caffe

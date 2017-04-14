@@ -59,17 +59,17 @@ void CuDNNReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
 
-  Blob<Dtype> tmp_diff;
-  if (this->phase_ == Phase::TEST)
-  {
-	  tmp_diff.ReshapeLike(*bottom[0]);
-	  const int count = bottom[0]->count();
-	  ReLUBackwardDiff << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
-		  count, top_diff, top_diff, tmp_diff.mutable_gpu_diff(),
-		  (Dtype)ReLULayer<Dtype>::layer_param_.dropout_param().dropout_ratio()
-		  );
-	  top_diff = tmp_diff.gpu_diff();
-  }
+  //Blob<Dtype> tmp_diff;
+  //if (this->phase_ == Phase::TEST)
+  //{
+	 // tmp_diff.ReshapeLike(*bottom[0]);
+	 // const int count = bottom[0]->count();
+	 // ReLUBackwardDiff << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
+		//  count, top_diff, top_diff, tmp_diff.mutable_gpu_diff(),
+		//  (Dtype)ReLULayer<Dtype>::layer_param_.dropout_param().dropout_ratio()
+		//  );
+	 // top_diff = tmp_diff.gpu_diff();
+  //}
 #if CUDNN_VERSION_MIN(5, 0, 0)
   CUDNN_CHECK(cudnnActivationBackward(this->handle_,
         activ_desc_,

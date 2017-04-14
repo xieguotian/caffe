@@ -240,7 +240,7 @@ vector<shared_ptr<Blob<Dtype>>> Net_GetMaskCaches(Net<Dtype>* net, string layer_
 		throw std::runtime_error("only the convolution mask layer has mask: " + layer_name);
 	}
 
-	vector<shared_ptr<Blob<char>>> mask = conv_mask_layer->get_mask_caches();
+	vector<shared_ptr<Blob<unsigned char>>> mask = conv_mask_layer->get_mask_caches();
 	vector<shared_ptr<Blob<Dtype>>> result(mask.size());
 	for (int i = 0; i < mask.size(); i++)
 	{
@@ -269,7 +269,7 @@ void Net_SetMaskCaches(Net<Dtype>* net, string layer_name, bp::object data_obj)
 		throw std::runtime_error("only the convolution mask layer has mask: " + layer_name);
 	}
 
-	vector<shared_ptr<Blob<char>>> mask = conv_mask_layer->get_mask_caches();
+	vector<shared_ptr<Blob<unsigned char>>> mask = conv_mask_layer->get_mask_caches();
 	vector<shared_ptr<Blob<Dtype>>> result(mask.size());
 	for (int i = 0; i < mask.size(); i++)
 	{

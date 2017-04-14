@@ -274,7 +274,7 @@ void CuDNNConvolutionMaskLayer<Dtype>::Reshape(
 	  //top_shape[this->channel_axis_ + 1] /= 9;
 	  //top_shape[this->channel_axis_ + 2] /= 9;
 	  //top[i]->Reshape(top_shape);
-	  mask_caches_[i].reset(new Blob<char>());
+	  mask_caches_[i].reset(new Blob<unsigned char>());
 	  mask_caches_[i]->Reshape(top_shape);
   }
 

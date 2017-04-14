@@ -12,7 +12,7 @@ __global__ void max_among_six_spatial(const int nthreads,
 	const Dtype* const input_data, 
 	const int num, const int channels,
 	const int height, const int width,
-	Dtype* const output_data,char* const output_mask,Dtype factor)
+	Dtype* const output_data,unsigned char* const output_mask,Dtype factor)
 {
 	CUDA_KERNEL_LOOP(index, nthreads) {
 		const int w_idx = index % width;
@@ -84,9 +84,9 @@ __global__ void max_among_six_spatial(const int nthreads,
 		}
 		//max_pos = 5;
 		output_data[index] = d[max_pos];//max_value;
-		output_mask[index] = (char)max_pos;
+		output_mask[index] = (unsigned char)max_pos;
 		//output_data[index] = d[5];
-		//output_mask[index] = (char)5;
+		//output_mask[index] = (unsigned char)5;
 
 	}
 }
@@ -96,7 +96,7 @@ __global__ void spatial_relu(const int nthreads,
 	const Dtype* const input_data,
 	const int num, const int channels,
 	const int height, const int width,
-	Dtype* const output_data, char* const output_mask, Dtype factor)
+	Dtype* const output_data, unsigned char* const output_mask, Dtype factor, Dtype leaky_factor=0)
 {
 	CUDA_KERNEL_LOOP(index, nthreads) {
 		const int w_idx = index % width;
@@ -112,7 +112,7 @@ __global__ void spatial_relu(const int nthreads,
 		int tmp_w_idx;
 		int tmp_h_idx;
 		
-		char spatial_record = 0;
+		unsigned char spatial_record = 0;
 		Dtype result = 0;
 		Dtype tmp_data = 0;
 		for (int i = 0; i < 3; i++)
@@ -144,6 +144,7 @@ __global__ void spatial_relu(const int nthreads,
 					}
 					else
 					{
+						result += leaky_factor * tmp_data;
 						spatial_record = (spatial_record << 1);
 					}
 				}
@@ -151,9 +152,9 @@ __global__ void spatial_relu(const int nthreads,
 		}
 
 		output_data[index] = result;
-		output_mask[index] = (char)spatial_record;
+		output_mask[index] = (unsigned char)spatial_record;
 		//output_data[index] = d[5];
-		//output_mask[index] = (char)5;
+		//output_mask[index] = (unsigned char)5;
 
 	}
 }
@@ -201,18 +202,19 @@ void CuDNNConvolutionMaskLayer<Dtype>::Forward_gpu(
 	// forward data from cacehs to top
 	int n_threads = top[i]->count();
 	//Dtype* mask_data = top[i * 2 + 1]->mutable_gpu_data();
-	char* mask_data = mask_caches_[i]->mutable_gpu_data();
+	unsigned char* mask_data = mask_caches_[i]->mutable_gpu_data();
 	if (this->layer_param_.conv_mask_param().use_spatial())
 	{
+		Dtype leaky_factor = this->layer_param_.relu_param().negative_slope();
 		static bool first_log = true;
 		if (first_log)
 		{
 			first_log = false;
-			LOG(INFO) << "use spatial_reul forward";
+			LOG(INFO) << "use spatial_reul forward. negative_slope: " << leaky_factor;
 		}
 		spatial_relu<Dtype> << <CAFFE_GET_BLOCKS(n_threads), CAFFE_CUDA_NUM_THREADS >> >(
 		n_threads, top_data, top[i]->num(), top[i]->channels(), top[i]->height(), top[i]->width(),
-			top[i]->mutable_gpu_data(), mask_data, factor_
+		top[i]->mutable_gpu_data(), mask_data, factor_, leaky_factor
 			);
 	}
 	else
@@ -232,7 +234,7 @@ __global__ void max_among_six_spatial_bp(const int nthreads,
 	const Dtype* const input_diff,
 	const int num, const int channels,
 	const int height, const int width,
-	Dtype* const output_diff, const char* const output_mask , Dtype factor)
+	Dtype* const output_diff, const unsigned char* const output_mask , Dtype factor)
 {
 
 	CUDA_KERNEL_LOOP(index, nthreads) {
@@ -496,7 +498,7 @@ __global__ void spatial_relu_bp(const int nthreads,
 	const Dtype* const input_diff,
 	const int num, const int channels,
 	const int height, const int width,
-	Dtype* const output_diff, const char* const output_mask, Dtype factor)
+	Dtype* const output_diff, const unsigned char* const output_mask, Dtype factor, Dtype leaky_factor=0)
 {
 
 	CUDA_KERNEL_LOOP(index, nthreads) {
@@ -509,7 +511,7 @@ __global__ void spatial_relu_bp(const int nthreads,
 		//int j = g_idx % 3;
 		//int i = g_idx / 3;
 		Dtype diff_data = input_diff[index];
-		char sel_num = output_mask[index];
+		unsigned char sel_num = output_mask[index];
 		Dtype norm_factor = 1.0;
 
 		for (int i = 8; i >=0; i--)
@@ -533,6 +535,11 @@ __global__ void spatial_relu_bp(const int nthreads,
 				{
 					int index_t = (((num_idx * 9 + i)*channels + ch_idx)*height + h)*width + w;
 					output_diff[index_t] = diff_data;// *norm_factor;
+				}
+				else if (w >= 0 && w < width && h >= 0 && h < height)
+				{
+					int index_t = (((num_idx * 9 + i)*channels + ch_idx)*height + h)*width + w;
+					output_diff[index_t] = leaky_factor * diff_data;// *norm_factor;
 				}
 			}
 		}
@@ -675,19 +682,20 @@ void CuDNNConvolutionMaskLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 	  // propagate diff to caches.
 	  int n_threads = top[i]->count() * 9;
 	  caffe_gpu_set(n_threads, (Dtype)0, caches_->mutable_gpu_data());
-	  const char* mask_data = mask_caches_[i]->gpu_data();
+	  const unsigned char* mask_data = mask_caches_[i]->gpu_data();
 	  if (this->layer_param_.conv_mask_param().use_spatial())
 	  {
+		  Dtype leaky_factor = this->layer_param_.relu_param().negative_slope();
 		  static bool first_log = true;
 		  if (first_log)
 		  {
 			  first_log = false;
-			  LOG(INFO) << "use spatial_reul backward";
+			  LOG(INFO) << "use spatial_reul backward. negative_slope: " << leaky_factor;
 		  }
 		  spatial_relu_bp<Dtype> << <CAFFE_GET_BLOCKS(n_threads / 9), CAFFE_CUDA_NUM_THREADS >> >(
-		  n_threads / 9, top[i]->gpu_diff(), top[i]->num(),
+			  n_threads / 9, top[i]->gpu_diff(), top[i]->num(),
 			  top[i]->channels(), top[i]->height(), top[i]->width(),
-			  caches_->mutable_gpu_data(), mask_data, factor_);
+			  caches_->mutable_gpu_data(), mask_data, factor_, leaky_factor);
 	  }
 	  else
 	  {

@@ -671,7 +671,7 @@ message ConvolutionParameter {
   // ignored and the ND implementation will be used.)
   optional bool force_nd_im2col = 17 [default = false];
 
-  optional bool is_binarized_param = 18 [default = false] ;
+  optional bool is_binarized_param = 100 [default = false] ;
 }
 
 message CropParameter {

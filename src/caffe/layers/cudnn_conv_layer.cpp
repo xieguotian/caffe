@@ -100,6 +100,17 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 	  w_history_.ReshapeLike(*this->blobs_[0]);
 	  is_history_init_ = false;
   }
+
+  if (this->layer_param_.convolution_param().is_binarized_param())
+  {
+	  sign_weight_.ReshapeLike(*this->blobs_[0]);
+	  vector<int> shape;
+	  shape.push_back(this->blobs_[0]->channels()*this->blobs_[0]->height()*this->blobs_[0]->width());
+	  sum_cache_.Reshape(shape);
+	  caffe_gpu_set(sum_cache_.count(), (Dtype)1.0, sum_cache_.mutable_gpu_data());
+	  shape[0] = this->blobs_[0]->num();
+	  sum_result_.Reshape(shape);
+  }
 }
 
 template <typename Dtype>
