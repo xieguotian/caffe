@@ -487,7 +487,7 @@ void Solver<Dtype>::save_best_model()
 	case caffe::SolverParameter_SnapshotFormat_BINARYPROTO:
 		model_filename = param_.snapshot_prefix() + "_best.caffemodel";
 		LOG(INFO) << "save best model to binary proto file " << model_filename;
-		net_->ToProto(&net_param, param_.snapshot_diff());
+		net_->ToProto(&net_param, param_.snapshot_diff(),true);
 		WriteProtoToBinaryFile(net_param, model_filename);
 		break;
 	case caffe::SolverParameter_SnapshotFormat_HDF5:

@@ -60,7 +60,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 
   const Dtype* weight = this->blobs_[0]->gpu_data();
 
-  if (this->layer_param_.convolution_param().is_binarized_param())
+  if (this->layer_param_.convolution_param().is_binarized_param() && !this->blobs_[0]->is_binarized()) 
   {
 	  static bool is_first = true;
 	  if (is_first)
@@ -70,11 +70,14 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 	  }
 	  int n_thread = this->blobs_[0]->num()*this->blobs_[0]->height()*this->blobs_[0]->width();
 
-	  // sub mean and clamp to [-1,1]
-	  mean_vector_clamp<Dtype> << <CAFFE_GET_BLOCKS(n_thread), CAFFE_CUDA_NUM_THREADS >> > (
-		  n_thread, this->blobs_[0]->mutable_gpu_data(), this->blobs_[0]->num(),
-		  this->blobs_[0]->channels(), this->blobs_[0]->height(), this->blobs_[0]->width()
-		  );
+	  if (this->phase_ == TRAIN)
+	  {
+		  // sub mean and clamp to [-1,1]
+		  mean_vector_clamp<Dtype> << <CAFFE_GET_BLOCKS(n_thread), CAFFE_CUDA_NUM_THREADS >> > (
+			  n_thread, this->blobs_[0]->mutable_gpu_data(), this->blobs_[0]->num(),
+			  this->blobs_[0]->channels(), this->blobs_[0]->height(), this->blobs_[0]->width()
+			  );
+	  }
 	  // binarize weight
 	  caffe_gpu_sign(this->blobs_[0]->count(), this->blobs_[0]->gpu_data(), sign_weight_.mutable_gpu_data());
 	  // calculate abs(weight)

@@ -19,6 +19,9 @@ message BlobProto {
   optional int32 channels = 2 [default = 0];
   optional int32 height = 3 [default = 0];
   optional int32 width = 4 [default = 0];
+
+  optional bytes bin_data = 101; 
+  optional bool is_binarized = 102 [default=false];
 }
 
 // The BlobProtoVector is simply a way to pass multiple blobproto instances

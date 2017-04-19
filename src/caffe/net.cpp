@@ -319,7 +319,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 		  shared_blobs_index_[shared_id] = -1;
 	  for (int i = 0; i < layers_.size(); ++i) 
 	  {
-		  if ((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_&& (!layer_need_backward_[i] || half_support_ )))
+		  if ((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_
+			  && (!layer_need_backward_[i] || half_support_)))
 		  {
 			  // two case is not for shared memory: 1. shared data within the layer. 2. inplace layer.
 			  // shared data with int the layer:
@@ -851,7 +852,7 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   CHECK_LT(end, layers_.size());
   Dtype loss = 0;
   for (int i = start; i <= end; ++i) {
-	  if (((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_&& (!layer_need_backward_[i]||half_support_)))
+	  if (((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_ && (!layer_need_backward_[i] || half_support_)))
 		  && layer_types_[i] != "Split")
 	  {
 		  //share cache meory.
@@ -1329,7 +1330,7 @@ void Net<Dtype>::CopyTrainedLayersFromHDF5(const string trained_filename) {
 }
 
 template <typename Dtype>
-void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
+void Net<Dtype>::ToProto(NetParameter* param, bool write_diff,bool can_save_bin) const {
   param->Clear();
   param->set_name(name_);
   param->set_accuracy(best_accuracy_);
@@ -1337,7 +1338,7 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
   DLOG(INFO) << "Serializing " << layers_.size() << " layers";
   for (int i = 0; i < layers_.size(); ++i) {
     LayerParameter* layer_param = param->add_layer();
-    layers_[i]->ToProto(layer_param, write_diff);
+    layers_[i]->ToProto(layer_param, write_diff, can_save_bin);
   }
 }
 

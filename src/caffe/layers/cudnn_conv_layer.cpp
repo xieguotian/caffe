@@ -110,6 +110,7 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 	  caffe_gpu_set(sum_cache_.count(), (Dtype)1.0, sum_cache_.mutable_gpu_data());
 	  shape[0] = this->blobs_[0]->num();
 	  sum_result_.Reshape(shape);
+	  this->blobs_[0]->set_can_be_save_as_bin(true);
   }
 }
 

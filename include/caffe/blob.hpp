@@ -24,7 +24,7 @@ template <typename Dtype>
 class Blob {
  public:
   Blob()
-       : data_(), diff_(), count_(0), capacity_(0) {}
+       : data_(), diff_(), count_(0), capacity_(0),can_be_save_as_bin_(false),is_binarized_(false) {}
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
   explicit Blob(const int num, const int channels, const int height,
@@ -228,7 +228,7 @@ class Blob {
   Dtype* mutable_gpu_diff();
   void Update();
   void FromProto(const BlobProto& proto, bool reshape = true);
-  void ToProto(BlobProto* proto, bool write_diff = false) const;
+  void ToProto(BlobProto* proto, bool write_diff = false, bool save_as_bin = false) const;
 
   /// @brief Compute the sum of absolute values (L1 norm) of the data.
   Dtype asum_data() const;
@@ -275,7 +275,7 @@ class Blob {
 
   bool has_set_data() { return has_set_data_; }
   void is_set_data(bool has_set_data){ has_set_data_ = has_set_data; }
-
+  
   vector<int> field_info()
   {
 	  vector<int> file_info;
@@ -286,6 +286,10 @@ class Blob {
   }
 
   int pad, stride, kernel_size;
+  void set_can_be_save_as_bin(bool can_be_save_as_bin){ can_be_save_as_bin_ = can_be_save_as_bin; }
+  void set_is_binarized(bool is_binarized){ is_binarized_ = is_binarized; }
+  void to_bin(Blob &bin, Blob &ampl) const;
+  bool is_binarized(){ return is_binarized_; }
  protected:
   shared_ptr<SyncedMemory> data_;
   shared_ptr<SyncedMemory> diff_;
@@ -294,7 +298,9 @@ class Blob {
   int count_;
   int capacity_;
   bool has_set_data_;
-
+   
+  bool can_be_save_as_bin_;
+  bool is_binarized_;
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob
 
