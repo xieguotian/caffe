@@ -81,11 +81,18 @@ def get_field_indecies(x_axis_field, y_axis_field,chart_type):
     fields = create_field_index()[0][data_file_type]
     return fields[x_axis_field], fields[y_axis_field]
 
-def load_data(data_file, field_idx0, field_idx1):
+def load_data(data_file, field_idx0, field_idx1,file_type='accuracy'):
     data = [[], []]
     with open(data_file, 'r') as f:
         for idx,line in enumerate(f):
             if idx==0:
+                fields = line.split(',')
+                for ix,ff in enumerate(fields):
+                    print ff,file_type
+                    if file_type in ff:
+                        field_idx1 = ix
+                        print field_idx1,file_type
+                        break
                 continue
             line = line.strip()
             if line[0] != '#':
@@ -155,8 +162,9 @@ def plot_chart(chart_type, path_to_png, path_to_log_list):
         for ix,ch_type in enumerate(chart_type):
             data_file = get_data_file(ch_type, path_to_log)
             x_axis_field, y_axis_field = get_field_descriptions(ch_type)
+            #print x_axis_field,y_axis_field
             x, y = get_field_indecies(x_axis_field, y_axis_field,ch_type)
-            data = load_data(data_file, x, y)
+            data = load_data(data_file, x, y,y_axis_field.split(' ')[1])
             #if ix==0:
             #data = smooth_data2(data,20)
             ## TODO: more systematic color cycle for lines

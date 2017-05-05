@@ -65,7 +65,7 @@
     </CudaCompile>
     <ClCompile>
       <DisableSpecificWarnings>4661;4005;4812;4715;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\include\caffe;$(ProjectDir)\..\..\src\;$(ProjectDir)\..\..\3rdparty\glog\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Lib>
       <AdditionalOptions>/ignore:4221 %(AdditionalOptions)</AdditionalOptions>
@@ -163,6 +163,7 @@
     <ClCompile Include="..\..\src\caffe\layers\im2col_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\image_data_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\infogain_loss_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\inner_product_cluster_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\inner_product_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\input_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\kmeans_loss_layer.cpp" />
@@ -173,6 +174,7 @@
     <ClCompile Include="..\..\src\caffe\layers\multinomial_logistic_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\mvn_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\neuron_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\norm_center_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\parameter_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\pooling_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\power_layer.cpp" />
@@ -409,7 +411,9 @@
     <CudaCompile Include="..\..\src\caffe\layers\entropy_cross_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\entropy_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\entropy_total_loss_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\inner_product_cluster_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\kmeans_loss_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\norm_center_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\prob_norm_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\smooth_L1_loss_layer.cu" />

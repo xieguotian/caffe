@@ -443,8 +443,8 @@ message LayerParameter {
   optional bool incremental = 8266726 [default = false];
 
   optional ConvMaskParameter conv_mask_param = 8266727;
+  optional NormCenterLossParameter norm_center_loss_param = 8266728;
 }
-
 // message for multi-scale image argumentation
 message ScaleRange{
 	optional bool is_multi_scale = 1 [default = false];
@@ -1648,4 +1648,18 @@ message BinaryBoundingParameter{
 
 message ConvMaskParameter{
 	optional bool use_spatial= 1 [default=false];
+}
+
+
+message NormCenterLossParameter {
+  optional uint32 num_output = 1 [default = 10]; // The number of outputs for the layer
+  optional FillerParameter center_filler = 2; // The filler for the centers
+  // The first axis to be lumped into a single inner product computation;
+  // all preceding axes are retained in the output.
+  // May be negative to index from the end (e.g., -1 for the last axis).
+  optional int32 axis = 3 [default = 1];
+  optional float base = 4 [default = 1];
+  optional float gamma = 5 [default = 0];
+  optional float power = 6 [default = 1];
+  optional int32 iteration = 7 [default = 0];
 }
