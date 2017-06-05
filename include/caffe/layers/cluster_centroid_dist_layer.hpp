@@ -64,6 +64,7 @@ namespace caffe{
 		int num_samp_;
 		int compute_dist_;
 		bool is_self_dist_;
+		bool use_square_;
 	};
 }
 

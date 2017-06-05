@@ -156,6 +156,24 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
   Dtype weight_decay = this->param_.weight_decay();
   string regularization_type = this->param_.regularization_type();
   Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
+  static bool first_use_local_rate = true;
+
+  Dtype val = 0;
+  bool use_bias = false;
+  if (net_params_weight_decay[param_id] < 0)
+  {
+	  use_bias = true;
+	  Dtype tmp_weigth_decay = -net_params_weight_decay[param_id];
+	  local_decay = weight_decay * floor(tmp_weigth_decay) / 100.0;
+	  val = (tmp_weigth_decay - floor(tmp_weigth_decay))*100.0;
+
+	  if (first_use_local_rate)
+	  {
+		  LOG(INFO) << "param use local learning rate: " << net_params_weight_decay[param_id] << ", param id: " << param_id << ",learning rate:" << local_decay<<",value:"<<val;
+		  first_use_local_rate = false;
+	  }
+  }
+
   switch (Caffe::mode()) {
   case Caffe::CPU: {
     if (local_decay) {
@@ -183,11 +201,31 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
 #ifndef CPU_ONLY
     if (local_decay) {
       if (regularization_type == "L2") {
-        // add weight decay
-        caffe_gpu_axpy(net_params[param_id]->count(),
-            local_decay,
-            net_params[param_id]->gpu_data(),
-            net_params[param_id]->mutable_gpu_diff());
+		  if (use_bias)
+		  {
+			  Blob<Dtype> tmp_blob;
+			  tmp_blob.ReshapeLike(*net_params[param_id]);
+
+			  caffe_copy(net_params[param_id]->count(),
+				  net_params[param_id]->gpu_data(),
+				  tmp_blob.mutable_gpu_data()
+				  );
+			  caffe_gpu_add_scalar(net_params[param_id]->count(),
+				  -val,
+				  tmp_blob.mutable_gpu_data()
+				  );
+			  caffe_gpu_axpy(net_params[param_id]->count(),
+				  local_decay,
+				  tmp_blob.gpu_data(),
+				  net_params[param_id]->mutable_gpu_diff());
+		  }
+		  else{
+			  // add weight decay
+			  caffe_gpu_axpy(net_params[param_id]->count(),
+				  local_decay,
+				  net_params[param_id]->gpu_data(),
+				  net_params[param_id]->mutable_gpu_diff());
+		  }
       } else if (regularization_type == "L1") {
         caffe_gpu_sign(net_params[param_id]->count(),
             net_params[param_id]->gpu_data(),

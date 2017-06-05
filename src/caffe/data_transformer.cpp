@@ -217,6 +217,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   const int datum_height = datum.height();
   const int datum_width = datum.width();
 
+  transformed_blob->is_set_data(true);
   // Check dimensions.
   const int channels = transformed_blob->channels();
   const int height = transformed_blob->height();

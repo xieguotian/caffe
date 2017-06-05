@@ -37,6 +37,7 @@ namespace caffe{
 		this->param_propagate_down_.resize(this->blobs_.size(), true);
 
 		is_self_dist_ = compute_dist_ && bottom[0]->data() == bottom[1]->data();
+		use_square_ = this->layer_param_.binary_bounding_param().update_centroid();
 
 	}
 

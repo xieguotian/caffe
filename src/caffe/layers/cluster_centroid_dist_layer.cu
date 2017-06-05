@@ -232,7 +232,8 @@ namespace caffe{
 
 		//caffe_gpu_powx(top[0]->count(), top_data, (Dtype)0.5, top_data);
 		//caffe_gpu_scal(top[0]->count(), (Dtype)scale, top_data);
-		caffe_gpu_powx(top_count, top_data, (Dtype)0.5, top_data);
+		if (!use_square_)
+			caffe_gpu_powx(top_count, top_data, (Dtype)0.5, top_data);
 		caffe_gpu_scal(top_count, (Dtype)scale, top_data);
 		//if (compute_dist_ && bottom[0]->data() == bottom[1]->data())
 		if (is_self_dist_)
@@ -277,13 +278,21 @@ namespace caffe{
 		if (is_self_dist_)
 		{
 			expand_diag<Dtype> << <CAFFE_GET_BLOCKS(top_count), CAFFE_CUDA_NUM_THREADS >> >(top_count, top[0]->num(), top_cache_.mutable_gpu_diff(), top[0]->gpu_diff());
-			caffe_gpu_div(top_count, top_cache_.gpu_diff(), top_cache_.gpu_data(), top_cache_.mutable_gpu_diff());
-			caffe_gpu_scal(top_count, (Dtype)(scale / 2.0), top_cache_.mutable_gpu_diff());
+			if (!use_square_)
+			{
+				caffe_gpu_div(top_count, top_cache_.gpu_diff(), top_cache_.gpu_data(), top_cache_.mutable_gpu_diff());
+				caffe_gpu_scal(top_count, (Dtype)(scale / 2.0), top_cache_.mutable_gpu_diff());
+			}
 			set_diag_zero<Dtype> << <CAFFE_GET_BLOCKS(top_cache_.num()), CAFFE_CUDA_NUM_THREADS >> >(top_cache_.num(), top_cache_.mutable_gpu_diff());
 		}
 		else{
-			caffe_gpu_div(top[0]->count(), top[0]->gpu_diff(), top[0]->gpu_data(), top_cache_.mutable_gpu_data());
-			caffe_gpu_scal(top[0]->count(), (Dtype)(scale / 2.0), top_cache_.mutable_gpu_data());
+			if (!use_square_)
+			{
+				caffe_gpu_div(top[0]->count(), top[0]->gpu_diff(), top[0]->gpu_data(), top_cache_.mutable_gpu_data());
+				caffe_gpu_scal(top[0]->count(), (Dtype)(scale / 2.0), top_cache_.mutable_gpu_data());
+			}
+			else
+				caffe_copy(top[0]->count(), top[0]->gpu_diff(), top_cache_.mutable_gpu_data());
 		}
 		const Dtype* top_diff = is_self_dist_ ? top_cache_.gpu_diff() : top_cache_.gpu_data(); //top[0]->gpu_diff();
 		//const Dtype* top_diff = top[0]->gpu_diff();

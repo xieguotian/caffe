@@ -797,7 +797,8 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     if (param_size > param_id && (layer_param.param(param_id).share_mode() ==
                                   ParamSpec_DimCheckMode_PERMISSIVE)) {
       // Permissive dimension checking -- only check counts are the same.
-      CHECK_EQ(this_blob->count(), owner_blob->count())
+      //CHECK_EQ(this_blob->count(), owner_blob->count())
+		CHECK_LE(this_blob->count(), owner_blob->count())
           << "Cannot share param '" << param_name << "' owned by layer '"
           << layer_names_[owner_layer_id] << "' with layer '"
           << layer_names_[layer_id] << "'; count mismatch.  Owner layer param "
@@ -1431,9 +1432,26 @@ template <typename Dtype>
 void Net<Dtype>::ShareWeights() {
   for (int i = 0; i < params_.size(); ++i) {
     if (param_owners_[i] < 0) { continue; }
-    params_[i]->ShareData(*params_[param_owners_[i]]);
-	if (param_not_share_diff[i]<0)
-		params_[i]->ShareDiff(*params_[param_owners_[i]]);
+	if (params_[i]->count() < params_[param_owners_[i]]->count())
+	{
+		LOG(INFO) << "share weight data with less params. (" << i << "," << param_owners_[i] << ")";
+		params_[i]->ShareData_LE(*params_[param_owners_[i]]);
+	}
+	else
+	{
+		params_[i]->ShareData(*params_[param_owners_[i]]);
+	}
+	if (param_not_share_diff[i] < 0)
+	{
+		if (params_[i]->count() < params_[param_owners_[i]]->count())
+		{
+			LOG(INFO) << "share weight diff with less params. (" << i << "," << param_owners_[i] << ")";
+			params_[i]->ShareDiff_LE(*params_[param_owners_[i]]);
+		}
+		else{
+			params_[i]->ShareDiff(*params_[param_owners_[i]]);
+		}
+	}
   }
 }
 

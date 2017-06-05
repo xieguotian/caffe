@@ -131,17 +131,25 @@ shared_ptr<Net<Dtype> > Net_Init(string network_file, int phase,
 // Legacy Net construct-and-load convenience constructor
 shared_ptr<Net<Dtype> > Net_Init_Load(
     string param_file, string pretrained_param_file, int phase) {
+
+	std::vector<std::string> model_names;
+	boost::split(model_names, pretrained_param_file, boost::is_any_of(","));
+
   LOG(WARNING) << "DEPRECATION WARNING - deprecated use of Python interface";
   LOG(WARNING) << "Use this instead (with the named \"weights\""
     << " parameter):";
   LOG(WARNING) << "Net('" << param_file << "', " << phase
     << ", weights='" << pretrained_param_file << "')";
   CheckFile(param_file);
-  CheckFile(pretrained_param_file);
+  for (int i = 0; i < model_names.size(); ++i)
+	CheckFile(model_names[i]);
 
   shared_ptr<Net<Dtype> > net(new Net<Dtype>(param_file,
       static_cast<Phase>(phase)));
-  net->CopyTrainedLayersFrom(pretrained_param_file);
+  for (int i = 0; i < model_names.size(); ++i)
+  {
+	  net->CopyTrainedLayersFrom(model_names[i]);
+  }
   return net;
 }
 

@@ -7,7 +7,7 @@
 #include "lmdb.h"
 
 #include "caffe/util/db.hpp"
-
+#include "caffe/util/format.hpp"
 namespace caffe {
 	namespace db {
 		static const std::string base64_chars =
@@ -205,6 +205,8 @@ namespace caffe {
 					}
 					base64_key_ = line.substr(0, pos);
 					base64_value_ = base64ToDatumString(line.substr(pos + 1));
+					//string key_sub = key.substr(0, key.length() - 10);
+					//valid_ = base64_key_ == key_sub;
 					valid_ = base64_key_ == key;
 					if (!valid_)
 						LOG(INFO) << "key not equal:" << base64_key_ << "," << key;
@@ -229,12 +231,22 @@ namespace caffe {
 				int label;
 				//while (key_file >> key >>label)
 				string line;
+				//size_t count = 0;
 				while (std::getline(key_file, line))
 				{
 					vector<string> str_vec = string_split(line, ' ');
 					if (str_vec.size() < 2)
 						str_vec = string_split(line, '\t');
+					//static bool first_not_ignore_repeat = true;
+					//if (first_not_ignore_repeat)
+					//{
+					//	first_not_ignore_repeat = false;
+					//	LOG(INFO) << "not ignore repeat key in database64.";
+					//}
+
 					key = str_vec[0];
+					//key = str_vec[0] + "_" + caffe::format_int(count, 9);
+					//count++;
 					label = atoi(str_vec[1].c_str());
 
 					if (str_vec.size() >= 3)
