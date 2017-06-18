@@ -170,11 +170,13 @@
     <ClCompile Include="..\..\src\caffe\layers\log_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\lrn_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\matrix_multiplication_yt_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\memory_data_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\multinomial_logistic_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\multi_t_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\mvn_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\neuron_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\normalization_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\norm_center_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\parameter_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\pooling_layer.cpp" />
@@ -414,7 +416,9 @@
     <CudaCompile Include="..\..\src\caffe\layers\entropy_total_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\inner_product_cluster_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\kmeans_loss_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\matrix_multiplication_yt_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\multi_t_loss_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\normalization_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\norm_center_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\prob_norm_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\roi_pooling_layer.cu" />

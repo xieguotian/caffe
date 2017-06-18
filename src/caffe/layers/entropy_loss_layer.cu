@@ -207,7 +207,7 @@ void EntropyWithLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 		loss_weight /= (Dtype)temperature_;
 	}
     caffe_gpu_scal(prob_.count(), loss_weight , bottom_diff);
-	LOG(INFO) << bottom[0]->asum_diff();
+	//LOG(INFO) << bottom[0]->asum_diff();
   }
 }
 

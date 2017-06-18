@@ -54,7 +54,10 @@ namespace caffe{
 
 		vector<int> top_shape(2);
 		top_shape[0] = bottom[0]->num();
-		top_shape[1] = is_self_dist_ ? num_cluster_ - 1 : num_cluster_;
+		//top_shape[1] = is_self_dist_ ? num_cluster_ - 1 : num_cluster_;
+		top_shape[1] = num_cluster_;
+		//if (is_self_dist_)
+		//	LOG(INFO) << "shape:" << top_shape[0] << "," << top_shape[1];
 		top[0]->Reshape(top_shape);
 		if (!compute_dist_)
 		{
