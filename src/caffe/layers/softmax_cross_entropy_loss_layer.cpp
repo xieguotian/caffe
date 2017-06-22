@@ -66,6 +66,7 @@ void SoftmaxCrossEntropyLossLayer<Dtype>::LayerSetUp(
 	  is_update_T_ = true;
   }
 
+  gradient_norm_ = this->layer_param_.softmax_param().gradient_norm();
 }
 
 template <typename Dtype>

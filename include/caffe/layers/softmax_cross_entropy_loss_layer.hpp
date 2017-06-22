@@ -140,6 +140,7 @@ class SoftmaxCrossEntropyLossLayer : public LossLayer<Dtype> {
 
   Dtype update_step_;
   bool is_update_T_;
+  SoftmaxParameter_GradientNorm gradient_norm_;
 };
 
 }  // namespace caffe

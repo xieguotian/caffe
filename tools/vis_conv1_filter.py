@@ -10,6 +10,8 @@ def get_conv1_filter(param):
     param_images = []
     for i in range(param.shape[0]):
         img = param[i,:,:,:]
+        if(img.shape[0]==1):
+            img = np.concatenate((img,img,img),axis=0)
         img = np.transpose(img,(1,2,0))
         img = img - img.min()
         img = img / img.max()

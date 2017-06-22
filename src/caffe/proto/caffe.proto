@@ -1217,6 +1217,14 @@ message SoftmaxParameter {
   // Any other axes will be evaluated as independent softmaxes.
   optional int32 axis = 2 [default = 1];
   optional float temperature = 3 [default = 0];
+
+  enum GradientNorm {
+	DEFAULT_NORM = 0;
+	EASY_NORM = 1;
+	HARD_NORM = 2;
+	EQUAL_NORM = 3;
+  }
+  optional GradientNorm gradient_norm = 4 [default = DEFAULT_NORM];
 }
 
 message TanHParameter {

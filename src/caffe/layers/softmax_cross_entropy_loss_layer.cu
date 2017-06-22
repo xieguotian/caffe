@@ -120,19 +120,107 @@ void SoftmaxCrossEntropyLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*
 		valid_count /= bottom[0]->channels();
 	}
 
-	softmax_layer_org_->Forward(softmax_bottom_vec_org_, softmax_top_vec_org_);
-	softmax_layer_org_->Forward(softmax_bottom_vec_label_, softmax_top_vec_label_);
-	label = label_.gpu_data();
-	caffe_gpu_sub(prob_org_.count(), prob_org_.gpu_data(), label, prob_org_.mutable_gpu_data());
 	Dtype diff_sum;
 	Dtype prob_org_sum;
-	caffe_gpu_asum(bottom[0]->count(), bottom_diff, &diff_sum);
-	caffe_gpu_asum(bottom[0]->count(), prob_org_.gpu_data(), &prob_org_sum);
-	Dtype scale_factor = prob_org_sum / diff_sum;
+	static bool first_time_norm = true;
+	softmax_layer_org_->Forward(softmax_bottom_vec_org_, softmax_top_vec_org_);
+	if (bottom.size() == 3 && !has_ignore_label_ && gradient_norm_ == SoftmaxParameter_GradientNorm_HARD_NORM)
+	{
+		if (first_time_norm)
+		{
+			LOG(INFO) << "cross entropy loss with HARD_NROM";
+			first_time_norm = false;
+		}
+		caffe_set(label_.count(), (Dtype)0.0, label_.mutable_cpu_data());
+		Dtype* label_ptr = label_.mutable_cpu_data();
+		int stride = label_.channels();
+		for (int idx = 0; idx < bottom[2]->count(); ++idx)
+		{
+			int tmp_label = bottom[2]->cpu_data()[idx];
+			label_ptr[idx*stride + tmp_label] = 1;
+		}
+		label = label_.gpu_data();
+		caffe_gpu_sub(prob_org_.count(), prob_org_.gpu_data(), label, prob_org_.mutable_gpu_data());
+		for (int idx = 0; idx < bottom[0]->num(); idx++)
+		{
+			caffe_gpu_asum(bottom[0]->channels(), prob_org_.gpu_data() + idx*bottom[0]->channels(), &prob_org_sum);
+			caffe_gpu_asum(bottom[0]->channels(), bottom_diff + idx*bottom[0]->channels(), &diff_sum);
+			Dtype scale_factor = prob_org_sum / diff_sum;
+			caffe_gpu_scal(bottom[0]->channels(), scale_factor, bottom_diff + idx*bottom[0]->channels());
+		}
+		Dtype loss_weight = top[0]->cpu_diff()[0] / get_normalizer(normalization_, valid_count);
+		caffe_gpu_scal(bottom[0]->count(), loss_weight, bottom_diff);
+	}
+	else if (bottom.size() == 3 && !has_ignore_label_ && gradient_norm_ == SoftmaxParameter_GradientNorm_EASY_NORM)
+	{
+		if (first_time_norm)
+		{
+			LOG(INFO) << "cross entropy loss with EASY_NROM";
+			first_time_norm = false;
+		}
+		caffe_set(label_.count(), (Dtype)0.0, label_.mutable_cpu_data());
+		Dtype* label_ptr = label_.mutable_cpu_data();
+		int stride = label_.channels();
+		for (int idx = 0; idx < bottom[2]->count(); ++idx)
+		{
+			int tmp_label = bottom[2]->cpu_data()[idx];
+			label_ptr[idx*stride + tmp_label] = 1;
+		}
+		label = label_.gpu_data();
+		caffe_gpu_sub(prob_org_.count(), prob_org_.gpu_data(), label, prob_org_.mutable_gpu_data());
 
-    const Dtype loss_weight = scale_factor * top[0]->cpu_diff()[0] /
-		get_normalizer(normalization_, valid_count);
-    caffe_gpu_scal(prob_.count(), loss_weight , bottom_diff);
+		caffe_gpu_asum(bottom[0]->count(), prob_org_.gpu_data(), &prob_org_sum);
+		caffe_gpu_asum(bottom[0]->count(), bottom_diff, &diff_sum);
+		Dtype scale_factor = prob_org_sum / diff_sum;
+
+		Dtype loss_weight = scale_factor * top[0]->cpu_diff()[0] / get_normalizer(normalization_, valid_count);
+		caffe_gpu_scal(bottom[0]->count(), loss_weight, bottom_diff);
+	}
+	else if (bottom.size() == 3 && !has_ignore_label_ && gradient_norm_ == SoftmaxParameter_GradientNorm_EQUAL_NORM)
+	{
+		if (first_time_norm)
+		{
+			LOG(INFO) << "cross entropy loss with EQUAL_NROM";
+			first_time_norm = false;
+		}
+		caffe_set(label_.count(), (Dtype)0.0, label_.mutable_cpu_data());
+		Dtype* label_ptr = label_.mutable_cpu_data();
+		int stride = label_.channels();
+		for (int idx = 0; idx < bottom[2]->count(); ++idx)
+		{
+			int tmp_label = bottom[2]->cpu_data()[idx];
+			label_ptr[idx*stride + tmp_label] = 1;
+		}
+		label = label_.gpu_data();
+		caffe_gpu_sub(prob_org_.count(), prob_org_.gpu_data(), label, prob_org_.mutable_gpu_data());
+		caffe_gpu_asum(bottom[0]->count(), prob_org_.gpu_data(), &prob_org_sum);
+		prob_org_sum = prob_org_sum / bottom[0]->num();
+		for (int idx = 0; idx < bottom[0]->num(); idx++)
+		{
+			caffe_gpu_asum(bottom[0]->channels(), bottom_diff + idx*bottom[0]->channels(), &diff_sum);
+			Dtype scale_factor = prob_org_sum / diff_sum;
+			caffe_gpu_scal(bottom[0]->channels(), scale_factor, bottom_diff + idx*bottom[0]->channels());
+		}
+		Dtype loss_weight = top[0]->cpu_diff()[0] / get_normalizer(normalization_, valid_count);
+		caffe_gpu_scal(bottom[0]->count(), loss_weight, bottom_diff);
+	}
+	else{
+		if (first_time_norm)
+		{
+			LOG(INFO) << "cross entropy loss with DEFAULT_NROM";
+			first_time_norm = false;
+		}
+		softmax_layer_org_->Forward(softmax_bottom_vec_label_, softmax_top_vec_label_);
+		label = label_.gpu_data();
+		caffe_gpu_sub(prob_org_.count(), prob_org_.gpu_data(), label, prob_org_.mutable_gpu_data());
+		caffe_gpu_asum(bottom[0]->count(), bottom_diff, &diff_sum);
+		caffe_gpu_asum(bottom[0]->count(), prob_org_.gpu_data(), &prob_org_sum);
+		Dtype scale_factor = prob_org_sum / diff_sum;
+
+		const Dtype loss_weight = scale_factor * top[0]->cpu_diff()[0] /
+			get_normalizer(normalization_, valid_count);
+		caffe_gpu_scal(prob_.count(), loss_weight, bottom_diff);
+	}
 
 	if (is_update_T_ && this->blobs_[0]->cpu_data()[0]>1)
 	{
