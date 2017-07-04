@@ -41,7 +41,7 @@ with open(net_proto) as fid:
                 if 'lr_mult' in line or 'decay_mult' in line:
                     pos = line.rfind(':')+1
                     line = line[:pos] + '0.0'
-                if 'BatchNormTorch' in  line:
+                if '\"BatchNormTorch\"' in  line:
                     print >>fout, '\tbatch_norm_param{ use_global_stats: true }'
             if 'bottom' in line or 'top' in line or 'name' in line:
                 if not 'data' in line:

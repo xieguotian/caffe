@@ -965,6 +965,7 @@ message MVNParameter {
 
 message ParameterParameter {
   optional BlobShape shape = 1;
+  optional FillerParameter weight_filler = 3; // The filler for the weight
 }
 
 message PoolingParameter {
@@ -1225,6 +1226,11 @@ message SoftmaxParameter {
 	EQUAL_NORM = 3;
   }
   optional GradientNorm gradient_norm = 4 [default = DEFAULT_NORM];
+  enum NormType{
+	L1_NORM = 0;
+	L2_NORM = 1;
+  }
+  optional NormType norm_type = 5 [default = L1_NORM];
 }
 
 message TanHParameter {

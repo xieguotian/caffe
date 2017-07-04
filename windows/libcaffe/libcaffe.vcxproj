@@ -180,6 +180,7 @@
     <ClCompile Include="..\..\src\caffe\layers\normalization_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\norm_center_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\parameter_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\parameter_sel_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\pooling_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\power_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\prelu_layer.cpp" />

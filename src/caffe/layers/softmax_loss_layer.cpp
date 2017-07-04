@@ -33,6 +33,8 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
   } else {
     normalization_ = this->layer_param_.loss_param().normalization();
   }
+
+  gradient_norm_ = this->layer_param_.softmax_param().gradient_norm();
 }
 
 template <typename Dtype>

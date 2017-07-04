@@ -943,67 +943,66 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
   CHECK_GE(end, 0);
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
-	  if (layer_need_backward_[i]) {
 
-		  if ((phase_ == Phase::TRAIN && opt_memory_)
-			  && layer_types_[i] != "Reshape" && layer_types_[i] != "Flatten")
+	  if ((phase_ == Phase::TRAIN && opt_memory_)
+		  && layer_types_[i] != "Reshape" && layer_types_[i] != "Flatten")
+	  {
+		  //share cache meory.
+		  for (int bi = 0; bi < bottom_vecs_[i].size(); bi++)
 		  {
-			   //share cache meory.
-			   for (int bi = 0; bi < bottom_vecs_[i].size(); bi++)
-			   {
-			    int blob_id = bottom_id_vecs_[i][bi];
-			    int cache_idx = shared_blobs_diff_index_[blob_id];
-			    // if in-place, don't borrow the shared memory again.
-			    if (top_vecs_[i].size()>bi && top_vecs_[i][bi] == bottom_vecs_[i][bi])
-			    {
-			  	  continue;
-			    }
-
-			    if (shared_blobs_diff_[cache_idx]->count() < blobs_[blob_id]->count())
-			    {
-			  	  shared_blobs_diff_[cache_idx]->ReshapeLike(*blobs_[blob_id]);
-			  	  LOG_IF(INFO, Caffe::root_solver()) << "diff reshape " << layer_types_[i] << " " << shared_blobs_diff_[cache_idx]->count();
-			    }
-			    blobs_[blob_id]->ShareDiff_LE(*shared_blobs_diff_[cache_idx]);
-			   }
-			  for (int bi = 0; bi < bottom_vecs_[i].size(); bi++)
+			  int blob_id = bottom_id_vecs_[i][bi];
+			  int cache_idx = shared_blobs_diff_index_[blob_id];
+			  // if in-place, don't borrow the shared memory again.
+			  if (top_vecs_[i].size()>bi && top_vecs_[i][bi] == bottom_vecs_[i][bi])
 			  {
-				  // if in-place, don't borrow the shared memory again.
-				  if (top_vecs_[i].size()>bi && top_vecs_[i][bi] == bottom_vecs_[i][bi])
-				  {
-					  continue;
-				  }
+				  continue;
+			  }
 
-				  Blob<Dtype>* blob = bottom_vecs_[i][bi];
-				  switch (Caffe::mode()) {
-				  case Caffe::CPU:
-					  caffe_set(blob->count(), static_cast<Dtype>(0),
-						  blob->mutable_cpu_diff());
-					  break;
-				  case Caffe::GPU:
+			  if (shared_blobs_diff_[cache_idx]->count() < blobs_[blob_id]->count())
+			  {
+				  shared_blobs_diff_[cache_idx]->ReshapeLike(*blobs_[blob_id]);
+				  LOG_IF(INFO, Caffe::root_solver()) << "diff reshape " << layer_types_[i] << " " << shared_blobs_diff_[cache_idx]->count();
+			  }
+			  blobs_[blob_id]->ShareDiff_LE(*shared_blobs_diff_[cache_idx]);
+		  }
+		  for (int bi = 0; bi < bottom_vecs_[i].size(); bi++)
+		  {
+			  // if in-place, don't borrow the shared memory again.
+			  if (top_vecs_[i].size()>bi && top_vecs_[i][bi] == bottom_vecs_[i][bi])
+			  {
+				  continue;
+			  }
+
+			  Blob<Dtype>* blob = bottom_vecs_[i][bi];
+			  switch (Caffe::mode()) {
+			  case Caffe::CPU:
+				  caffe_set(blob->count(), static_cast<Dtype>(0),
+					  blob->mutable_cpu_diff());
+				  break;
+			  case Caffe::GPU:
 #ifndef CPU_ONLY
-					  caffe_gpu_set(blob->count(), static_cast<Dtype>(0),
-						  blob->mutable_gpu_diff());
+				  caffe_gpu_set(blob->count(), static_cast<Dtype>(0),
+					  blob->mutable_gpu_diff());
 #else
-					  NO_GPU;
+				  NO_GPU;
 #endif
-					  break;
-				  }
+				  break;
 			  }
 		  }
+	  }
 
-		  if (phase_ == Phase::TRAIN && half_support_)
+	  if (phase_ == Phase::TRAIN && half_support_)
+	  {
+		  for (int bi = 0; bi < bottom_vecs_[i].size(); ++bi)
 		  {
-		   for (int bi = 0; bi < bottom_vecs_[i].size(); ++bi)
-		   {
-		    int blob_id = bottom_id_vecs_[i][bi];
+			  int blob_id = bottom_id_vecs_[i][bi];
 
-		    THCHalf2Float<Dtype>(
-		  	  blobs_[blob_id]->mutable_gpu_data(),
-		  	  static_cast<half*>(half_blobs_[blob_id]->mutable_gpu_data()),
-		  	  blobs_[blob_id]->count());
-		   }
+			  THCHalf2Float<Dtype>(
+				  blobs_[blob_id]->mutable_gpu_data(),
+				  static_cast<half*>(half_blobs_[blob_id]->mutable_gpu_data()),
+				  blobs_[blob_id]->count());
 		  }
+	  }
 
 //		  Dtype decay_mult = layers_[i]->layer_param().decay_mult();
 //		  // if need signal decay, decay the diff of signal.
@@ -1032,19 +1031,20 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
 //				  }
 //			  }
 //		  }
+		  if (layer_need_backward_[i]) {
 
-		  layers_[i]->Backward(
-			  top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
-		  if (show_asum_debug_)
-		  {
-			  show_asum_info_[layer_names_[i]][0] = bottom_vecs_[i][0]->asum_data() / bottom_vecs_[i][0]->count();
-			  show_asum_info_[layer_names_[i]][1] = bottom_vecs_[i][0]->asum_diff() / bottom_vecs_[i][0]->count();
-			  show_asum_info_[layer_names_[i]][2] = layers_[i]->blobs()[0]->asum_data() / layers_[i]->blobs()[0]->count();
-			  show_asum_info_[layer_names_[i]][3] = layers_[i]->blobs()[0]->asum_diff() / layers_[i]->blobs()[0]->count();
+			  layers_[i]->Backward(
+				  top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
+			  if (show_asum_debug_)
+			  {
+				  show_asum_info_[layer_names_[i]][0] = bottom_vecs_[i][0]->asum_data() / bottom_vecs_[i][0]->count();
+				  show_asum_info_[layer_names_[i]][1] = bottom_vecs_[i][0]->asum_diff() / bottom_vecs_[i][0]->count();
+				  show_asum_info_[layer_names_[i]][2] = layers_[i]->blobs()[0]->asum_data() / layers_[i]->blobs()[0]->count();
+				  show_asum_info_[layer_names_[i]][3] = layers_[i]->blobs()[0]->asum_diff() / layers_[i]->blobs()[0]->count();
+			  }
+			  if (debug_info_) { BackwardDebugInfo(i); }
+
 		  }
-		  if (debug_info_) { BackwardDebugInfo(i); }
-
-	  }
   }
 
 

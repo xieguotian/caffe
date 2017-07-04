@@ -117,6 +117,28 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         has_ignore_label_) {
       caffe_gpu_asum(nthreads, counts, &valid_count);
     }
+
+	Dtype diff_sum;
+	Dtype prob_org_sum;
+	static bool first_time_norm = true;
+	if (gradient_norm_ == SoftmaxParameter_GradientNorm_EQUAL_NORM)
+	{
+		if (first_time_norm)
+		{
+			LOG(INFO) << "cross entropy loss with EQUAL_NROM";
+			first_time_norm = false;
+		}
+
+		caffe_gpu_asum(bottom[0]->count(), bottom_diff, &prob_org_sum);
+		prob_org_sum = prob_org_sum / bottom[0]->num();
+		for (int idx = 0; idx < bottom[0]->num(); idx++)
+		{
+			caffe_gpu_asum(bottom[0]->channels(), bottom_diff + idx*bottom[0]->channels(), &diff_sum);
+			Dtype scale_factor = prob_org_sum / diff_sum;
+			caffe_gpu_scal(bottom[0]->channels(), scale_factor, bottom_diff + idx*bottom[0]->channels());
+		}
+	}
+
     const Dtype loss_weight = top[0]->cpu_diff()[0] /
                               get_normalizer(normalization_, valid_count);
     caffe_gpu_scal(prob_.count(), loss_weight , bottom_diff);
