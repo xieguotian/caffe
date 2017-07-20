@@ -352,6 +352,9 @@ void SoftmaxCrossEntropyLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*
 		//const Dtype loss_weight = scale_factor * top[0]->cpu_diff()[0] /
 		//	get_normalizer(normalization_, valid_count);
 		//caffe_gpu_scal(prob_.count(), loss_weight, bottom_diff);
+		const Dtype loss_weight = top[0]->cpu_diff()[0] /
+			get_normalizer(normalization_, valid_count);
+		caffe_gpu_scal(prob_.count(), loss_weight, bottom_diff);
 	}
 
 	if (is_update_T_ && this->blobs_[0]->cpu_data()[0]>1)
