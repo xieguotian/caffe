@@ -26,6 +26,7 @@
 #include "caffe/layers/cudnn_softmax_layer.hpp"
 #include "caffe/layers/cudnn_tanh_layer.hpp"
 #include "caffe/layers/cudnn_conv_mask_layer.hpp"
+#include "caffe/layers/cudnn_conv_tree_layer.hpp"
 #endif
 
 #ifdef WITH_PYTHON_LAYER
@@ -68,6 +69,9 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
   }
   else if (engine == ConvolutionParameter_Engine_CUDNNMASK){
 	  return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionMaskLayer<Dtype>(param));
+  }
+  else if (engine == ConvolutionParameter_Engine_TREE){
+	  return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionTreeLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
