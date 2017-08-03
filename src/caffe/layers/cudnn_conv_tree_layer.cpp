@@ -49,6 +49,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
   Dtype std = std::pow(sqrt(Dtype(2) / n),1.0/num_layer_);
   caffe_rng_gaussian<Dtype>(this->blobs_[0]->count(), Dtype(0), std,
 	  this->blobs_[0]->mutable_cpu_data());
+  sigma_ = std;
   //*********************************************
 
   // Initialize CUDA streams and cuDNN.
