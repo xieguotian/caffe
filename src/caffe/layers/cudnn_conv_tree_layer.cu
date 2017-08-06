@@ -35,7 +35,8 @@ namespace caffe {
 	{
 		CUDA_KERNEL_LOOP(index, n_thread) {
 			int c_idx = index % channel_in_;
-			int r_idx = index / 2;
+			//int r_idx = index / 2;
+			int r_idx = index / 4;
 			output_data[r_idx*channel_in_+c_idx] = input_data[index];
 		}
 	}
@@ -45,7 +46,8 @@ namespace caffe {
 	{
 		CUDA_KERNEL_LOOP(index, n_thread) {
 			int c_idx = index % channel_in_;
-			int r_idx = index / 2;
+			//int r_idx = index / 2;
+			int r_idx = index / 4;
 			output_data[index] = input_data[r_idx*channel_in_ + c_idx];
 		}
 	}
@@ -177,34 +179,53 @@ void CuDNNConvolutionTreeLayer<Dtype>::Forward_gpu(
 	  LOG(INFO) << "using conv tree." << num_layer_;
 	  first_used = false;
   }
-  caffe_gpu_set(re_weights_.count(), (Dtype)0.0, re_weights_.mutable_gpu_data());
-  recover_weight<Dtype> << <CAFFE_GET_BLOCKS(2 * channels_), CAFFE_CUDA_NUM_THREADS >> >(
-	  2 * channels_,
+  caffe_gpu_set(Wp_[0]->count(), (Dtype)0.0, Wp_[0]->mutable_gpu_data());
+  recover_weight<Dtype> << <CAFFE_GET_BLOCKS(4 * channels_), CAFFE_CUDA_NUM_THREADS >> >(
+	  4 * channels_,
 	  this->blobs_[0]->gpu_data(),
-	  re_weights_.mutable_gpu_data(),
+	  //re_weights_cache_.mutable_gpu_data(), 
+	  Wp_[0]->mutable_gpu_data(),
 	  channels_
 	  );
+  caffe_copy(Wp_[0]->count(), Wp_[0]->gpu_data(), Wpi_[0]->mutable_gpu_data());
   for (int i = 1; i < num_layer_; i++)
   {
-	  caffe_gpu_set(re_weights_cache_.count(), (Dtype)0.0, re_weights_cache_.mutable_gpu_data());
-	  recover_weight<Dtype> << <CAFFE_GET_BLOCKS(2 * channels_), CAFFE_CUDA_NUM_THREADS >> >(
-		  2 * channels_,
-		  this->blobs_[0]->gpu_data() + 2 * channels_*i,
-		  re_weights_cache_.mutable_gpu_data(), 
+	  caffe_gpu_set(Wpi_[i]->count(), (Dtype)0.0, Wpi_[i]->mutable_gpu_data());
+	  recover_weight<Dtype> << <CAFFE_GET_BLOCKS(4 * channels_), CAFFE_CUDA_NUM_THREADS >> >(
+		  4 * channels_,
+		  this->blobs_[0]->gpu_data() + 4 * channels_*(i),
+		  Wpi_[i]->mutable_gpu_data(),
 		  channels_
 		  );
-	  caffe_copy(re_weights_.count(), re_weights_.gpu_data(), re_weights_cache2_.mutable_gpu_data());
+	  
 	  caffe_gpu_gemm(CblasNoTrans,
 		  CblasNoTrans,
 		  channels_,
 		  channels_,
 		  channels_,
 		  (Dtype)1.0,
-		  re_weights_cache_.gpu_data(),
-		  re_weights_cache2_.gpu_data(),
-		  (Dtype)0.0, re_weights_.mutable_gpu_data());
-
+		  Wpi_[i]->gpu_data(),
+		  Wp_[i - 1]->gpu_data(),
+		  (Dtype)0.0, Wp_[i]->mutable_gpu_data());
   }
+
+  caffe_copy(Wp_[num_layer_-1]->count(), Wp_[num_layer_-1]->gpu_data(), re_weights_.mutable_gpu_data());
+
+  for (int i = num_layer_ - 2; i >= 0; i--)
+  {
+	  caffe_copy(Wpi_[i]->count(), Wpi_[i]->gpu_data(), re_weights_cache_.mutable_gpu_data());
+	  caffe_gpu_gemm(CblasNoTrans,
+		  CblasNoTrans,
+		  channels_,
+		  channels_,
+		  channels_,
+		  (Dtype)1.0,
+		  Wpi_[i+1]->gpu_data(),
+		  re_weights_cache_.gpu_data(),
+		  (Dtype)0.0, Wpi_[i]->mutable_gpu_data());
+  }
+  //caffe_copy(Wp_[0]->count(), Wp_[0]->gpu_data(), Wpi_[num_layer_ - 1]->mutable_gpu_data());
+
   //for (int i = 0; i < channels_*channels_; i++)
   //{
 	 // LOG(INFO) << re_weights_.cpu_data()[i];
@@ -349,89 +370,138 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 	}
 
 	//todo: recover gradient into parameters blob
-	//recover weight. idenitity
-	caffe_gpu_set(re_weights2_.count(), (Dtype)0, re_weights2_.mutable_gpu_data());
-	identity_mat<Dtype> << <CAFFE_GET_BLOCKS( channels_), CAFFE_CUDA_NUM_THREADS >> >(
-		 channels_,
-		re_weights2_.mutable_gpu_data()
-		);
-
-	caffe_copy(re_weights_cache_.count(), weight_diff, re_weights_cache_.mutable_gpu_data());
-	caffe_gpu_gemm(
-		CblasNoTrans,
-		CblasTrans,
-		channels_,
-		channels_,
-		channels_,
-		(Dtype)1.0,
-		re_weights_cache_.gpu_data(),
-		re_weights_.gpu_data(),
-		(Dtype)0.0, weight_diff
-		);
-	for (int i = num_layer_-1; i>=0; i--)
+	for (int i = num_layer_ - 1; i >= 0; i--)
 	{
-		//compute inv weight
-		// compute inv into re_weights_cache2_.
-		caffe_copy(2 * channels_,
-			this->blobs_[0]->gpu_data() + i * 2 * channels_,
-			re_weights_cache2_.mutable_gpu_data());
-		compute_weight_inv<Dtype> << <CAFFE_GET_BLOCKS(channels_ / 2), CAFFE_CUDA_NUM_THREADS >> >(
-			channels_ / 2,
-			re_weights_cache2_.mutable_gpu_data(),
-			re_weights_cache2_.mutable_gpu_data() + channels_
-			);
-
-		//recover inv into re_weights_cache_.
-		caffe_gpu_set(re_weights_.count(), (Dtype)0.0, re_weights_.mutable_gpu_data());
-		recover_weight<Dtype> << <CAFFE_GET_BLOCKS(2 * channels_), CAFFE_CUDA_NUM_THREADS >> >(
-			2 * channels_,
-			re_weights_cache2_.gpu_data(),
-			re_weights_.mutable_gpu_data(),
-			channels_
-			);
-
 		//recover gradient
-		caffe_gpu_gemm(
-			CblasTrans,
-			CblasNoTrans,
-			channels_,
-			channels_,
-			channels_,
-			(Dtype)1.0,
-			re_weights2_.gpu_data(),
-			weight_diff,
-			(Dtype)0.0, re_weights_cache_.mutable_gpu_data()
-			);
-		caffe_gpu_gemm(
-			CblasNoTrans,
-			CblasNoTrans,
-			channels_,
-			channels_,
-			channels_,
-			(Dtype)1.0,
-			re_weights_cache_.gpu_data(),
-			re_weights_.gpu_data(),
-			(Dtype)0.0, re_weights_cache2_.mutable_gpu_data()
-			);
+		if (i < num_layer_ - 1)
+		{
+			caffe_gpu_gemm(
+				CblasTrans,
+				CblasNoTrans,
+				channels_,
+				channels_,
+				channels_,
+				(Dtype)1.0,
+				//re_weights2_.gpu_data(),
+				Wpi_[i + 1]->gpu_data(),
+				weight_diff,
+				(Dtype)0.0, re_weights_cache_.mutable_gpu_data()
+				);
+		}
+		else
+		{
+			caffe_copy(re_weights_cache_.count(), weight_diff, re_weights_cache_.mutable_gpu_data());
+		}
+		if (i > 0)
+		{
+			caffe_gpu_gemm(
+				CblasNoTrans,
+				CblasTrans,
+				channels_,
+				channels_,
+				channels_,
+				(Dtype)1.0,
+				re_weights_cache_.gpu_data(),
+				//re_weights_.gpu_data(),
+				Wp_[i - 1]->gpu_data(),
+				(Dtype)0.0, re_weights_cache2_.mutable_gpu_data()
+				);
+		}
+		else{
+			caffe_copy(re_weights_cache_.count(), re_weights_cache_.gpu_data(), re_weights_cache2_.mutable_gpu_data());
+		}
 
-		caffe_copy(re_weights_cache2_.count(), re_weights_cache2_.gpu_data(), weight_diff);
-		recover_weight_diff<Dtype> << <CAFFE_GET_BLOCKS(2 * channels_), CAFFE_CUDA_NUM_THREADS >> >(
-			2 * channels_,
+		//caffe_copy(re_weights_cache2_.count(), re_weights_cache2_.gpu_data(), weight_diff);
+		recover_weight_diff<Dtype> << <CAFFE_GET_BLOCKS(4 * channels_), CAFFE_CUDA_NUM_THREADS >> >(
+			4 * channels_,
 			re_weights_cache2_.gpu_data(),
-			this->blobs_[0]->mutable_gpu_diff() + 2 * channels_*i,
-			channels_
-			);
-
-		//********************************************************
-		//recover weight
-		caffe_gpu_set(re_weights2_.count(), (Dtype)0.0, re_weights2_.mutable_gpu_data());
-		recover_weight<Dtype> << <CAFFE_GET_BLOCKS(2 * channels_), CAFFE_CUDA_NUM_THREADS >> >(
-			2 * channels_,
-			this->blobs_[0]->gpu_data() + 2 * channels_*(i),
-			re_weights2_.mutable_gpu_data(),
+			this->blobs_[0]->mutable_gpu_diff() + 4 * channels_*i,
 			channels_
 			);
 	}
+	////recover weight. idenitity
+	//caffe_gpu_set(re_weights2_.count(), (Dtype)0, re_weights2_.mutable_gpu_data());
+	//identity_mat<Dtype> << <CAFFE_GET_BLOCKS( channels_), CAFFE_CUDA_NUM_THREADS >> >(
+	//	 channels_,
+	//	re_weights2_.mutable_gpu_data()
+	//	);
+
+	//caffe_copy(re_weights_cache_.count(), weight_diff, re_weights_cache_.mutable_gpu_data());
+	//caffe_gpu_gemm(
+	//	CblasNoTrans,
+	//	CblasTrans,
+	//	channels_,
+	//	channels_,
+	//	channels_,
+	//	(Dtype)1.0,
+	//	re_weights_cache_.gpu_data(),
+	//	re_weights_.gpu_data(),
+	//	(Dtype)0.0, weight_diff
+	//	);
+	//for (int i = num_layer_-1; i>=0; i--)
+	//{
+	//	//compute inv weight
+	//	// compute inv into re_weights_cache2_.
+	//	caffe_copy(2 * channels_,
+	//		this->blobs_[0]->gpu_data() + i * 2 * channels_,
+	//		re_weights_cache2_.mutable_gpu_data());
+	//	compute_weight_inv<Dtype> << <CAFFE_GET_BLOCKS(channels_ / 2), CAFFE_CUDA_NUM_THREADS >> >(
+	//		channels_ / 2,
+	//		re_weights_cache2_.mutable_gpu_data(),
+	//		re_weights_cache2_.mutable_gpu_data() + channels_
+	//		);
+
+	//	//recover inv into re_weights_cache_.
+	//	caffe_gpu_set(re_weights_.count(), (Dtype)0.0, re_weights_.mutable_gpu_data());
+	//	recover_weight<Dtype> << <CAFFE_GET_BLOCKS(2 * channels_), CAFFE_CUDA_NUM_THREADS >> >(
+	//		2 * channels_,
+	//		re_weights_cache2_.gpu_data(),
+	//		re_weights_.mutable_gpu_data(),
+	//		channels_
+	//		);
+
+	//	//recover gradient
+	//	caffe_gpu_gemm(
+	//		CblasTrans,
+	//		CblasNoTrans,
+	//		channels_,
+	//		channels_,
+	//		channels_,
+	//		(Dtype)1.0,
+	//		re_weights2_.gpu_data(),
+	//		weight_diff,
+	//		(Dtype)0.0, re_weights_cache_.mutable_gpu_data()
+	//		);
+	//	caffe_gpu_gemm(
+	//		CblasNoTrans,
+	//		CblasNoTrans,
+	//		channels_,
+	//		channels_,
+	//		channels_,
+	//		(Dtype)1.0,
+	//		re_weights_cache_.gpu_data(),
+	//		re_weights_.gpu_data(),
+	//		(Dtype)0.0, re_weights_cache2_.mutable_gpu_data()
+	//		);
+
+	//	caffe_copy(re_weights_cache2_.count(), re_weights_cache2_.gpu_data(), weight_diff);
+	//	recover_weight_diff<Dtype> << <CAFFE_GET_BLOCKS(2 * channels_), CAFFE_CUDA_NUM_THREADS >> >(
+	//		2 * channels_,
+	//		re_weights_cache2_.gpu_data(),
+	//		this->blobs_[0]->mutable_gpu_diff() + 2 * channels_*i,
+	//		channels_
+	//		);
+
+	//	//********************************************************
+	//	//recover weight
+	//	caffe_gpu_set(re_weights2_.count(), (Dtype)0.0, re_weights2_.mutable_gpu_data());
+	//	recover_weight<Dtype> << <CAFFE_GET_BLOCKS(2 * channels_), CAFFE_CUDA_NUM_THREADS >> >(
+	//		2 * channels_,
+	//		this->blobs_[0]->gpu_data() + 2 * channels_*(i),
+	//		re_weights2_.mutable_gpu_data(),
+	//		channels_
+	//		);
+	//}
 	//************************************
 	
 	Dtype decay_mult = this->layer_param_.decay_mult();

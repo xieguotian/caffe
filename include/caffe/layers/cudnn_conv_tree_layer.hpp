@@ -78,6 +78,9 @@ class CuDNNConvolutionTreeLayer : public ConvolutionLayer<Dtype> {
   Blob<Dtype> re_weights2_;
   int num_layer_;
   Dtype sigma_;
+
+  vector<shared_ptr<Blob<Dtype>>> Wp_;
+  vector<shared_ptr<Blob<Dtype>>> Wpi_;
 };
 #endif
 

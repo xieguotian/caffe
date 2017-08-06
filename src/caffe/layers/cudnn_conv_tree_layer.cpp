@@ -26,12 +26,25 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
   re_weights2_.ReshapeLike(*this->blobs_[0]);
   re_weights_cache_.ReshapeLike(*this->blobs_[0]);
   re_weights_cache2_.ReshapeLike(*this->blobs_[0]);
-
+  
   vector<int> weight_shape(2);
   CHECK_EQ(channels_, num_output_);
-  weight_shape[0] = std::ceil(std::log2(Dtype(channels_ / group_)));
-  weight_shape[1] = 2 * num_output_;
+  //weight_shape[0] = std::ceil(std::log2(Dtype(channels_ / group_)));
+  //weight_shape[1] = 2 * num_output_;
+  weight_shape[0] = std::ceil(std::log2(Dtype(channels_ / group_))/std::log2(4));
+  weight_shape[1] = 4 * num_output_;
   num_layer_ = weight_shape[0];
+
+  Wp_.resize(num_layer_);
+  Wpi_.resize(num_layer_);
+
+  for (int i = 0; i < num_layer_; i++)
+  {
+	  Wp_[i].reset(new Blob<Dtype>());
+	  Wpi_[i].reset(new Blob<Dtype>());
+	  Wp_[i]->ReshapeLike(*this->blobs_[0]);
+	  Wpi_[i]->ReshapeLike(*this->blobs_[0]);
+  }
   //weight_shape[0] = conv_out_channels_;
   //weight_shape[1] = conv_in_channels_ / group_;
   //for (int i = 0; i < num_spatial_axes_; ++i) {
