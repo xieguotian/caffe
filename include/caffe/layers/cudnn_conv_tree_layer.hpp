@@ -81,6 +81,9 @@ class CuDNNConvolutionTreeLayer : public ConvolutionLayer<Dtype> {
 
   vector<shared_ptr<Blob<Dtype>>> Wp_;
   vector<shared_ptr<Blob<Dtype>>> Wpi_;
+  int ch_per_super_node_;
+  int connects_per_layer_;
+  
 };
 #endif
 

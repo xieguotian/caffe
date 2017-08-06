@@ -61,7 +61,7 @@ class CuDNNConvolutionTreeLayerTest : public GPUDeviceTest<Dtype> {
 
 TYPED_TEST_CASE(CuDNNConvolutionTreeLayerTest, TestDtypes);
 
-TYPED_TEST(CuDNNConvolutionTreeLayerTest, TestGradientCuDNN) {
+TYPED_TEST(CuDNNConvolutionTreeLayerTest, TestGradientCuDNN_4channels) {
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -78,8 +78,41 @@ TYPED_TEST(CuDNNConvolutionTreeLayerTest, TestGradientCuDNN) {
       this->blob_top_vec_);
 }
 
+TYPED_TEST(CuDNNConvolutionTreeLayerTest, TestGradientCuDNN_8channels) {
+	LayerParameter layer_param;
+	ConvolutionParameter* convolution_param =
+		layer_param.mutable_convolution_param();
+	this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+	this->blob_top_vec_.push_back(this->blob_top_2_);
+	convolution_param->add_kernel_size(1);
+	convolution_param->add_stride(1);
+	convolution_param->set_num_output(16);
+	convolution_param->mutable_weight_filler()->set_type("gaussian");
+	convolution_param->mutable_bias_filler()->set_type("gaussian");
+	convolution_param->set_num_channels_per_supernode(8);
+	CuDNNConvolutionTreeLayer<TypeParam> layer(layer_param);
+	GradientChecker<TypeParam> checker(1e-2, 1e-3);
+	checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+		this->blob_top_vec_);
+}
 
-
+TYPED_TEST(CuDNNConvolutionTreeLayerTest, TestGradientCuDNN_4channels_tree_2) {
+	LayerParameter layer_param;
+	ConvolutionParameter* convolution_param =
+		layer_param.mutable_convolution_param();
+	this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
+	this->blob_top_vec_.push_back(this->blob_top_2_);
+	convolution_param->add_kernel_size(1);
+	convolution_param->add_stride(1);
+	convolution_param->set_num_output(16);
+	convolution_param->mutable_weight_filler()->set_type("gaussian");
+	convolution_param->mutable_bias_filler()->set_type("gaussian");
+	convolution_param->set_num_layer_of_tree(1);
+	CuDNNConvolutionTreeLayer<TypeParam> layer(layer_param);
+	GradientChecker<TypeParam> checker(1e-2, 1e-3);
+	checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+		this->blob_top_vec_);
+}
 #endif
 
 }  // namespace caffe

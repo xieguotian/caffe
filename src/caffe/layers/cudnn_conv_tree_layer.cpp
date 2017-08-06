@@ -20,6 +20,10 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
   ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
 
   //*****************************************************
+  ConvolutionParameter conv_param = this->layer_param_.convolution_param();
+  num_layer_ = conv_param.num_layer_of_tree();
+  ch_per_super_node_ = conv_param.num_channels_per_supernode();
+
   // Re-Initialize and fill the weights:
   // output channels x input channels per-group x kernel height x kernel width
   re_weights_.ReshapeLike(*this->blobs_[0]);
@@ -31,9 +35,15 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
   CHECK_EQ(channels_, num_output_);
   //weight_shape[0] = std::ceil(std::log2(Dtype(channels_ / group_)));
   //weight_shape[1] = 2 * num_output_;
-  weight_shape[0] = std::ceil(std::log2(Dtype(channels_ / group_))/std::log2(4));
-  weight_shape[1] = 4 * num_output_;
-  num_layer_ = weight_shape[0];
+  if (num_layer_ <= 0)
+  {
+	  num_layer_ = std::ceil(std::log2(Dtype(channels_ / group_)) / std::log2(ch_per_super_node_));
+  }
+  LOG(INFO) << "num_layer of conv_tree :" << num_layer_ << " channels per supernode: " << ch_per_super_node_;
+  connects_per_layer_ = ch_per_super_node_ * num_output_;
+  weight_shape[0] = num_layer_;
+  weight_shape[1] = connects_per_layer_;
+  
 
   Wp_.resize(num_layer_);
   Wpi_.resize(num_layer_);

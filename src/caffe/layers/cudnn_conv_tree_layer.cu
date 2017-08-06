@@ -31,23 +31,23 @@ namespace caffe {
 		}
 	}
 	template <typename Dtype>
-	__global__ void recover_weight(int n_thread, const Dtype* input_data, Dtype* output_data, int channel_in_)
+	__global__ void recover_weight(int n_thread, const Dtype* input_data, Dtype* output_data, int channel_in_, int ch_per_super_node)
 	{
 		CUDA_KERNEL_LOOP(index, n_thread) {
 			int c_idx = index % channel_in_;
 			//int r_idx = index / 2;
-			int r_idx = index / 4;
+			int r_idx = index / ch_per_super_node;
 			output_data[r_idx*channel_in_+c_idx] = input_data[index];
 		}
 	}
 
 	template <typename Dtype>
-	__global__ void recover_weight_diff(int n_thread, const Dtype* input_data, Dtype* output_data, int channel_in_)
+	__global__ void recover_weight_diff(int n_thread, const Dtype* input_data, Dtype* output_data, int channel_in_, int ch_per_super_node)
 	{
 		CUDA_KERNEL_LOOP(index, n_thread) {
 			int c_idx = index % channel_in_;
 			//int r_idx = index / 2;
-			int r_idx = index / 4;
+			int r_idx = index / ch_per_super_node;
 			output_data[index] = input_data[r_idx*channel_in_ + c_idx];
 		}
 	}
@@ -180,22 +180,24 @@ void CuDNNConvolutionTreeLayer<Dtype>::Forward_gpu(
 	  first_used = false;
   }
   caffe_gpu_set(Wp_[0]->count(), (Dtype)0.0, Wp_[0]->mutable_gpu_data());
-  recover_weight<Dtype> << <CAFFE_GET_BLOCKS(4 * channels_), CAFFE_CUDA_NUM_THREADS >> >(
-	  4 * channels_,
+  recover_weight<Dtype> << <CAFFE_GET_BLOCKS(connects_per_layer_), CAFFE_CUDA_NUM_THREADS >> >(
+	  connects_per_layer_,
 	  this->blobs_[0]->gpu_data(),
 	  //re_weights_cache_.mutable_gpu_data(), 
 	  Wp_[0]->mutable_gpu_data(),
-	  channels_
+	  channels_,
+	  ch_per_super_node_
 	  );
   caffe_copy(Wp_[0]->count(), Wp_[0]->gpu_data(), Wpi_[0]->mutable_gpu_data());
   for (int i = 1; i < num_layer_; i++)
   {
 	  caffe_gpu_set(Wpi_[i]->count(), (Dtype)0.0, Wpi_[i]->mutable_gpu_data());
-	  recover_weight<Dtype> << <CAFFE_GET_BLOCKS(4 * channels_), CAFFE_CUDA_NUM_THREADS >> >(
-		  4 * channels_,
-		  this->blobs_[0]->gpu_data() + 4 * channels_*(i),
+	  recover_weight<Dtype> << <CAFFE_GET_BLOCKS(connects_per_layer_), CAFFE_CUDA_NUM_THREADS >> >(
+		  connects_per_layer_,
+		  this->blobs_[0]->gpu_data() + connects_per_layer_*(i),
 		  Wpi_[i]->mutable_gpu_data(),
-		  channels_
+		  channels_,
+		  ch_per_super_node_
 		  );
 	  
 	  caffe_gpu_gemm(CblasNoTrans,
@@ -412,11 +414,12 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 		}
 
 		//caffe_copy(re_weights_cache2_.count(), re_weights_cache2_.gpu_data(), weight_diff);
-		recover_weight_diff<Dtype> << <CAFFE_GET_BLOCKS(4 * channels_), CAFFE_CUDA_NUM_THREADS >> >(
-			4 * channels_,
+		recover_weight_diff<Dtype> << <CAFFE_GET_BLOCKS(connects_per_layer_), CAFFE_CUDA_NUM_THREADS >> >(
+			connects_per_layer_,
 			re_weights_cache2_.gpu_data(),
-			this->blobs_[0]->mutable_gpu_diff() + 4 * channels_*i,
-			channels_
+			this->blobs_[0]->mutable_gpu_diff() + connects_per_layer_*i,
+			channels_,
+			ch_per_super_node_
 			);
 	}
 	////recover weight. idenitity
