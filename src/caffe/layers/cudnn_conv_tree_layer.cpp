@@ -23,6 +23,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   num_layer_ = conv_param.num_layer_of_tree();
   ch_per_super_node_ = conv_param.num_channels_per_supernode();
+  norm_tree_weight_ = conv_param.norm_tree_weight();
 
   // Re-Initialize and fill the weights:
   // output channels x input channels per-group x kernel height x kernel width

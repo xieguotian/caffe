@@ -159,20 +159,20 @@ void CuDNNConvolutionTreeLayer<Dtype>::Forward_gpu(
 
   //*****************************
   // todo: recover weight matrix , W =  W5W4W3W2W1
-  //if (this->phase_ == Phase::TRAIN)
-  //{
-	 // Dtype product = 1;
-	 // for (int i = 0; i < num_layer_; i++)
-	 // {
-		//  Dtype norm_factor = 0;
-		//  caffe_gpu_dot(2 * channels_, this->blobs_[0]->gpu_data() + 2 * channels_*i, this->blobs_[0]->gpu_data() + 2 * channels_*i, &norm_factor);
-		//  norm_factor = std::sqrt(norm_factor + 1e-10);
-		//  caffe_gpu_scal(2 * channels_, (Dtype) 1/norm_factor,this->blobs_[0]->mutable_gpu_data() + 2 * channels_*i);
-		//  product *= norm_factor;
-	 // }
-	 // product = std::pow(product, 1.0/num_layer_);
-	 // caffe_gpu_scal(this->blobs_[0]->count(), (Dtype)product, this->blobs_[0]->mutable_gpu_data());
-  //}
+  if (this->phase_ == Phase::TRAIN && norm_tree_weight_)
+  {
+	  Dtype product = 1;
+	  for (int i = 0; i < num_layer_; i++)
+	  {
+		  Dtype norm_factor = 0;
+		  caffe_gpu_dot(connects_per_layer_, this->blobs_[0]->gpu_data() + connects_per_layer_*i, this->blobs_[0]->gpu_data() + connects_per_layer_*i, &norm_factor);
+		  norm_factor = std::sqrt(norm_factor + 1e-10);
+		  caffe_gpu_scal(connects_per_layer_, (Dtype)1 / norm_factor, this->blobs_[0]->mutable_gpu_data() + connects_per_layer_*i);
+		  product *= norm_factor;
+	  }
+	  product = std::pow(product, 1.0/num_layer_);
+	  caffe_gpu_scal(this->blobs_[0]->count(), (Dtype)product, this->blobs_[0]->mutable_gpu_data());
+  }
   static bool first_used = true;
   if (first_used)
   {

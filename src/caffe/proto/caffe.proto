@@ -679,6 +679,7 @@ message ConvolutionParameter {
   optional bool is_binarized_param = 100 [default = false] ;
   optional int32 num_layer_of_tree = 101 [default = 0];
   optional int32 num_channels_per_supernode = 102 [default = 4];
+  optional bool norm_tree_weight = 103 [default = false];
 }
 
 message CropParameter {
