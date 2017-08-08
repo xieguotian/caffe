@@ -372,6 +372,16 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 	}
 
 	//todo: recover gradient into parameters blob
+	//add weight_decay.
+	//Dtype local_decay = this->layer_param_.param(0).decay_mult();
+	//if (local_decay < 0)
+	//{
+	//	weight = re_weights_.gpu_data();
+	//	caffe_gpu_axpy(this->blobs_[0]->count(),
+	//		-local_decay,
+	//		weight,
+	//		weight_diff);
+	//}
 	for (int i = num_layer_ - 1; i >= 0; i--)
 	{
 		//recover gradient
