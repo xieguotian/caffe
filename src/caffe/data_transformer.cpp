@@ -313,74 +313,85 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 		}
 		if (phase_ == TRAIN)
 		{
-			
-			if (min_length == 0 || max_length == 0)
+			if (param_.multi_scale_param().padding())
 			{
-				int org_height = cv_img.rows;
-				int org_width = cv_img.cols;
-				//get random scale
-				int small_side = std::min(org_height, org_width);
-				int min_side = small_side*min_scale;
-				int max_side = small_side*max_scale;
-				float scale = float(Rand(max_side - min_side + 1) + min_side) / float(small_side);
-
-				if (param_.is_aspect_ration())
-				{
-					float aspect_ratio = float(Rand(8) + 9) / 12;
-					int resize_height = org_height*scale;
-					int resize_width = org_width*scale;
-					if (Rand(2) == 0)
-						resize_height = std::max((int)(org_height*scale*aspect_ratio), min_length);
-					else
-						resize_width = std::max((int)(org_width*scale*aspect_ratio), min_length);
-
-					//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
-					cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
-				}
-				else
-				{
-					//scale image
-					int resize_height = org_height*scale;
-					int resize_width = org_width*scale;
-
-					//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
-					cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
-				}
+				int pad_width = param_.multi_scale_param().pad_width();
+				cv::Mat  tmp = tmp_cv_img;
+				copyMakeBorder(tmp, tmp_cv_img, pad_width, pad_width,
+					pad_width, pad_width, cv::BORDER_REPLICATE);
+				int width = tmp_cv_img.rows;
+				CHECK_EQ(width, max_length);
 			}
 			else
 			{
-				int org_height = cv_img.rows;
-				int org_width = cv_img.cols;
-				//get random scale
-				int small_side = std::min(org_height, org_width);
-				//int min_side = small_side*min_scale;
-				//int max_side = small_side*max_scale;
-				float scale = float(Rand(max_length - min_length + 1) + min_length) / float(small_side);
-				
-				if (param_.is_aspect_ration())
+				if (min_length == 0 || max_length == 0)
 				{
-					float aspect_ratio = float(Rand(8) + 9) / 12;
-					int resize_height = org_height*scale;
-					int resize_width = org_width*scale;
-					if (Rand(2) == 0)
-						resize_height = std::max((int)(org_height*scale*aspect_ratio), min_length);
-					else
-						resize_width = std::max((int)(org_width*scale*aspect_ratio), min_length);
+					int org_height = cv_img.rows;
+					int org_width = cv_img.cols;
+					//get random scale
+					int small_side = std::min(org_height, org_width);
+					int min_side = small_side*min_scale;
+					int max_side = small_side*max_scale;
+					float scale = float(Rand(max_side - min_side + 1) + min_side) / float(small_side);
 
-					// set to cropsize
-					resize_height = std::max(resize_height, min_length);
-					resize_width = std::max(resize_width, min_length);
-					//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
-					cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+					if (param_.is_aspect_ration())
+					{
+						float aspect_ratio = float(Rand(8) + 9) / 12;
+						int resize_height = org_height*scale;
+						int resize_width = org_width*scale;
+						if (Rand(2) == 0)
+							resize_height = std::max((int)(org_height*scale*aspect_ratio), min_length);
+						else
+							resize_width = std::max((int)(org_width*scale*aspect_ratio), min_length);
+
+						//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height));
+						cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+					}
+					else
+					{
+						//scale image
+						int resize_height = org_height*scale;
+						int resize_width = org_width*scale;
+
+						//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+						cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+					}
 				}
 				else
 				{
-					//scale image and set to cropsize
-					int resize_height = std::max((int)(org_height*scale), min_length);
-					int resize_width = std::max((int)(org_width*scale), min_length);
+					int org_height = cv_img.rows;
+					int org_width = cv_img.cols;
+					//get random scale
+					int small_side = std::min(org_height, org_width);
+					//int min_side = small_side*min_scale;
+					//int max_side = small_side*max_scale;
+					float scale = float(Rand(max_length - min_length + 1) + min_length) / float(small_side);
 
-					//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
-					cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+					if (param_.is_aspect_ration())
+					{
+						float aspect_ratio = float(Rand(8) + 9) / 12;
+						int resize_height = org_height*scale;
+						int resize_width = org_width*scale;
+						if (Rand(2) == 0)
+							resize_height = std::max((int)(org_height*scale*aspect_ratio), min_length);
+						else
+							resize_width = std::max((int)(org_width*scale*aspect_ratio), min_length);
+
+						// set to cropsize
+						resize_height = std::max(resize_height, min_length);
+						resize_width = std::max(resize_width, min_length);
+						//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+						cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+					}
+					else
+					{
+						//scale image and set to cropsize
+						int resize_height = std::max((int)(org_height*scale), min_length);
+						int resize_width = std::max((int)(org_width*scale), min_length);
+
+						//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+						cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+					}
 				}
 			}
 		}

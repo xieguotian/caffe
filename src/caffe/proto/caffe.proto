@@ -453,6 +453,8 @@ message ScaleRange{
 	optional float max_scale = 3 [default = 1];
 	optional uint32 min_length = 4 [default = 0];
 	optional uint32 max_length = 5 [default = 0];
+	optional bool padding = 6 [default = false];
+	optional uint32 pad_width = 7 [default=0];
 }
 // message for multi-scale image argumentation
 message RotateRange{
@@ -680,6 +682,7 @@ message ConvolutionParameter {
   optional int32 num_layer_of_tree = 101 [default = 0];
   optional int32 num_channels_per_supernode = 102 [default = 4];
   optional bool norm_tree_weight = 103 [default = false];
+  optional bool shuffle = 104 [default = false];
 }
 
 message CropParameter {

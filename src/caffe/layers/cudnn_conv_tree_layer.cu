@@ -31,23 +31,27 @@ namespace caffe {
 		}
 	}
 	template <typename Dtype>
-	__global__ void recover_weight(int n_thread, const Dtype* input_data, Dtype* output_data, int channel_in_, int ch_per_super_node)
+	__global__ void recover_weight(int n_thread, const Dtype* input_data, Dtype* output_data, int channel_in_, int ch_per_super_node, const Dtype* idx_ptr=NULL)
 	{
 		CUDA_KERNEL_LOOP(index, n_thread) {
 			int c_idx = index % channel_in_;
 			//int r_idx = index / 2;
 			int r_idx = index / ch_per_super_node;
+			if (idx_ptr != NULL)
+				r_idx = idx_ptr[r_idx];
 			output_data[r_idx*channel_in_+c_idx] = input_data[index];
 		}
 	}
 
 	template <typename Dtype>
-	__global__ void recover_weight_diff(int n_thread, const Dtype* input_data, Dtype* output_data, int channel_in_, int ch_per_super_node)
+	__global__ void recover_weight_diff(int n_thread, const Dtype* input_data, Dtype* output_data, int channel_in_, int ch_per_super_node, const Dtype* idx_ptr = NULL)
 	{
 		CUDA_KERNEL_LOOP(index, n_thread) {
 			int c_idx = index % channel_in_;
 			//int r_idx = index / 2;
 			int r_idx = index / ch_per_super_node;
+			if (idx_ptr != NULL)
+				r_idx = idx_ptr[r_idx];
 			output_data[index] = input_data[r_idx*channel_in_ + c_idx];
 		}
 	}
@@ -186,7 +190,8 @@ void CuDNNConvolutionTreeLayer<Dtype>::Forward_gpu(
 	  //re_weights_cache_.mutable_gpu_data(), 
 	  Wp_[0]->mutable_gpu_data(),
 	  channels_,
-	  ch_per_super_node_
+	  ch_per_super_node_,
+	  shuffle_ ? this->blobs_[idx_blob_]->gpu_data() : NULL
 	  );
   caffe_copy(Wp_[0]->count(), Wp_[0]->gpu_data(), Wpi_[0]->mutable_gpu_data());
   for (int i = 1; i < num_layer_; i++)
@@ -197,7 +202,8 @@ void CuDNNConvolutionTreeLayer<Dtype>::Forward_gpu(
 		  this->blobs_[0]->gpu_data() + connects_per_layer_*(i),
 		  Wpi_[i]->mutable_gpu_data(),
 		  channels_,
-		  ch_per_super_node_
+		  ch_per_super_node_,
+		  shuffle_ ? this->blobs_[idx_blob_]->gpu_data() + i*channels_ : NULL
 		  );
 	  
 	  caffe_gpu_gemm(CblasNoTrans,
@@ -429,7 +435,8 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 			re_weights_cache2_.gpu_data(),
 			this->blobs_[0]->mutable_gpu_diff() + connects_per_layer_*i,
 			channels_,
-			ch_per_super_node_
+			ch_per_super_node_,
+			shuffle_ ? this->blobs_[idx_blob_]->gpu_data() + i*channels_ : NULL
 			);
 	}
 	////recover weight. idenitity

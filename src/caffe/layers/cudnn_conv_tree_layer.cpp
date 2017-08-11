@@ -24,6 +24,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
   num_layer_ = conv_param.num_layer_of_tree();
   ch_per_super_node_ = conv_param.num_channels_per_supernode();
   norm_tree_weight_ = conv_param.norm_tree_weight();
+  shuffle_ = conv_param.shuffle();
 
   // Re-Initialize and fill the weights:
   // output channels x input channels per-group x kernel height x kernel width
@@ -44,6 +45,30 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
   connects_per_layer_ = ch_per_super_node_ * num_output_;
   weight_shape[0] = num_layer_;
   weight_shape[1] = connects_per_layer_;
+  if (shuffle_)
+  {
+	  LOG(INFO) << "shuffle using random shuffle among layers.";
+	  vector<int> shape_tmp(2);
+	  shape_tmp[0] = num_layer_;
+	  shape_tmp[1] = channels_;
+	  //this->blobs_.push_back(new Blob<Dtype>(shape_tmp));
+	  this->blobs_.resize(this->blobs_.size()+1);
+	  idx_blob_ = this->blobs_.size() - 1;
+	  this->blobs_[idx_blob_].reset(new Blob<Dtype>(shape_tmp));
+	  vector<int> idx_shuffle(channels_);
+	  for (int i = 0; i < channels_; i++)
+		  idx_shuffle[i] = i;
+
+	  for (int i = 0; i < num_layer_; i++)
+	  {
+		  std::random_shuffle(idx_shuffle.begin(), idx_shuffle.end());
+		  Dtype* idx_ptr = this->blobs_[idx_blob_]->mutable_cpu_data() + i*channels_;
+		  for (int j = 0; j < channels_; j++)
+		  {
+			  idx_ptr[j] = (Dtype)idx_shuffle[j];
+		  }
+	  }
+  }
   
 
   Wp_.resize(num_layer_);

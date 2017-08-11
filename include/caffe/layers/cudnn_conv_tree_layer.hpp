@@ -84,6 +84,8 @@ class CuDNNConvolutionTreeLayer : public ConvolutionLayer<Dtype> {
   int ch_per_super_node_;
   int connects_per_layer_;
   bool norm_tree_weight_;
+  bool shuffle_;
+  int idx_blob_;
 };
 #endif
 
