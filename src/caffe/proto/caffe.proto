@@ -445,6 +445,7 @@ message LayerParameter {
   optional ConvMaskParameter conv_mask_param = 8266727;
   optional NormCenterLossParameter norm_center_loss_param = 8266728;
   optional MultiTLossParameter multi_t_loss_param = 8266729;
+  optional ShuffleChannelParameter shuffle_channel_param = 8266730;
 }
 // message for multi-scale image argumentation
 message ScaleRange{
@@ -1693,4 +1694,8 @@ message MultiTLossParameter {
   optional float bandwidth = 5 [default = 1.0];
   optional float alpha = 6 [default = 1.0];
   optional FillerParameter weight_filler = 4;
+}
+
+message ShuffleChannelParameter {
+  optional uint32 group = 1[default = 1]; // The number of group
 }
