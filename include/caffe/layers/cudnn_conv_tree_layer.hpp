@@ -75,7 +75,8 @@ class CuDNNConvolutionTreeLayer : public ConvolutionLayer<Dtype> {
   Blob<Dtype> re_weights_;
   Blob<Dtype> re_weights_cache_;
   Blob<Dtype> re_weights_cache2_;
-  Blob<Dtype> re_weights2_;
+  Blob<Dtype> re_weights_cache3_;
+  //Blob<Dtype> re_weights2_;
   int num_layer_;
   Dtype sigma_;
 

@@ -29,12 +29,16 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
   // Re-Initialize and fill the weights:
   // output channels x input channels per-group x kernel height x kernel width
   re_weights_.ReshapeLike(*this->blobs_[0]);
-  re_weights2_.ReshapeLike(*this->blobs_[0]);
-  re_weights_cache_.ReshapeLike(*this->blobs_[0]);
-  re_weights_cache2_.ReshapeLike(*this->blobs_[0]);
+  //re_weights2_.ReshapeLike(*this->blobs_[0]);
+  vector<int> shape_cache(2);
+  shape_cache[0] = channels_;
+  shape_cache[1] = channels_;
+  re_weights_cache_.Reshape(shape_cache);
+  re_weights_cache2_.Reshape(shape_cache);
+  shape_cache[0] = num_output_;
+  re_weights_cache3_.Reshape(shape_cache);
   
-  vector<int> weight_shape(2);
-  CHECK_EQ(channels_, num_output_);
+  //CHECK_EQ(channels_, num_output_);
   //weight_shape[0] = std::ceil(std::log2(Dtype(channels_ / group_)));
   //weight_shape[1] = 2 * num_output_;
   if (num_layer_ <= 0)
@@ -42,9 +46,12 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 	  num_layer_ = std::ceil(std::log2(Dtype(channels_ / group_)) / std::log2(ch_per_super_node_));
   }
   LOG(INFO) << "num_layer of conv_tree :" << num_layer_ << " channels per supernode: " << ch_per_super_node_;
-  connects_per_layer_ = ch_per_super_node_ * num_output_;
-  weight_shape[0] = num_layer_;
-  weight_shape[1] = connects_per_layer_;
+  connects_per_layer_ = ch_per_super_node_ * channels_;
+
+  vector<int> weight_shape(1);
+  weight_shape[0] = (num_layer_ - 1)*connects_per_layer_ + num_output_*ch_per_super_node_;
+
+  //weight_shape[1] = connects_per_layer_;
   if (shuffle_)
   {
 	  LOG(INFO) << "shuffle using random shuffle among layers.";
@@ -73,14 +80,23 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 
   Wp_.resize(num_layer_);
   Wpi_.resize(num_layer_);
-
+  vector<int> shape_wp(2);
+  shape_wp[1] = channels_;
   for (int i = 0; i < num_layer_; i++)
   {
 	  Wp_[i].reset(new Blob<Dtype>());
 	  Wpi_[i].reset(new Blob<Dtype>());
-	  Wp_[i]->ReshapeLike(*this->blobs_[0]);
-	  Wpi_[i]->ReshapeLike(*this->blobs_[0]);
+	  shape_wp[0] = channels_;
+	  shape_wp[1] = channels_;
+
+	  Wp_[i]->Reshape(shape_wp);
+	  shape_wp[0] = num_output_;
+	  Wpi_[i]->Reshape(shape_wp);
+	  //Wp_[i]->ReshapeLike(*this->blobs_[0]);
+	  //Wpi_[i]->ReshapeLike(*this->blobs_[0]);
   }
+  shape_wp[0] = num_output_;
+  Wp_[num_layer_ - 1]->Reshape(shape_wp);
   //weight_shape[0] = conv_out_channels_;
   //weight_shape[1] = conv_in_channels_ / group_;
   //for (int i = 0; i < num_spatial_axes_; ++i) {
