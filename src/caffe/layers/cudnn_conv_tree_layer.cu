@@ -183,6 +183,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::Forward_gpu(
 	  LOG(INFO) << "using conv tree." << num_layer_;
 	  first_used = false;
   }
+
   //recover weight to Wp_;
   for (int i = 0; i < num_layer_; i++)
   {
@@ -194,7 +195,8 @@ void CuDNNConvolutionTreeLayer<Dtype>::Forward_gpu(
 		  //re_weights_cache_.mutable_gpu_data(), 
 		  Wp_[i]->mutable_gpu_data(),
 		  //Wp_[i]->num(),
-		  channels_,
+		  //channels_,
+		  intermediate_output_,
 		  ch_per_super_node_,
 		  shuffle_ ? this->blobs_[idx_blob_]->gpu_data() : NULL
 		  );
@@ -207,8 +209,10 @@ void CuDNNConvolutionTreeLayer<Dtype>::Forward_gpu(
    caffe_gpu_gemm(CblasNoTrans,
     CblasNoTrans,
     num_output_,
-    channels_,
-    channels_,
+    //channels_,
+    //channels_,
+	intermediate_output_,
+	intermediate_output_,
     (Dtype)1.0,
     Wpi_[i+1]->gpu_data(),
     //re_weights_cache_.gpu_data(),
@@ -226,14 +230,48 @@ void CuDNNConvolutionTreeLayer<Dtype>::Forward_gpu(
 		  CblasNoTrans,
 		  //channels_,
 		  Wp_[i]->num(),
-		  channels_,
-		  channels_,
+		  //channels_,
+		  //channels_,
+		  intermediate_output_,
+		  intermediate_output_,
 		  (Dtype)1.0,
 		  cache_data,
 		  Wp_[i - 1]->gpu_data(),
 		  (Dtype)0.0, Wp_[i]->mutable_gpu_data());
   }
-  caffe_copy(Wp_[num_layer_ - 1]->count(), Wp_[num_layer_ - 1]->gpu_data(), re_weights_.mutable_gpu_data());
+  if (use_spatial_)
+  {
+	  const int* kernel_shape_data = this->kernel_shape_.cpu_data();
+	  caffe_gpu_set(Sp_W_.count(), (Dtype)0.0, Sp_W_.mutable_gpu_data());
+	  int num_nodes = kernel_shape_data[0] * kernel_shape_data[1] * Sp_W_.num();
+	  recover_weight<Dtype> << <CAFFE_GET_BLOCKS(num_nodes), CAFFE_CUDA_NUM_THREADS >> >(
+		  num_nodes,
+		  this->blobs_[spatial_idx_]->gpu_data(),
+		  //re_weights_cache_.mutable_gpu_data(), 
+		  Sp_W_.mutable_gpu_data(),
+		  //Wp_[i]->num(),
+		  //channels_,
+		  //intermediate_output_,
+		  kernel_shape_data[0] * kernel_shape_data[1] * channels_,
+		  kernel_shape_data[0] * kernel_shape_data[1],
+		  NULL
+		  );
+	  caffe_gpu_gemm(CblasNoTrans,
+		  CblasNoTrans,
+		  //channels_,
+		  Wp_[num_layer_ - 1]->num(),
+		  //channels_,
+		  //channels_,
+		  Sp_W_.channels(),
+		  intermediate_output_,
+		  (Dtype)1.0,
+		  Wp_[num_layer_ - 1]->gpu_data(),
+		  Sp_W_.gpu_data(),
+		  (Dtype)0.0, re_weights_.mutable_gpu_data());
+  }
+  else{
+	  caffe_copy(Wp_[num_layer_ - 1]->count(), Wp_[num_layer_ - 1]->gpu_data(), re_weights_.mutable_gpu_data());
+  }
 
   //caffe_copy(Wp_[0]->count(), Wp_[0]->gpu_data(), Wpi_[0]->mutable_gpu_data());
   //for (int i = 1; i < num_layer_; i++)
@@ -430,6 +468,22 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 	//		weight,
 	//		weight_diff);
 	//}
+	if (use_spatial_)
+	{
+		caffe_gpu_gemm(
+			CblasNoTrans,
+			CblasTrans,
+			num_output_,
+			intermediate_output_,
+			Sp_W_.channels(),
+			(Dtype)1.0,
+			weight_diff,
+			Sp_W_.gpu_data(),
+			(Dtype)0.0, //re_weights_cache2_.mutable_gpu_data()
+			Wp_[num_layer_ - 1]->mutable_gpu_diff()
+			);
+		weight_diff = Wp_[num_layer_ - 1]->mutable_gpu_diff();
+	}
 	for (int i = num_layer_ - 1; i >= 0; i--)
 	{
 		Dtype* cache_data = re_weights_cache_.mutable_gpu_data();
@@ -441,8 +495,10 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 			caffe_gpu_gemm(
 				CblasTrans,
 				CblasNoTrans,
-				channels_,
-				channels_,
+				//channels_,
+				//channels_,
+				intermediate_output_,
+				intermediate_output_,
 				num_output_,
 				(Dtype)1.0,
 				//re_weights2_.gpu_data(),
@@ -463,9 +519,12 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 				CblasNoTrans,
 				CblasTrans,
 				//num_output_,
-				i == num_layer_ - 1 ? num_output_:channels_,
-				channels_,
-				channels_,
+				//i == num_layer_ - 1 ? num_output_:channels_,
+				//channels_,
+				//channels_,
+				i == num_layer_ - 1 ? num_output_ : intermediate_output_,
+				intermediate_output_,
+				intermediate_output_,
 				(Dtype)1.0,
 				//re_weights_cache_.gpu_data(),
 				cache_data,
@@ -488,9 +547,40 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 			cache_data2,
 			this->blobs_[0]->mutable_gpu_diff() + connects_per_layer_*i,
 			//Wp_[i]->num(),
-			channels_,
+			//channels_,
+			intermediate_output_,
 			ch_per_super_node_,
 			shuffle_ ? this->blobs_[idx_blob_]->gpu_data() + i*channels_ : NULL
+			);
+	}
+
+	if (use_spatial_)
+	{
+		const int* kernel_shape_data = this->kernel_shape_.cpu_data();
+		weight_diff = re_weights_.mutable_gpu_diff();
+		caffe_gpu_gemm(
+			CblasTrans,
+			CblasNoTrans,
+			//channels_,
+			//channels_,
+			Sp_W_.num(),
+			Sp_W_.channels(),
+			num_output_,
+			(Dtype)1.0,
+			//re_weights2_.gpu_data(),
+			Wp_[num_layer_-1]->gpu_data(),
+			weight_diff,
+			(Dtype)0.0, //re_weights_cache_.mutable_gpu_data()
+			Sp_W_.mutable_gpu_diff()
+			);
+		int num_nodes = kernel_shape_data[0] * kernel_shape_data[1] * Sp_W_.num();
+		recover_weight_diff<Dtype> << <CAFFE_GET_BLOCKS(num_nodes), CAFFE_CUDA_NUM_THREADS >> >(
+			num_nodes,
+			Sp_W_.gpu_diff(),
+			this->blobs_[spatial_idx_]->mutable_gpu_diff(),
+			kernel_shape_data[0] * kernel_shape_data[1] * channels_,
+			kernel_shape_data[0] * kernel_shape_data[1],
+			NULL
 			);
 	}
 	//************************************

@@ -684,6 +684,8 @@ message ConvolutionParameter {
   optional int32 num_channels_per_supernode = 102 [default = 4];
   optional bool norm_tree_weight = 103 [default = false];
   optional bool shuffle = 104 [default = false];
+  optional int32 intermediate_output = 105 [default = 0];
+  optional int32 num_spatial_per_supernode = 106[default=1];
 }
 
 message CropParameter {

@@ -36,7 +36,7 @@
     <Import Project="..\CommonSettings.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <TargetName>$(ProjectName)_downup</TargetName>
+    <TargetName>$(ProjectName)_sp</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>

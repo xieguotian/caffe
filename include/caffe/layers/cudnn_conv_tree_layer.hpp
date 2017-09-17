@@ -87,6 +87,11 @@ class CuDNNConvolutionTreeLayer : public ConvolutionLayer<Dtype> {
   bool norm_tree_weight_;
   bool shuffle_;
   int idx_blob_;
+  Blob<Dtype> Sp_W_;
+  int intermediate_output_;
+  bool use_spatial_;
+  int spatial_idx_;
+  int num_spatial_per_supernode_;
 };
 #endif
 

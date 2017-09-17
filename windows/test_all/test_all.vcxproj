@@ -38,6 +38,9 @@
   <ImportGroup Label="ExtensionSettings" Condition="'$(CpuOnlyBuild)'=='false'">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA $(CudaVersion).props" />
   </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <TargetName>$(ProjectName)_2</TargetName>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
       <AdditionalDependencies>libcaffe.lib;$(CudaDependencies);%(AdditionalDependencies)</AdditionalDependencies>
