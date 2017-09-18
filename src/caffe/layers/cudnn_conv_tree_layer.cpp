@@ -26,6 +26,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
   norm_tree_weight_ = conv_param.norm_tree_weight();
   shuffle_ = conv_param.shuffle();
   intermediate_output_ = conv_param.intermediate_output();
+  num_spatial_per_supernode_ = conv_param.num_spatial_per_supernode();
 
   //const int* kernel_shape_data = kernel_shape_.cpu_data();
   const int* kernel_shape_data = this->kernel_shape_.cpu_data();
@@ -78,7 +79,8 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 	  //num_layer_ = std::ceil(std::log2(Dtype(channels_ / group_)) / std::log2(ch_per_super_node_));
 	  num_layer_ = std::ceil(std::log2(Dtype(intermediate_output_ / group_)) / std::log2(ch_per_super_node_));
   }
-  LOG(INFO) << "num_layer of conv_tree :" << num_layer_ << " channels per supernode: " << ch_per_super_node_ << "intermediate output: " << intermediate_output_ << "kernel_size: "<<kernel_shape_data[0];
+  LOG(INFO) << "num_layer of conv_tree :" << num_layer_ << " channels per supernode: " << ch_per_super_node_ 
+	  << "intermediate output: " << intermediate_output_ << "kernel_size: " << kernel_shape_data[0] << "num_spatial_per_node: " << num_spatial_per_supernode_;
   //connects_per_layer_ = ch_per_super_node_ * channels_;
   connects_per_layer_ = ch_per_super_node_ * intermediate_output_;
 
@@ -158,7 +160,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 	  this->blobs_.resize(this->blobs_.size() + 1);
 	  spatial_idx_ = this->blobs_.size() - 1;
 	  vector<int> tmp_shape(1);
-	  tmp_shape[0] = kernel_shape_data[0] * kernel_shape_data[1] * intermediate_output_;
+	  tmp_shape[0] = num_spatial_per_supernode_ * kernel_shape_data[0] * kernel_shape_data[1] * intermediate_output_;
 	  this->blobs_[spatial_idx_].reset(new Blob<Dtype>(tmp_shape));
 	  caffe_rng_gaussian<Dtype>(this->blobs_[spatial_idx_]->count(), Dtype(0), std,
 		  this->blobs_[spatial_idx_]->mutable_cpu_data());

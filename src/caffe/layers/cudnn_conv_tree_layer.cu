@@ -222,7 +222,11 @@ void CuDNNConvolutionTreeLayer<Dtype>::Forward_gpu(
   //calculate Wp_;
   for (int i = 1; i < num_layer_; i++)
   {
-	  Dtype* cache_data = i == (num_layer_ - 1) ? re_weights_.mutable_gpu_data() : re_weights_cache_.mutable_gpu_data();
+	  Dtype* cache_data;
+	  if (!use_spatial_)
+		cache_data = i == (num_layer_ - 1) ? re_weights_.mutable_gpu_data() : re_weights_cache_.mutable_gpu_data();
+	  else
+		cache_data = re_weights_cache_.mutable_gpu_data();
 	  caffe_copy(Wp_[i]->count(), 
 		  Wp_[i]->gpu_data(), 
 		  cache_data);
@@ -243,7 +247,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::Forward_gpu(
   {
 	  const int* kernel_shape_data = this->kernel_shape_.cpu_data();
 	  caffe_gpu_set(Sp_W_.count(), (Dtype)0.0, Sp_W_.mutable_gpu_data());
-	  int num_nodes = kernel_shape_data[0] * kernel_shape_data[1] * Sp_W_.num();
+	  int num_nodes = num_spatial_per_supernode_*kernel_shape_data[0] * kernel_shape_data[1] * Sp_W_.num();
 	  recover_weight<Dtype> << <CAFFE_GET_BLOCKS(num_nodes), CAFFE_CUDA_NUM_THREADS >> >(
 		  num_nodes,
 		  this->blobs_[spatial_idx_]->gpu_data(),
@@ -253,7 +257,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::Forward_gpu(
 		  //channels_,
 		  //intermediate_output_,
 		  kernel_shape_data[0] * kernel_shape_data[1] * channels_,
-		  kernel_shape_data[0] * kernel_shape_data[1],
+		  num_spatial_per_supernode_*kernel_shape_data[0] * kernel_shape_data[1],
 		  NULL
 		  );
 	  caffe_gpu_gemm(CblasNoTrans,
@@ -486,8 +490,13 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 	}
 	for (int i = num_layer_ - 1; i >= 0; i--)
 	{
+		Dtype* cache_data2;
+		
 		Dtype* cache_data = re_weights_cache_.mutable_gpu_data();
-		Dtype* cache_data2 = (i == num_layer_ - 1 ? re_weights_cache3_.mutable_gpu_data() : re_weights_cache2_.mutable_gpu_data());
+		if (!use_spatial_)
+			cache_data2 = (i == num_layer_ - 1 ? re_weights_cache3_.mutable_gpu_data() : re_weights_cache2_.mutable_gpu_data());
+		else
+			cache_data2 =  re_weights_cache2_.mutable_gpu_data();
 		
 		//recover gradient
 		if (i < num_layer_ - 1)
@@ -573,13 +582,13 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 			(Dtype)0.0, //re_weights_cache_.mutable_gpu_data()
 			Sp_W_.mutable_gpu_diff()
 			);
-		int num_nodes = kernel_shape_data[0] * kernel_shape_data[1] * Sp_W_.num();
+		int num_nodes = num_spatial_per_supernode_*kernel_shape_data[0] * kernel_shape_data[1] * Sp_W_.num();
 		recover_weight_diff<Dtype> << <CAFFE_GET_BLOCKS(num_nodes), CAFFE_CUDA_NUM_THREADS >> >(
 			num_nodes,
 			Sp_W_.gpu_diff(),
 			this->blobs_[spatial_idx_]->mutable_gpu_diff(),
 			kernel_shape_data[0] * kernel_shape_data[1] * channels_,
-			kernel_shape_data[0] * kernel_shape_data[1],
+			num_spatial_per_supernode_*kernel_shape_data[0] * kernel_shape_data[1],
 			NULL
 			);
 	}

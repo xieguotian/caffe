@@ -88,6 +88,7 @@ TYPED_TEST(CuDNNConvolutionTreeLayerTest, TestGradientCuDNN_4channels_sp) {
 	convolution_param->add_pad(1);
 	convolution_param->set_num_output(16);
 	convolution_param->set_intermediate_output(16);
+	convolution_param->set_num_spatial_per_supernode(2);
 	convolution_param->mutable_weight_filler()->set_type("gaussian");
 	convolution_param->mutable_bias_filler()->set_type("gaussian");
 	CuDNNConvolutionTreeLayer<TypeParam> layer(layer_param);
