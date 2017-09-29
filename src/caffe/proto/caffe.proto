@@ -497,6 +497,7 @@ message TransformationParameter {
   optional bool is_aspect_ration = 13[default=false];
   optional uint32 rotate_num = 14;
   optional bool color_jitter = 15 [default=false];
+  repeated float std_value = 16;
 }
 
 // Message that stores parameters shared by loss layers

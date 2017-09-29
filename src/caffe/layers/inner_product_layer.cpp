@@ -88,9 +88,16 @@ void InnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   top[0]->Reshape(top_shape);
   // Set up the bias multiplier
   if (bias_term_) {
-    vector<int> bias_shape(1, M_);
-    bias_multiplier_.Reshape(bias_shape);
-    caffe_set(M_, Dtype(1), bias_multiplier_.mutable_cpu_data());
+	  if (bias_multiplier_.count() != M_)
+	  {
+		  vector<int> bias_shape(1, M_);
+		  bias_multiplier_.Reshape(bias_shape);
+		  if (Caffe::mode()==Caffe::CPU)
+			caffe_set(M_, Dtype(1), bias_multiplier_.mutable_cpu_data());
+		  else
+			  caffe_gpu_set(M_, Dtype(1), bias_multiplier_.mutable_gpu_data());
+
+	  }
   }
 }
 

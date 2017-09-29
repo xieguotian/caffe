@@ -153,6 +153,8 @@ class DataTransformer {
 	  float SqrtV[3];
   };
   kl_info color_kl_cache_;
+  vector<Dtype> std_values_;
+  bool has_std_values_;
 };
 
 }  // namespace caffe

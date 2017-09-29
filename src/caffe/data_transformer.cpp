@@ -37,6 +37,16 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
       mean_values_.push_back(param_.mean_value(c));
     }
   }
+
+  // check if we want to use std_value
+  has_std_values_ = false;
+  if (param_.std_value_size() > 0) {
+	  std_values_.clear();
+	  for (int c = 0; c < param_.std_value_size(); ++c) {
+		  std_values_.push_back(param_.std_value(c));
+	  }
+	  has_std_values_ = true;
+  }
 }
 
 template<typename Dtype>
@@ -287,7 +297,18 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        Blob<Dtype>* transformed_blob) {
 	cv::Mat tmp_cv_img;
 	// random scale image
+	static int flag_time = 0;
+	static float cvt_time = 0;
+	static float resize_time = 0;
+	//clock_t st2 = clock();
+	
 	cv_img.convertTo(tmp_cv_img, CV_32F);
+	//cvt_time += (clock()-st2);
+	//if (flag_time % 2560 == 0)
+	//{
+	//	LOG(INFO) << "time convert image:" << (cvt_time) / CLOCKS_PER_SEC;
+	//	cvt_time = 0;
+	//}
 	float min_scale = param_.multi_scale_param().min_scale();
 	float max_scale = param_.multi_scale_param().max_scale();
 	int min_length = param_.multi_scale_param().min_length();
@@ -317,8 +338,12 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 			{
 				int pad_width = param_.multi_scale_param().pad_width();
 				cv::Mat  tmp = tmp_cv_img;
+				//copyMakeBorder(tmp, tmp_cv_img, pad_width, pad_width,
+				//	pad_width, pad_width, cv::BORDER_REPLICATE);
+				//copyMakeBorder(tmp, tmp_cv_img, pad_width, pad_width,
+				//	pad_width, pad_width, cv::BORDER_CONSTANT,cv::Scalar(0));
 				copyMakeBorder(tmp, tmp_cv_img, pad_width, pad_width,
-					pad_width, pad_width, cv::BORDER_REPLICATE);
+					pad_width, pad_width, cv::BORDER_REFLECT);
 				int width = tmp_cv_img.rows;
 				CHECK_EQ(width, max_length);
 			}
@@ -389,8 +414,18 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 						int resize_height = std::max((int)(org_height*scale), min_length);
 						int resize_width = std::max((int)(org_width*scale), min_length);
 
+						//static int flag_time = 0;
+
+						//clock_t st = clock();
 						//cv::resize(cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
 						cv::resize(tmp_cv_img, tmp_cv_img, cv::Size(resize_width, resize_height), 0.0, 0.0, interpolation);
+						//resize_time += (clock() - st);
+						//if (flag_time % 2560 == 0)
+						//{
+						//	LOG(INFO) << "time resize image:" << (resize_time) / CLOCKS_PER_SEC;
+						//	resize_time = 0;
+						//}
+						//flag_time++;
 					}
 				}
 			}
@@ -790,6 +825,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 				  else {
 					  top_index = (c * height + h) * width + w;
 				  }
+				  Dtype tmp_scale = has_std_values_ ? 1.0 / std_values_[c] : 1;
 				  // int top_index = (c * height + h) * width + w;
 				  Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
 				  if (has_mean_file) {
@@ -797,21 +833,21 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 					  if (use_crop_mean)
 					  {
 						  transformed_data[top_index] =
-							  (pixel - mean[top_index] + color_shift[c]) * scale;
+							  (pixel - mean[top_index] + color_shift[c]) * scale*tmp_scale;
 					  }
 					  else
 					  {
 						  transformed_data[top_index] =
-							  (pixel - mean[mean_index]+color_shift[c]) * scale;
+							  (pixel - mean[mean_index] + color_shift[c]) * scale*tmp_scale;
 					  }
 				  }
 				  else {
 					  if (has_mean_values) {
 						  transformed_data[top_index] =
-							  (pixel - mean_values_[c]+color_shift[c]) * scale;
+							  (pixel - mean_values_[c] + color_shift[c]) * scale*tmp_scale;
 					  }
 					  else {
-						  transformed_data[top_index] = (pixel + color_shift[c]) * scale;
+						  transformed_data[top_index] = (pixel + color_shift[c]) * scale*tmp_scale;
 					  }
 				  }
 			  }
