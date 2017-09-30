@@ -27,11 +27,11 @@
     <CudaDependencies>cublas.lib;cuda.lib;curand.lib;cudart.lib</CudaDependencies>
   </PropertyGroup>
   <PropertyGroup Condition="'$(UseCuDNN)'=='true'">
-    <CudaDependencies>cudnn_5.lib;$(CudaDependencies)</CudaDependencies>
+    <CudaDependencies>cudnn.lib;$(CudaDependencies)</CudaDependencies>
   </PropertyGroup>
   <PropertyGroup Condition="'$(UseCuDNN)'=='true' And $(CuDnnPath)!=''">
-    <LibraryPath>$(CuDnnPath)\cuda\lib\x64;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(CuDnnPath)\cuda\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(CuDnnPath)\cuda_7\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(CuDnnPath)\cuda_7\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup>
     <OutDir>$(BuildDir)\$(Platform)\$(Configuration)\</OutDir>
