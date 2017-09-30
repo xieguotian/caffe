@@ -26,7 +26,7 @@ void ShuffleChannelLayer<Dtype>::Resize_cpu(Dtype *output, const Dtype *input, i
 
             caffe_copy(len, p_i, p_o);
         }
-    }
+    } 
 }
 
 template <typename Dtype>

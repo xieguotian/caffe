@@ -110,7 +110,8 @@ inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
     cudnnTensorDescriptor_t bottom, cudnnFilterDescriptor_t filter,
     int pad_h, int pad_w, int stride_h, int stride_w) {
   CUDNN_CHECK(cudnnSetConvolution2dDescriptor(*conv,
-      pad_h, pad_w, stride_h, stride_w, 1, 1, CUDNN_CROSS_CORRELATION));
+      pad_h, pad_w, stride_h, stride_w, 1, 1, CUDNN_CROSS_CORRELATION,
+	  cudnnDataType_t::CUDNN_DATA_FLOAT));
 }
 
 template <typename Dtype>
@@ -145,6 +146,10 @@ inline void createActivationDescriptor(cudnnActivationDescriptor_t* activ_desc,
                                            CUDNN_PROPAGATE_NAN, Dtype(0)));
 }
 
+template <typename Dtype>
+inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv, int groupCount) {
+	CUDNN_CHECK(cudnnSetConvolutionGroupCount(*conv,groupCount));
+}
 }  // namespace cudnn
 
 }  // namespace caffe

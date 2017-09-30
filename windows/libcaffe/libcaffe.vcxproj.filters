@@ -426,6 +426,9 @@
     <ClCompile Include="..\..\src\caffe\layers\shuffle_channel_layer.cpp">
       <Filter>src\layers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\cudnn_conv_g_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\caffe\proto\caffe.pb.h">
@@ -752,6 +755,9 @@
     <ClInclude Include="..\..\include\caffe\layers\batch_norm_torch_layer.hpp">
       <Filter>include\layers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\cudnn_conv_g_layer.hpp">
+      <Filter>include\layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\contrastive_loss_layer.cu">
@@ -1004,6 +1010,9 @@
       <Filter>cu\layers</Filter>
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\shuffle_channel_layer.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\cudnn_conv_g_layer.cu">
       <Filter>cu\layers</Filter>
     </CudaCompile>
   </ItemGroup>

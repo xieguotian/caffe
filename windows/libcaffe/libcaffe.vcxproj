@@ -134,6 +134,7 @@
     <ClCompile Include="..\..\src\caffe\layers\conv_dw_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\conv_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\crop_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\cudnn_conv_g_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\cudnn_conv_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\cudnn_conv_mask_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\cudnn_conv_tree_layer.cpp" />
@@ -261,6 +262,7 @@
     <ClInclude Include="..\..\include\caffe\layers\contrastive_loss_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\conv_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\crop_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\cudnn_conv_g_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\cudnn_conv_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\cudnn_conv_mask_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\cudnn_lcn_layer.hpp" />
@@ -416,6 +418,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\cluster_centroid_dist_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\cluster_centroid_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\conv_dw_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\cudnn_conv_g_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\cudnn_conv_mask_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\cudnn_conv_tree_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\entropy_cross_loss_layer.cu" />
