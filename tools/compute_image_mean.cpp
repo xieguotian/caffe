@@ -11,6 +11,7 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
 #include "caffe/util/io.hpp"
+#include "caffe/common.hpp"
 
 using namespace caffe;  // NOLINT(build/namespaces)
 
@@ -20,10 +21,13 @@ using boost::scoped_ptr;
 
 DEFINE_string(backend, "lmdb",
         "The backend {leveldb, lmdb} containing the images");
-
+DEFINE_string(mean, "0,0,0",
+	"The mean for calculate std.");
+DEFINE_bool(force_color, false,
+	"force data color");
 int main(int argc, char** argv) {
   ::google::InitGoogleLogging(argv[0]);
-
+  FLAGS_alsologtostderr = 1;
 #ifdef USE_OPENCV
 #ifndef GFLAGS_GFLAGS_H_
   namespace gflags = google;
@@ -40,7 +44,22 @@ int main(int argc, char** argv) {
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/compute_image_mean");
     return 1;
   }
-
+  vector<string> pre_mean = string_split(FLAGS_mean, ',');
+  vector<float> pre_mean_value;
+  bool is_pre_mean=false;
+  if (FLAGS_mean == "0,0,0")
+  {
+	  is_pre_mean = false;
+  }
+  else
+  {
+	  is_pre_mean = true;
+	  for (int i = 0; i < pre_mean.size(); i++)
+	  {
+		  pre_mean_value.push_back(atof(pre_mean[i].c_str()));
+		  LOG(INFO) << "mean:" << pre_mean_value[i];
+	  }
+  }
   scoped_ptr<db::DB> db(db::GetDB(FLAGS_backend));
   db->Open(argv[1], db::READ);
   scoped_ptr<db::Cursor> cursor(db->NewCursor());
@@ -50,9 +69,17 @@ int main(int argc, char** argv) {
   // load first datum
   Datum datum;
   datum.ParseFromString(cursor->value());
-
-  if (DecodeDatumNative(&datum)) {
-    LOG(INFO) << "Decoding Datum";
+  if (FLAGS_force_color)
+  {
+	  if (DecodeDatum(&datum,FLAGS_force_color)) {
+		  LOG(INFO) << "Decoding Datum";
+	  }
+  }
+  else
+  {
+	  if (DecodeDatumNative(&datum)) {
+		  LOG(INFO) << "Decoding Datum";
+	  }
   }
 
   sum_blob.set_num(1);
@@ -69,6 +96,12 @@ int main(int argc, char** argv) {
   while (cursor->valid()) {
     Datum datum;
     datum.ParseFromString(cursor->value());
+	if (FLAGS_force_color)
+	{
+		if (DecodeDatum(&datum, FLAGS_force_color)) {
+		}
+	}
+	else
     DecodeDatumNative(&datum);
 
     const std::string& data = datum.data();
@@ -79,11 +112,27 @@ int main(int argc, char** argv) {
     if (data.size() != 0) {
       CHECK_EQ(data.size(), size_in_datum);
       for (int i = 0; i < size_in_datum; ++i) {
+		  if (is_pre_mean)
+		  {
+			  int c = i / (datum.height()*datum.width());
+			  float tmp = (uint8_t)data[i] - pre_mean_value[c];
+			  tmp = tmp*tmp;
+			  sum_blob.set_data(i, sum_blob.data(i) + tmp);
+		  }
+		  else
         sum_blob.set_data(i, sum_blob.data(i) + (uint8_t)data[i]);
       }
     } else {
       CHECK_EQ(datum.float_data_size(), size_in_datum);
       for (int i = 0; i < size_in_datum; ++i) {
+		  if (is_pre_mean)
+		  {
+			  int c = i / (datum.height()*datum.width());
+			  float tmp = static_cast<float>(datum.float_data(i)) - pre_mean_value[c];
+			  tmp = tmp*tmp;
+			  sum_blob.set_data(i, sum_blob.data(i) + tmp);
+		  }
+		  else
         sum_blob.set_data(i, sum_blob.data(i) +
             static_cast<float>(datum.float_data(i)));
       }
@@ -114,6 +163,9 @@ int main(int argc, char** argv) {
     for (int i = 0; i < dim; ++i) {
       mean_values[c] += sum_blob.data(dim * c + i);
     }
+	if (is_pre_mean)
+		LOG(INFO) << "mean_value channel [" << c << "]:" << sqrt(mean_values[c] / dim);
+	else
     LOG(INFO) << "mean_value channel [" << c << "]:" << mean_values[c] / dim;
   }
 #else

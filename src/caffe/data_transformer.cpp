@@ -340,10 +340,25 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 				cv::Mat  tmp = tmp_cv_img;
 				//copyMakeBorder(tmp, tmp_cv_img, pad_width, pad_width,
 				//	pad_width, pad_width, cv::BORDER_REPLICATE);
-				//copyMakeBorder(tmp, tmp_cv_img, pad_width, pad_width,
-				//	pad_width, pad_width, cv::BORDER_CONSTANT,cv::Scalar(0));
+				cv::Scalar colorscalar;
+				if (mean_values_.size() == 3)
+				{
+					colorscalar = cv::Scalar(mean_values_[0], mean_values_[1], mean_values_[2]);
+				}
+				else if (mean_values_.size()==1)
+				{
+					colorscalar = cv::Scalar(mean_values_[0]);
+				}
+				else
+				{
+					colorscalar = cv::Scalar(0);
+					LOG(WARNING) << "pad raw 0.";
+				}
+
 				copyMakeBorder(tmp, tmp_cv_img, pad_width, pad_width,
-					pad_width, pad_width, cv::BORDER_REFLECT);
+					pad_width, pad_width, cv::BORDER_CONSTANT,colorscalar);
+				//copyMakeBorder(tmp, tmp_cv_img, pad_width, pad_width,
+				//	pad_width, pad_width, cv::BORDER_REFLECT);
 				int width = tmp_cv_img.rows;
 				CHECK_EQ(width, max_length);
 			}
