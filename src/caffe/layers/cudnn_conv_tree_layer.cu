@@ -37,9 +37,12 @@ namespace caffe {
 			int c_idx = index % channel_in_;
 			//int r_idx = index / 2;
 			int r_idx = index / ch_per_super_node;
+
+			bool skip_or_not = ((index / channel_in_ %ch_per_super_node)==(index%ch_per_super_node));
+
 			if (idx_ptr != NULL)
 				r_idx = idx_ptr[r_idx];
-			output_data[r_idx*channel_in_+c_idx] = input_data[index];
+			output_data[r_idx*channel_in_ + c_idx] = input_data[index] + skip_or_not ? 1 : 0;
 		}
 	}
 
