@@ -16,45 +16,45 @@ namespace caffe {
  */
 template <typename Dtype>
 void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
-    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
+	const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+	ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
 
-  //*****************************************************
-  ConvolutionParameter conv_param = this->layer_param_.convolution_param();
-  num_layer_ = conv_param.num_layer_of_tree();
-  ch_per_super_node_ = conv_param.num_channels_per_supernode();
-  norm_tree_weight_ = conv_param.norm_tree_weight();
-  shuffle_ = conv_param.shuffle();
-  intermediate_output_ = conv_param.intermediate_output();
-  num_spatial_per_supernode_ = conv_param.num_spatial_per_supernode();
+	//*****************************************************
+	ConvolutionParameter conv_param = this->layer_param_.convolution_param();
+	num_layer_ = conv_param.num_layer_of_tree();
+	ch_per_super_node_ = conv_param.num_channels_per_supernode();
+	norm_tree_weight_ = conv_param.norm_tree_weight();
+	shuffle_ = conv_param.shuffle();
+	intermediate_output_ = conv_param.intermediate_output();
+	num_spatial_per_supernode_ = conv_param.num_spatial_per_supernode();
 
-  //const int* kernel_shape_data = kernel_shape_.cpu_data();
-  const int* kernel_shape_data = this->kernel_shape_.cpu_data();
-  use_spatial_ = intermediate_output_ > 0 && kernel_shape_data[0]>1;
-  if (!use_spatial_)
-  {
-	  intermediate_output_ = channels_;
-  }
-  int max_num = std::max(intermediate_output_, num_output_);
-  if (use_spatial_)
-  {
-	  max_num = std::max(max_num, channels_*kernel_shape_data[0] * kernel_shape_data[1]);
-  }
-  
-  // Re-Initialize and fill the weights:
-  // output channels x input channels per-group x kernel height x kernel width
-  re_weights_.ReshapeLike(*this->blobs_[0]);
-  //re_weights2_.ReshapeLike(*this->blobs_[0]);
-  if (!use_spatial_)
-  {
-	  vector<int> shape_cache(2);
-	  shape_cache[0] = intermediate_output_; //channels_;
-	  shape_cache[1] = intermediate_output_; //channels_;
-	  re_weights_cache_.Reshape(shape_cache);
-	  re_weights_cache2_.Reshape(shape_cache);
-	  shape_cache[0] = num_output_;
-	  re_weights_cache3_.Reshape(shape_cache);
-  }
+	//const int* kernel_shape_data = kernel_shape_.cpu_data();
+	const int* kernel_shape_data = this->kernel_shape_.cpu_data();
+	use_spatial_ = intermediate_output_ > 0 && kernel_shape_data[0] > 1;
+	if (!use_spatial_)
+	{
+		intermediate_output_ = channels_;
+	}
+	int max_num = std::max(intermediate_output_, num_output_);
+	if (use_spatial_)
+	{
+		max_num = std::max(max_num, channels_*kernel_shape_data[0] * kernel_shape_data[1]);
+	}
+
+	// Re-Initialize and fill the weights:
+	// output channels x input channels per-group x kernel height x kernel width
+	re_weights_.ReshapeLike(*this->blobs_[0]);
+	//re_weights2_.ReshapeLike(*this->blobs_[0]);
+	if (!use_spatial_)
+	{
+		vector<int> shape_cache(2);
+		shape_cache[0] = intermediate_output_; //channels_;
+		shape_cache[1] = intermediate_output_; //channels_;
+		re_weights_cache_.Reshape(shape_cache);
+		re_weights_cache2_.Reshape(shape_cache);
+		shape_cache[0] = num_output_;
+		re_weights_cache3_.Reshape(shape_cache);
+	}
 	else
 	{
 		vector<int> shape_cache(1);
@@ -63,107 +63,125 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 		re_weights_cache2_.Reshape(shape_cache);
 		re_weights_cache3_.Reshape(shape_cache);
 	}
-  if (use_spatial_)
-  {
-	  vector<int> shape_cache(2);
-	  shape_cache[0] = intermediate_output_;
-	  shape_cache[1] = channels_*kernel_shape_data[0] * kernel_shape_data[1];
-	  Sp_W_.Reshape(shape_cache);
-  }
-  
-  //CHECK_EQ(channels_, num_output_);
-  //weight_shape[0] = std::ceil(std::log2(Dtype(channels_ / group_)));
-  //weight_shape[1] = 2 * num_output_;
-  if (num_layer_ <= 0)
-  {
-	  //num_layer_ = std::ceil(std::log2(Dtype(channels_ / group_)) / std::log2(ch_per_super_node_));
-	  num_layer_ = std::ceil(std::log2(Dtype(intermediate_output_ / group_)) / std::log2(ch_per_super_node_));
-  }
-  LOG(INFO) << "num_layer of conv_tree :" << num_layer_ << " channels per supernode: " << ch_per_super_node_ 
-	  << "intermediate output: " << intermediate_output_ << "kernel_size: " << kernel_shape_data[0] << "num_spatial_per_node: " << num_spatial_per_supernode_;
-  //connects_per_layer_ = ch_per_super_node_ * channels_;
-  connects_per_layer_ = ch_per_super_node_ * intermediate_output_;
+	if (use_spatial_)
+	{
+		vector<int> shape_cache(2);
+		shape_cache[0] = intermediate_output_;
+		shape_cache[1] = channels_*kernel_shape_data[0] * kernel_shape_data[1];
+		Sp_W_.Reshape(shape_cache);
+	}
 
-  vector<int> weight_shape(1);
-  weight_shape[0] = (num_layer_ - 1)*connects_per_layer_ + num_output_*ch_per_super_node_;
+	//CHECK_EQ(channels_, num_output_);
+	//weight_shape[0] = std::ceil(std::log2(Dtype(channels_ / group_)));
+	//weight_shape[1] = 2 * num_output_;
+	if (num_layer_ <= 0)
+	{
+		//num_layer_ = std::ceil(std::log2(Dtype(channels_ / group_)) / std::log2(ch_per_super_node_));
+		num_layer_ = std::ceil(std::log2(Dtype(intermediate_output_ / group_)) / std::log2(ch_per_super_node_));
+	}
+	LOG(INFO) << "num_layer of conv_tree :" << num_layer_ << " channels per supernode: " << ch_per_super_node_
+		<< "intermediate output: " << intermediate_output_ << "kernel_size: " << kernel_shape_data[0] << "num_spatial_per_node: " << num_spatial_per_supernode_;
+	//connects_per_layer_ = ch_per_super_node_ * channels_;
+	connects_per_layer_ = ch_per_super_node_ * intermediate_output_;
 
-  //weight_shape[1] = connects_per_layer_;
-  //if (shuffle_)
-  //{
-	 // LOG(INFO) << "shuffle using random shuffle among layers.";
-	 // vector<int> shape_tmp(2);
-	 // shape_tmp[0] = num_layer_;
-	 // shape_tmp[1] = channels_;
-	 // //this->blobs_.push_back(new Blob<Dtype>(shape_tmp));
-	 // this->blobs_.resize(this->blobs_.size()+1);
-	 // idx_blob_ = this->blobs_.size() - 1;
-	 // this->blobs_[idx_blob_].reset(new Blob<Dtype>(shape_tmp));
-	 // vector<int> idx_shuffle(channels_);
-	 // for (int i = 0; i < channels_; i++)
-		//  idx_shuffle[i] = i;
+	vector<int> weight_shape(1);
+	weight_shape[0] = (num_layer_ - 1)*connects_per_layer_ + num_output_*ch_per_super_node_;
 
-	 // for (int i = 0; i < num_layer_; i++)
-	 // {
-		//  std::random_shuffle(idx_shuffle.begin(), idx_shuffle.end());
-		//  Dtype* idx_ptr = this->blobs_[idx_blob_]->mutable_cpu_data() + i*channels_;
-		//  for (int j = 0; j < channels_; j++)
-		//  {
-		//	  idx_ptr[j] = (Dtype)idx_shuffle[j];
-		//  }
-	 // }
-  //}
-  
+	//weight_shape[1] = connects_per_layer_;
+	//if (shuffle_)
+	//{
+	// LOG(INFO) << "shuffle using random shuffle among layers.";
+	// vector<int> shape_tmp(2);
+	// shape_tmp[0] = num_layer_;
+	// shape_tmp[1] = channels_;
+	// //this->blobs_.push_back(new Blob<Dtype>(shape_tmp));
+	// this->blobs_.resize(this->blobs_.size()+1);
+	// idx_blob_ = this->blobs_.size() - 1;
+	// this->blobs_[idx_blob_].reset(new Blob<Dtype>(shape_tmp));
+	// vector<int> idx_shuffle(channels_);
+	// for (int i = 0; i < channels_; i++)
+	//  idx_shuffle[i] = i;
 
-  Wp_.resize(num_layer_);
-  Wpi_.resize(num_layer_);
-  vector<int> shape_wp(2);
-  //shape_wp[1] = channels_;
-  shape_wp[1] = intermediate_output_;
-  for (int i = 0; i < num_layer_; i++)
-  {
-	  Wp_[i].reset(new Blob<Dtype>());
-	  Wpi_[i].reset(new Blob<Dtype>());
-	  //shape_wp[0] = channels_;
-	  //shape_wp[1] = channels_;
-	  shape_wp[0] = intermediate_output_;
-	  shape_wp[1] = intermediate_output_;
+	// for (int i = 0; i < num_layer_; i++)
+	// {
+	//  std::random_shuffle(idx_shuffle.begin(), idx_shuffle.end());
+	//  Dtype* idx_ptr = this->blobs_[idx_blob_]->mutable_cpu_data() + i*channels_;
+	//  for (int j = 0; j < channels_; j++)
+	//  {
+	//	  idx_ptr[j] = (Dtype)idx_shuffle[j];
+	//  }
+	// }
+	//}
 
-	  Wp_[i]->Reshape(shape_wp);
-	  shape_wp[0] = num_output_;
-	  Wpi_[i]->Reshape(shape_wp);
-	  //Wp_[i]->ReshapeLike(*this->blobs_[0]);
-	  //Wpi_[i]->ReshapeLike(*this->blobs_[0]);
-  }
-  shape_wp[0] = num_output_;
-  Wp_[num_layer_ - 1]->Reshape(shape_wp);
-  //weight_shape[0] = conv_out_channels_;
-  //weight_shape[1] = conv_in_channels_ / group_;
-  //for (int i = 0; i < num_spatial_axes_; ++i) {
-	 // weight_shape.push_back(kernel_shape_data[i]);
-  //}
+
+	Wp_.resize(num_layer_);
+	Wpi_.resize(num_layer_);
+	vector<int> shape_wp(2);
+	//shape_wp[1] = channels_;
+	shape_wp[1] = intermediate_output_;
+	for (int i = 0; i < num_layer_; i++)
+	{
+		Wp_[i].reset(new Blob<Dtype>());
+		Wpi_[i].reset(new Blob<Dtype>());
+		//shape_wp[0] = channels_;
+		//shape_wp[1] = channels_;
+		shape_wp[0] = intermediate_output_;
+		shape_wp[1] = intermediate_output_;
+
+		Wp_[i]->Reshape(shape_wp);
+		shape_wp[0] = num_output_;
+		Wpi_[i]->Reshape(shape_wp);
+		//Wp_[i]->ReshapeLike(*this->blobs_[0]);
+		//Wpi_[i]->ReshapeLike(*this->blobs_[0]);
+	}
+	shape_wp[0] = num_output_;
+	Wp_[num_layer_ - 1]->Reshape(shape_wp);
+	//weight_shape[0] = conv_out_channels_;
+	//weight_shape[1] = conv_in_channels_ / group_;
+	//for (int i = 0; i < num_spatial_axes_; ++i) {
+	// weight_shape.push_back(kernel_shape_data[i]);
+	//}
 
   this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
   shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
 	  this->layer_param_.convolution_param().weight_filler()));
-  weight_filler->Fill(this->blobs_[0].get());	
-  //caffe_gpu_powx(this->blobs_[0]->count(), this->blobs_[0]->gpu_data(), (Dtype)1 / (Dtype)num_layer_, this->blobs_[0]->mutable_gpu_data());
-  //int fan_in = channels_;
-  int fan_in = channels_ * kernel_shape_data[0] * kernel_shape_data[1];
-  Dtype n = fan_in;  // default to fan_in
-  Dtype std = std::pow(sqrt(Dtype(2) / n), use_spatial_ ? 1.0 / num_layer_ : 1.0 / (num_layer_ + 1));
-  caffe_rng_gaussian<Dtype>(this->blobs_[0]->count(), Dtype(0), std,
-	  this->blobs_[0]->mutable_cpu_data());
-  sigma_ = std;
 
-  if (use_spatial_)
+  if (false)
   {
-	  this->blobs_.resize(this->blobs_.size() + 1);
-	  spatial_idx_ = this->blobs_.size() - 1;
-	  vector<int> tmp_shape(1);
-	  tmp_shape[0] = num_spatial_per_supernode_ * kernel_shape_data[0] * kernel_shape_data[1] * intermediate_output_;
-	  this->blobs_[spatial_idx_].reset(new Blob<Dtype>(tmp_shape));
-	  caffe_rng_gaussian<Dtype>(this->blobs_[spatial_idx_]->count(), Dtype(0), std,
-		  this->blobs_[spatial_idx_]->mutable_cpu_data());
+	  //version 2 for initialization
+	  for (int num_l = 0; num_l < num_layer_; num_l++)
+	  {
+		  vector<int> tmp_shape(2);
+		  tmp_shape[0] = (num_l == (num_layer_ - 1)) ? num_output_ : intermediate_output_;
+		  tmp_shape[1] = ch_per_super_node_;
+		  Blob<Dtype> tmp_blob(tmp_shape);
+		  tmp_blob.set_cpu_data(this->blobs_[0]->mutable_cpu_data() + num_l*intermediate_output_*ch_per_super_node_);
+		  weight_filler->Fill(&tmp_blob);
+	  }
+  }
+  else
+  {
+	  //version 1 for initialization
+	  weight_filler->Fill(this->blobs_[0].get());
+	  //caffe_gpu_powx(this->blobs_[0]->count(), this->blobs_[0]->gpu_data(), (Dtype)1 / (Dtype)num_layer_, this->blobs_[0]->mutable_gpu_data());
+	  //int fan_in = channels_;
+	  int fan_in = channels_ * kernel_shape_data[0] * kernel_shape_data[1];
+	  Dtype n = fan_in;  // default to fan_in
+	  Dtype std = std::pow(sqrt(Dtype(2) / n), use_spatial_ ? 1.0 / num_layer_ : 1.0 / (num_layer_ + 1));
+	  caffe_rng_gaussian<Dtype>(this->blobs_[0]->count(), Dtype(0), std,
+		  this->blobs_[0]->mutable_cpu_data());
+	  sigma_ = std;
+
+	  if (use_spatial_)
+	  {
+		  this->blobs_.resize(this->blobs_.size() + 1);
+		  spatial_idx_ = this->blobs_.size() - 1;
+		  vector<int> tmp_shape(1);
+		  tmp_shape[0] = num_spatial_per_supernode_ * kernel_shape_data[0] * kernel_shape_data[1] * intermediate_output_;
+		  this->blobs_[spatial_idx_].reset(new Blob<Dtype>(tmp_shape));
+		  caffe_rng_gaussian<Dtype>(this->blobs_[spatial_idx_]->count(), Dtype(0), std,
+			  this->blobs_[spatial_idx_]->mutable_cpu_data());
+	  }
   }
   //*********************************************
 
