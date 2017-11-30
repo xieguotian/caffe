@@ -2,7 +2,7 @@
 #define CAFFE_UTIL_CUDNN_H_
 #ifdef USE_CUDNN
 
-#include <cudnn.h>
+#include "cudnn_v7.h"
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -111,7 +111,7 @@ inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
     int pad_h, int pad_w, int stride_h, int stride_w) {
   CUDNN_CHECK(cudnnSetConvolution2dDescriptor(*conv,
       pad_h, pad_w, stride_h, stride_w, 1, 1, CUDNN_CROSS_CORRELATION,
-	  cudnnDataType_t::CUDNN_DATA_FLOAT));
+	  CUDNN_DATA_FLOAT));
 }
 
 template <typename Dtype>

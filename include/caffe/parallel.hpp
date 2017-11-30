@@ -115,8 +115,8 @@ class P2PSync : public GPUParams<Dtype>, public Solver<Dtype>::Callback,
   shared_ptr<Solver<Dtype> > solver_;
   Dtype parent_loss_;
   Dtype smoothed_loss_tmp_;
-  vector<shared_ptr<Blob<Dtype>>> parent_result_;
-  vector<shared_ptr<Blob<Dtype>>> show_result_;
+  vector<shared_ptr<Blob<Dtype> > > parent_result_;
+  vector<shared_ptr<Blob<Dtype> > > show_result_;
 
   using Params<Dtype>::size_;
   using Params<Dtype>::data_;

@@ -79,16 +79,16 @@ class DataReader {
 	vector<string> key_list;
 	vector<int> label_list;
 	vector<int> key_index;
-	vector<vector<float>> kl_info_vec;
+	vector<vector<float> > kl_info_vec;
 
 	int key_position;
 	bool use_other_label = false;
 	bool use_key_files = false;
 
-	vector<vector<string>> key_list_set;
-	vector<vector<int>> label_list_set;
-	vector<vector<int>> key_index_set;
-	vector<vector<vector<float>>> kl_info_set;
+	vector<vector<string> > key_list_set;
+	vector<vector<int> > label_list_set;
+	vector<vector<int> > key_index_set;
+	vector<vector<vector<float> > > kl_info_set;
 	vector<int> key_pos_set;
 	vector<int> random_sequence;
 	int cursor_idx;

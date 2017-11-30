@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "caffe/layers/cudnn_conv_layer.hpp"
-#include "caffe\filler.hpp"
+#include "caffe/filler.hpp"
 namespace caffe {
 
 // Set to three for the benefit of the backward pass, which
@@ -145,11 +145,11 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
         this->channels_ / this->group_, height, width,
         this->channels_ * height * width,
         height * width, width, 1);
-	if (is_direct_connect_)
+	if (this->is_direct_connect_)
 		cudnn::setTensor4dDesc<Dtype>(&top_descs_[i],
 		this->num_,
 		this->num_output_ / this->group_, height_out, width_out,
-		(this->num_output_ + direct_num_) * this->out_spatial_dim_,
+		(this->num_output_ + this->direct_num_) * this->out_spatial_dim_,
 		this->out_spatial_dim_, width_out, 1);
 	else
     cudnn::setTensor4dDesc<Dtype>(&top_descs_[i],

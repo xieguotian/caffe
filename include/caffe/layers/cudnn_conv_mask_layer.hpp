@@ -48,7 +48,7 @@ class CuDNNConvolutionMaskLayer : public ConvolutionLayer<Dtype> {
 	  LOG(INFO) << "Release caches";
   }
 
-  virtual vector<shared_ptr<Blob<unsigned char>>> get_mask_caches(){ return mask_caches_; }
+  virtual vector<shared_ptr<Blob<unsigned char> > > get_mask_caches(){ return mask_caches_; }
  protected:
 	 virtual void Base_Reshape(const vector<Blob<Dtype>*>& bottom,
 		 const vector<Blob<Dtype>*>& top);
@@ -79,9 +79,9 @@ class CuDNNConvolutionMaskLayer : public ConvolutionLayer<Dtype> {
   static map<string,void *> workspaceData;  // underlying storage
   void **workspace;  // aliases into workspaceData
 
-  static map <string, shared_ptr<Blob<Dtype>>> thread_caches_;
+  static map <string, shared_ptr<Blob<Dtype> > > thread_caches_;
   string thread_id_;
-  vector<shared_ptr<Blob<unsigned char>>> mask_caches_;
+  vector<shared_ptr<Blob<unsigned char> > > mask_caches_;
 
   float factor_ = 1.0;
 };

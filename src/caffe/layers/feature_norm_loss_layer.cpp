@@ -11,7 +11,7 @@ void FeatureNormLossLayer<Dtype>::Reshape(
   LossLayer<Dtype>::Reshape(bottom, top);
   cache_.ReshapeLike(*bottom[0]);
   vector<int> shape;
-  shape.push_back(max(bottom[0]->channels(),bottom[0]->num()));
+  shape.push_back(std::max(bottom[0]->channels(),bottom[0]->num()));
   ones_.Reshape(shape);
   caffe_set(ones_.count(), (Dtype)1.0, ones_.mutable_cpu_data());
   shape[0] = bottom[0]->num();

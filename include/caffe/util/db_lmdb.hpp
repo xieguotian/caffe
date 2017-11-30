@@ -8,7 +8,7 @@
 #include "lmdb.h"
 
 #include "caffe/util/db.hpp"
-#include <windows.h>
+//#include <windows.h>
 namespace caffe { namespace db {
 
 inline void MDB_CHECK(int mdb_status) {
@@ -39,7 +39,7 @@ class LMDBCursor : public Cursor {
   virtual void SeekByKey(string key)
   {
 	  char* key_char = new char[key.length()+1];
-	  std::strcpy(key_char, key.c_str());
+	  strcpy(key_char, key.c_str());
 	  //if (mdb_key_.mv_data != NULL)
 		  //delete mdb_key_.mv_data;
 	  mdb_key_.mv_data = key_char;//key.c_str();

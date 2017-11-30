@@ -13,7 +13,7 @@ namespace caffe
 		ShrinkageParameter shrinkage_param = this->layer_param_.shrinkage_param();
 		this->blobs_.resize(1);
 		this->blobs_[0].reset(new Blob<Dtype>(1, bottom[0]->channels(), 1, 1));
-		shared_ptr<Filler<Dtype>> th_filler(GetFiller<Dtype>(
+		shared_ptr<Filler<Dtype> > th_filler(GetFiller<Dtype>(
 			shrinkage_param.threshold_filler()));
 		th_filler->Fill(this->blobs_[0].get());
 	}

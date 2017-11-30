@@ -10,7 +10,7 @@ namespace bp = boost::python;
 #include <map>
 #include <string>
 #include <vector>
-#include <direct.h>
+//#include <direct.h>
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
@@ -63,7 +63,8 @@ void initGlog()
 	FLAGS_log_dirs = FLAGS_log_dirs + "\\";
 	//FLAGS_log_dir = ".\\log\\";
 	if (!boost::filesystem::exists(FLAGS_log_dirs))
-		_mkdir(FLAGS_log_dirs.c_str());
+		//_mkdir(FLAGS_log_dirs.c_str());
+               CHECK_EQ(mkdir(FLAGS_log_dirs.c_str(), 0744), 0) << "mkdir " << FLAGS_log_dirs.c_str() << "failed";
 
 	std::string LOG_INFO_FILE;
 	std::string LOG_WARNING_FILE;

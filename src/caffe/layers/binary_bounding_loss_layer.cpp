@@ -14,7 +14,7 @@ namespace caffe {
 		shape_tmp.push_back(bottom[0]->channels());
 		this->blobs_[0].reset(new Blob<Dtype>(shape_tmp));
 
-		shared_ptr<Filler<Dtype>> centroid_filler(GetFiller<Dtype>(
+		shared_ptr<Filler<Dtype> > centroid_filler(GetFiller<Dtype>(
 			this->layer_param_.cluster_centroid_param().centroid_filler()));
 
 		centroid_filler->Fill(this->blobs_[0].get());

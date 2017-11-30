@@ -1,4 +1,4 @@
-#include "caffe\layers\SwapMaxLayer.hpp"
+#include "caffe/layers/SwapMaxLayer.hpp"
 
 namespace caffe{
 #ifdef CPU_ONLY

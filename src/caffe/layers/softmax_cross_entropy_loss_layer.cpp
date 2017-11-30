@@ -140,7 +140,7 @@ void SoftmaxCrossEntropyLossLayer<Dtype>::Forward_cpu(
 
   for (int idx = 0; idx < bottom[0]->count(); ++idx)
   {
-	  loss -= label[idx] * log(max(prob_data[idx], Dtype(FLT_MIN)));
+	  loss -= label[idx] * std::log(std::max(prob_data[idx], Dtype(FLT_MIN)));
   }
 
   top[0]->mutable_cpu_data()[0] = loss / get_normalizer(normalization_, outer_num_*inner_num_);

@@ -141,3 +141,5 @@ src/caffe/layers/batch_norm_opt_layer_org.cu
 
 Build2/*
 libraries/*
+
+3rd_lib/*

@@ -44,7 +44,7 @@ namespace caffe {
 		int height_out_, width_out_;
 		int num_output_;
 		int top_N_;
-		shared_ptr<NeighborDistLayer<Dtype>> nei_dist_layer;
+		shared_ptr<NeighborDistLayer<Dtype> > nei_dist_layer;
 		vector<Blob<Dtype>*> nei_dist_top_vec;
 		vector<Blob<Dtype>*> nei_dist_bottom_vec;
 

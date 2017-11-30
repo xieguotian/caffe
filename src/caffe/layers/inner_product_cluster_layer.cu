@@ -89,8 +89,8 @@ void InnerProductClusterLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& t
     // Gradient with respect to weight
 	const Dtype* weight_tmp;
 	Dtype lr = 1;
-	if (layer_param_.loss_weight_size() > 0)
-		lr = layer_param_.loss_weight(0);
+	if (this->layer_param_.loss_weight_size() > 0)
+		lr = this->layer_param_.loss_weight(0);
 	for (int n = 0; n < M_; n++)
 	{
 		int label = labels[n];

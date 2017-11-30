@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "caffe/layers/cudnn_conv_tree_layer.hpp"
-#include "caffe\filler.hpp"
+#include "caffe/filler.hpp"
 namespace caffe {
 
 // Set to three for the benefit of the backward pass, which
@@ -33,12 +33,12 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 	use_spatial_ = intermediate_output_ > 0 && kernel_shape_data[0] > 1;
 	if (!use_spatial_)
 	{
-		intermediate_output_ = channels_;
+		intermediate_output_ = this->channels_;
 	}
-	int max_num = std::max(intermediate_output_, num_output_);
+	int max_num = std::max(intermediate_output_, this->num_output_);
 	if (use_spatial_)
 	{
-		max_num = std::max(max_num, channels_*kernel_shape_data[0] * kernel_shape_data[1]);
+		max_num = std::max(max_num, this->channels_*kernel_shape_data[0] * kernel_shape_data[1]);
 	}
 
 	// Re-Initialize and fill the weights:
@@ -52,7 +52,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 		shape_cache[1] = intermediate_output_; //channels_;
 		re_weights_cache_.Reshape(shape_cache);
 		re_weights_cache2_.Reshape(shape_cache);
-		shape_cache[0] = num_output_;
+		shape_cache[0] = this->num_output_;
 		re_weights_cache3_.Reshape(shape_cache);
 	}
 	else
@@ -67,7 +67,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 	{
 		vector<int> shape_cache(2);
 		shape_cache[0] = intermediate_output_;
-		shape_cache[1] = channels_*kernel_shape_data[0] * kernel_shape_data[1];
+		shape_cache[1] = this->channels_*kernel_shape_data[0] * kernel_shape_data[1];
 		Sp_W_.Reshape(shape_cache);
 	}
 
@@ -77,7 +77,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 	if (num_layer_ <= 0)
 	{
 		//num_layer_ = std::ceil(std::log2(Dtype(channels_ / group_)) / std::log2(ch_per_super_node_));
-		num_layer_ = std::ceil(std::log2(Dtype(intermediate_output_ / group_)) / std::log2(ch_per_super_node_));
+		num_layer_ = std::ceil(std::log2(Dtype(intermediate_output_ / this->group_)) / std::log2(ch_per_super_node_));
 	}
 	LOG(INFO) << "num_layer of conv_tree :" << num_layer_ << " channels per supernode: " << ch_per_super_node_
 		<< "intermediate output: " << intermediate_output_ << "kernel_size: " << kernel_shape_data[0] << "num_spatial_per_node: " << num_spatial_per_supernode_;
@@ -85,7 +85,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 	connects_per_layer_ = ch_per_super_node_ * intermediate_output_;
 
 	vector<int> weight_shape(1);
-	weight_shape[0] = (num_layer_ - 1)*connects_per_layer_ + num_output_*ch_per_super_node_;
+	weight_shape[0] = (num_layer_ - 1)*connects_per_layer_ + this->num_output_*ch_per_super_node_;
 
 	//weight_shape[1] = connects_per_layer_;
 	//if (shuffle_)
@@ -129,12 +129,12 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 		shape_wp[1] = intermediate_output_;
 
 		Wp_[i]->Reshape(shape_wp);
-		shape_wp[0] = num_output_;
+		shape_wp[0] = this->num_output_;
 		Wpi_[i]->Reshape(shape_wp);
 		//Wp_[i]->ReshapeLike(*this->blobs_[0]);
 		//Wpi_[i]->ReshapeLike(*this->blobs_[0]);
 	}
-	shape_wp[0] = num_output_;
+	shape_wp[0] = this->num_output_;
 	Wp_[num_layer_ - 1]->Reshape(shape_wp);
 	//weight_shape[0] = conv_out_channels_;
 	//weight_shape[1] = conv_in_channels_ / group_;
@@ -152,7 +152,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 	  for (int num_l = 0; num_l < num_layer_; num_l++)
 	  {
 		  vector<int> tmp_shape(2);
-		  tmp_shape[0] = (num_l == (num_layer_ - 1)) ? num_output_ : intermediate_output_;
+		  tmp_shape[0] = (num_l == (num_layer_ - 1)) ? this->num_output_ : intermediate_output_;
 		  tmp_shape[1] = ch_per_super_node_;
 		  Blob<Dtype> tmp_blob(tmp_shape);
 		  tmp_blob.set_cpu_data(this->blobs_[0]->mutable_cpu_data() + num_l*intermediate_output_*ch_per_super_node_);
@@ -165,7 +165,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 	  weight_filler->Fill(this->blobs_[0].get());
 	  //caffe_gpu_powx(this->blobs_[0]->count(), this->blobs_[0]->gpu_data(), (Dtype)1 / (Dtype)num_layer_, this->blobs_[0]->mutable_gpu_data());
 	  //int fan_in = channels_;
-	  int fan_in = channels_ * kernel_shape_data[0] * kernel_shape_data[1];
+	  int fan_in = this->channels_ * kernel_shape_data[0] * kernel_shape_data[1];
 	  Dtype n = fan_in;  // default to fan_in
 	  Dtype std = std::pow(sqrt(Dtype(2) / n), use_spatial_ ? 1.0 / num_layer_ : 1.0 / (num_layer_ + 1));
 	  caffe_rng_gaussian<Dtype>(this->blobs_[0]->count(), Dtype(0), std,
@@ -312,11 +312,11 @@ void CuDNNConvolutionTreeLayer<Dtype>::Reshape(
         this->channels_ / this->group_, height, width,
         this->channels_ * height * width,
         height * width, width, 1);
-	if (is_direct_connect_)
+	if (this->is_direct_connect_)
 		cudnn::setTensor4dDesc<Dtype>(&top_descs_[i],
 		this->num_,
 		this->num_output_ / this->group_, height_out, width_out,
-		(this->num_output_ + direct_num_) * this->out_spatial_dim_,
+		(this->num_output_ + this->direct_num_) * this->out_spatial_dim_,
 		this->out_spatial_dim_, width_out, 1);
 	else
     cudnn::setTensor4dDesc<Dtype>(&top_descs_[i],

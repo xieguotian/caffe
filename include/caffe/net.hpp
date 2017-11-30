@@ -11,7 +11,7 @@
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "util\half_util.hpp"
+#include "caffe/util/half_util.hpp"
 #include "caffe/layers/cudnn_conv_mask_layer.hpp"
 
 namespace caffe {
@@ -325,7 +325,7 @@ class Net {
   //new add blob information for diff and data sharing
   vector<bool> blobs_deletable_;
   vector<int> blob_used_counter_;
-  vector<shared_ptr<Blob<Dtype>> > shared_blobs_;
+  vector<shared_ptr<Blob<Dtype> > > shared_blobs_;
   vector<int> shared_record_;
   vector<int> shared_blobs_index_;
 
@@ -335,7 +335,7 @@ class Net {
   vector<int> shared_blobs_diff_index_;
 
   // half float point
-  vector<shared_ptr<SyncedMemory>> half_blobs_;
+  vector<shared_ptr<SyncedMemory> > half_blobs_;
   bool half_support_;
   /// bottom_vecs stores the vectors containing the input for each layer.
   /// They don't actually host the blobs (blobs_ does), so we simply store
@@ -386,14 +386,14 @@ class Net {
 
   // allocate diff cache according to layer types.
   vector<string> layer_types_;
-  //map<string, vector<Blob<Dtype>*>> diff_caches_;
-  //map<string, vector<int>> diff_caches_used_;
+  //map<string, vector<Blob<Dtype>*> > diff_caches_;
+  //map<string, vector<int> > diff_caches_used_;
   //vector<string> layer_type_record_;
   //vector<int> used_cache_record_;
   bool opt_memory_;
   bool opt_test_shared_memory_;
   bool show_asum_debug_;
-  map<string, vector<Dtype>> show_asum_info_;
+  map<string, vector<Dtype> > show_asum_info_;
 
   bool is_signal_decay_;
   Dtype signal_decay_;

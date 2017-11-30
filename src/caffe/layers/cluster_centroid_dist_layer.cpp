@@ -20,7 +20,7 @@ namespace caffe{
 
 			this->blobs_.resize(1);
 			this->blobs_[0].reset(new Blob<Dtype>(cluster_shape));
-			shared_ptr<Filler<Dtype>> cluster_filler(GetFiller<Dtype>(
+			shared_ptr<Filler<Dtype> > cluster_filler(GetFiller<Dtype>(
 				this->layer_param_.cluster_centroid_param().centroid_filler()));
 			cluster_filler->Fill(this->blobs_[0].get());
 			bool isinit = this->layer_param_.binary_bounding_param().not_initialed();

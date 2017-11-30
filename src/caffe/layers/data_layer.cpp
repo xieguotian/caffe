@@ -232,7 +232,7 @@ void TransformThread<Dtype>::init(
 	transform_data_full_ = transform_full;
 	transform_data_free_ = transform_free;
 	datum_free_ = datum_free;
-	InitRand();
+	this->InitRand();
 	StartInternalThread();
 }
 INSTANTIATE_CLASS(TransformThread);

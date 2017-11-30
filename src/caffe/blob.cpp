@@ -624,6 +624,66 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
   }
 }
 
+
+template <>
+void Blob<float>::to_bin(Blob<float> &bin, Blob<float> &ampl) const
+{
+	bin.ReshapeLike(*this);
+	vector<int> shape_tmp;
+	shape_tmp.push_back(bin.num());
+	ampl.Reshape(shape_tmp);
+	Blob<float> ones;
+
+	shape_tmp[0] = channels()*height()*width();
+	ones.Reshape(shape_tmp);
+	caffe_gpu_set(ones.count(), (float)1.0, ones.mutable_gpu_data());
+
+	// binarize weight
+	caffe_gpu_sign(count_, gpu_data(), bin.mutable_gpu_data());
+	// calculate abs(weight)
+	caffe_gpu_abs(count_, gpu_data(), bin.mutable_gpu_diff());
+
+	caffe_gpu_gemm(CblasNoTrans, CblasNoTrans,
+		num(), 1,
+		channels()*height()*width(),
+		(float)(1.0 / num()),
+		//this->blobs_[0]->gpu_data(),
+		bin.gpu_diff(),
+		ones.gpu_data(),
+		(float)0.0,
+		ampl.mutable_gpu_data()
+		);
+}
+template <>
+void Blob<double>::to_bin(Blob<double> &bin, Blob<double> &ampl) const
+{
+	bin.ReshapeLike(*this);
+	vector<int> shape_tmp;
+	shape_tmp.push_back(bin.num());
+	ampl.Reshape(shape_tmp);
+	Blob<double> ones;
+
+	shape_tmp[0] = channels()*height()*width();
+	ones.Reshape(shape_tmp);
+	caffe_gpu_set(ones.count(), (double)1.0, ones.mutable_gpu_data());
+
+	// binarize weight
+	caffe_gpu_sign(count_, gpu_data(), bin.mutable_gpu_data());
+	// calculate abs(weight)
+	caffe_gpu_abs(count_, gpu_data(), bin.mutable_gpu_diff());
+
+	caffe_gpu_gemm(CblasNoTrans, CblasNoTrans,
+		num(), 1,
+		channels()*height()*width(),
+		(double)(1.0 / num()),
+		//this->blobs_[0]->gpu_data(),
+		bin.gpu_diff(),
+		ones.gpu_data(),
+		(double)0.0,
+		ampl.mutable_gpu_data()
+		);
+}
+
 template <>
 void Blob<double>::ToProto(BlobProto* proto, bool write_diff, bool save_as_bin) const {
   proto->clear_shape();
@@ -754,72 +814,15 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff, bool save_as_bin) c
   }
 }
 
-template <>
-void Blob<float>::to_bin(Blob<float> &bin, Blob<float> &ampl) const
-{
-	bin.ReshapeLike(*this);
-	vector<int> shape_tmp;
-	shape_tmp.push_back(bin.num());
-	ampl.Reshape(shape_tmp);
-	Blob<float> ones;
 
-	shape_tmp[0] = channels()*height()*width();
-	ones.Reshape(shape_tmp);
-	caffe_gpu_set(ones.count(), (float)1.0, ones.mutable_gpu_data());
-
-	// binarize weight
-	caffe_gpu_sign(count_, gpu_data(), bin.mutable_gpu_data());
-	// calculate abs(weight)
-	caffe_gpu_abs(count_, gpu_data(), bin.mutable_gpu_diff());
-
-	caffe_gpu_gemm(CblasNoTrans, CblasNoTrans,
-		num(), 1,
-		channels()*height()*width(),
-		(float)(1.0 / num()),
-		//this->blobs_[0]->gpu_data(),
-		bin.gpu_diff(),
-		ones.gpu_data(),
-		(float)0.0,
-		ampl.mutable_gpu_data()
-		);
-}
-template <>
-void Blob<double>::to_bin(Blob<double> &bin, Blob<double> &ampl) const
-{
-	bin.ReshapeLike(*this);
-	vector<int> shape_tmp;
-	shape_tmp.push_back(bin.num());
-	ampl.Reshape(shape_tmp);
-	Blob<double> ones;
-
-	shape_tmp[0] = channels()*height()*width();
-	ones.Reshape(shape_tmp);
-	caffe_gpu_set(ones.count(), (double)1.0, ones.mutable_gpu_data());
-
-	// binarize weight
-	caffe_gpu_sign(count_, gpu_data(), bin.mutable_gpu_data());
-	// calculate abs(weight)
-	caffe_gpu_abs(count_, gpu_data(), bin.mutable_gpu_diff());
-
-	caffe_gpu_gemm(CblasNoTrans, CblasNoTrans,
-		num(), 1,
-		channels()*height()*width(),
-		(double)(1.0 / num()),
-		//this->blobs_[0]->gpu_data(),
-		bin.gpu_diff(),
-		ones.gpu_data(),
-		(double)0.0,
-		ampl.mutable_gpu_data()
-		);
-}
 
 template <>
-void Blob<char>::to_bin(Blob<char> &bin, Blob<char> &ampl) const
+void Blob<char>::to_bin(Blob<char> &bin, Blob<char> &ampl)  const
 {
 	NOT_IMPLEMENTED;
 }
 template <>
-void Blob<unsigned char>::to_bin(Blob<unsigned char> &bin, Blob<unsigned char> &ampl) const
+void Blob<unsigned char>::to_bin(Blob<unsigned char> &bin, Blob<unsigned char> &ampl)  const
 {
 	NOT_IMPLEMENTED;
 }

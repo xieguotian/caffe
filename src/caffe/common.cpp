@@ -6,10 +6,10 @@
 
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
-#include <process.h>
-#include <direct.h>
-#include <boost\date_time.hpp>
-#include <boost\filesystem.hpp>
+//#include <process.h>
+//#include <direct.h>
+#include <boost/date_time.hpp>
+#include <boost/filesystem.hpp>
 
 namespace caffe {
 

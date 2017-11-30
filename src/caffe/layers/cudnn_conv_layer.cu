@@ -134,7 +134,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
     sync_conv_groups<<<1, 1>>>();
   }
 
-  if (is_direct_connect_)
+  if (this->is_direct_connect_)
   {
 	  int idx_param_idx = this->blobs_.size() - 1;
 	  for (int i = 0; i < bottom.size(); ++i)
@@ -148,7 +148,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 			  {
 				  caffe_copy(bottom[i]->count(2),
 					  bottom_data + bottom[i]->offset(n, sel_idx),
-					  top_data + top[i]->offset(n, idx + num_output_));
+					  top_data + top[i]->offset(n, idx + this->num_output_));
 			  }
 		  }
 	  }
@@ -262,7 +262,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 		}
 	}
 
-  if (is_direct_connect_)
+  if (this->is_direct_connect_)
   {
 	  int idx_param_idx = this->blobs_.size() - 1;
 	  for (int i = 0; i < bottom.size(); ++i)
@@ -275,7 +275,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 			  for (int n = 0; n < bottom[i]->num(); ++n)
 			  {
 				  caffe_gpu_axpy(bottom[i]->count(2), (Dtype)1.0,
-					  top_diff + top[i]->offset(n, idx + num_output_),
+					  top_diff + top[i]->offset(n, idx + this->num_output_),
 					  bottom_diff + bottom[i]->offset(n, sel_idx));
 			  }
 		  }

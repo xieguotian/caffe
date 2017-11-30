@@ -92,7 +92,7 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat>& mat_vector,
 #endif  // USE_OPENCV
 
 template <typename Dtype>
-void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n, bool is_transformed=false) {
+void MemoryDataLayer<Dtype>::Reset(Dtype* data, Dtype* labels, int n, bool is_transformed) {
   CHECK(data);
   CHECK(labels);
   CHECK_EQ(n % batch_size_, 0) << "n must be a multiple of batch size";

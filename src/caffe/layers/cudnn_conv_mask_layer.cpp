@@ -5,14 +5,14 @@
 #include "caffe/layers/cudnn_conv_mask_layer.hpp"
 #include "caffe/filler.hpp"
 namespace caffe {
-	template <> map<string, shared_ptr<Blob<double>>> CuDNNConvolutionMaskLayer<double>::thread_caches_ = map<string, shared_ptr<Blob<double>>>();
-	template <> map<string, shared_ptr<Blob<float>>> CuDNNConvolutionMaskLayer<float>::thread_caches_ = map<string, shared_ptr<Blob<float>>>();
+	template <> map<string, shared_ptr<Blob<double> > > CuDNNConvolutionMaskLayer<double>::thread_caches_ = map<string, shared_ptr<Blob<double> > >();
+	template <> map<string, shared_ptr<Blob<float> > > CuDNNConvolutionMaskLayer<float>::thread_caches_ = map<string, shared_ptr<Blob<float> > >();
 
-	template <> map<string, void *> CuDNNConvolutionMaskLayer<double>::workspaceData;
-	template <> map<string, void *> CuDNNConvolutionMaskLayer<float>::workspaceData;
+	template <> map<string, void *> CuDNNConvolutionMaskLayer<double>::workspaceData=map<string, void *>();
+	template <> map<string, void *> CuDNNConvolutionMaskLayer<float>::workspaceData=map<string, void *>();
 
-	template <> map<string, size_t>  CuDNNConvolutionMaskLayer<double>::workspaceSizeInBytes;
-	template <> map<string, size_t>  CuDNNConvolutionMaskLayer<float>::workspaceSizeInBytes;
+	template <> map<string, size_t>  CuDNNConvolutionMaskLayer<double>::workspaceSizeInBytes=map<string, size_t>();
+	template <> map<string, size_t>  CuDNNConvolutionMaskLayer<float>::workspaceSizeInBytes=map<string, size_t>();
 	boost::mutex caches_mutex_;
 
 // Set to three for the benefit of the backward pass, which
@@ -285,7 +285,7 @@ void CuDNNConvolutionMaskLayer<Dtype>::Reshape(
   }
   caches_mutex_.unlock();
 
-  shared_ptr<Blob<Dtype>> caches_;
+  shared_ptr<Blob<Dtype> > caches_;
   caches_ = thread_caches_[thread_id_];
   for (int i = 0; i < top.size(); ++i)
   {
@@ -339,11 +339,11 @@ template <typename Dtype>
 void CuDNNConvolutionMaskLayer<Dtype>::Base_Reshape(const vector<Blob<Dtype>*>& bottom,
 	const vector<Blob<Dtype>*>& top)
 {
-	const int first_spatial_axis = channel_axis_ + 1;
-	CHECK_EQ(bottom[0]->num_axes(), first_spatial_axis + num_spatial_axes_)
+	const int first_spatial_axis = this->channel_axis_ + 1;
+	CHECK_EQ(bottom[0]->num_axes(), first_spatial_axis + this->num_spatial_axes_)
 		<< "bottom num_axes may not change.";
-	num_ = bottom[0]->count(0, channel_axis_);
-	CHECK_EQ(bottom[0]->shape(channel_axis_), channels_)
+	this->num_ = bottom[0]->count(0, this->channel_axis_);
+	CHECK_EQ(bottom[0]->shape(this->channel_axis_), this->channels_)
 		<< "Input size incompatible with convolution kernel.";
 	// TODO: generalize to handle inputs of different shapes.
 	for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
@@ -351,13 +351,13 @@ void CuDNNConvolutionMaskLayer<Dtype>::Base_Reshape(const vector<Blob<Dtype>*>& 
 			<< "All inputs must have the same shape.";
 	}
 	// Shape the tops.
-	bottom_shape_ = &bottom[0]->shape();
-	compute_output_shape();
+	this->bottom_shape_ = &bottom[0]->shape();
+	this->compute_output_shape();
 	vector<int> top_shape(bottom[0]->shape().begin(),
-		bottom[0]->shape().begin() + channel_axis_);
-	top_shape.push_back(num_output_);
-	for (int i = 0; i < num_spatial_axes_; ++i) {
-		top_shape.push_back(output_shape_[i]);
+		bottom[0]->shape().begin() + this->channel_axis_);
+	top_shape.push_back(this->num_output_);
+	for (int i = 0; i < this->num_spatial_axes_; ++i) {
+		top_shape.push_back(this->output_shape_[i]);
 	}
 	top_shape[this->channel_axis_] = top_shape[this->channel_axis_] / 9;
 	for (int top_id = 0; top_id < top.size(); ++top_id) {
@@ -372,16 +372,16 @@ void CuDNNConvolutionMaskLayer<Dtype>::Base_Reshape(const vector<Blob<Dtype>*>& 
 	//col_offset_ = kernel_dim_ * conv_out_spatial_dim_;
 	//output_offset_ = conv_out_channels_ * conv_out_spatial_dim_ / group_;
 	// Setup input dimensions (conv_input_shape_).
-	vector<int> bottom_dim_blob_shape(1, num_spatial_axes_ + 1);
-	conv_input_shape_.Reshape(bottom_dim_blob_shape);
-	int* conv_input_shape_data = conv_input_shape_.mutable_cpu_data();
-	for (int i = 0; i < num_spatial_axes_ + 1; ++i) {
-		if (reverse_dimensions()) {
+	vector<int> bottom_dim_blob_shape(1, this->num_spatial_axes_ + 1);
+	this->conv_input_shape_.Reshape(bottom_dim_blob_shape);
+	int* conv_input_shape_data = this->conv_input_shape_.mutable_cpu_data();
+	for (int i = 0; i < this->num_spatial_axes_ + 1; ++i) {
+		if (this->reverse_dimensions()) {
 			//not inverse in convolution mask
-			conv_input_shape_data[i] = top[0]->shape(channel_axis_ + i);
+			conv_input_shape_data[i] = top[0]->shape(this->channel_axis_ + i);
 		}
 		else {
-			conv_input_shape_data[i] = bottom[0]->shape(channel_axis_ + i);
+			conv_input_shape_data[i] = bottom[0]->shape(this->channel_axis_ + i);
 		}
 	}
 	// The im2col result buffer will only hold one image at a time to avoid
@@ -389,21 +389,21 @@ void CuDNNConvolutionMaskLayer<Dtype>::Base_Reshape(const vector<Blob<Dtype>*>& 
 	// it goes lazily unused to save memory.
 	//col_buffer_shape_.clear();
 	//col_buffer_shape_.push_back(kernel_dim_ * group_);
-	for (int i = 0; i < num_spatial_axes_; ++i) {
-		if (reverse_dimensions()) {
-			col_buffer_shape_.push_back(input_shape(i + 1));
+	for (int i = 0; i < this->num_spatial_axes_; ++i) {
+		if (this->reverse_dimensions()) {
+			this->col_buffer_shape_.push_back(this->input_shape(i + 1));
 		}
 		else {
-			col_buffer_shape_.push_back(output_shape_[i]);
+			this->col_buffer_shape_.push_back(this->output_shape_[i]);
 		}
 	}
 	//col_buffer_.Reshape(col_buffer_shape_);
-	bottom_dim_ = bottom[0]->count(channel_axis_);
-	top_dim_ = top[0]->count(channel_axis_) * 9;
+	this->bottom_dim_ = bottom[0]->count(this->channel_axis_);
+	this->top_dim_ = top[0]->count(this->channel_axis_) * 9;
 	//num_kernels_im2col_ = conv_in_channels_ * conv_out_spatial_dim_;
 	//num_kernels_col2im_ = reverse_dimensions() ? top_dim_ : bottom_dim_;
 	// Set up the all ones "bias multiplier" for adding biases by BLAS
-	out_spatial_dim_ = top[0]->count(first_spatial_axis);
+	this->out_spatial_dim_ = top[0]->count(first_spatial_axis);
 	//if (bias_term_) {
 	//	vector<int> bias_multiplier_shape(1, out_spatial_dim_);
 	//	bias_multiplier_.Reshape(bias_multiplier_shape);

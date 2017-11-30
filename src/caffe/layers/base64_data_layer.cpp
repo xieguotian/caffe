@@ -126,7 +126,7 @@ namespace caffe {
 		} else {
 			cv_img = cv::imdecode(data, cv::IMREAD_GRAYSCALE);
 		}
-		cout << cv_img.cols << " " << cv_img.rows << " " << cv_img.channels() << endl;
+		std::cout << cv_img.cols << " " << cv_img.rows << " " << cv_img.channels() << std::endl;
 		infile.seekg(0, ios::beg);
 		//Debug
 		vector<int> compression_params;

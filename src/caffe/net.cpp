@@ -18,7 +18,7 @@
 #include "caffe/util/upgrade_proto.hpp"
 
 #include "caffe/test/test_caffe_main.hpp"
-#include "caffe/util\half_util.hpp"
+#include "caffe/util/half_util.hpp"
 
 namespace caffe {
 
@@ -298,7 +298,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 
   //half point 
   half_support_ = param.opt_fp16() && Caffe::mode() == Caffe::GPU;
-  if (phase_ == Phase::TRAIN && half_support_)
+  if (phase_ == TRAIN && half_support_)
   {
 	  half_blobs_.clear();
 	  for (int i = 0; i < blobs_.size(); ++i)
@@ -312,14 +312,14 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   opt_test_shared_memory_ = param.opt_test_shared_memory();
   shared_blobs_.clear();
   shared_record_.clear();
-  if ((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_))
+  if ((phase_ == TEST && opt_test_shared_memory_) || (phase_ == TRAIN && opt_memory_))
   {
 	  shared_blobs_index_.resize(blobs_.size());
 	  for (int shared_id = 0; shared_id < shared_blobs_index_.size(); ++shared_id)
 		  shared_blobs_index_[shared_id] = -1;
 	  for (int i = 0; i < layers_.size(); ++i) 
 	  {
-		  if ((phase_ == Phase::TEST && opt_test_shared_memory_) || (phase_ == Phase::TRAIN && opt_memory_
+		  if ((phase_ == TEST && opt_test_shared_memory_) || (phase_ == TRAIN && opt_memory_
 			  && (!layer_need_backward_[i] || half_support_)))
 		  {
 			  // two case is not for shared memory: 1. shared data within the layer. 2. inplace layer.
@@ -421,7 +421,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 	  for (int i = 0; i < shared_blobs_.size(); i++)
 		  LOG_IF(INFO, Caffe::root_solver()) << "cache id " << i << " size:" << shared_blobs_[i]->count();
   }
-  if (phase_ == Phase::TRAIN && opt_memory_) 
+  if (phase_ == TRAIN && opt_memory_) 
   {
 	  blob_diff_used_counter_.resize(blobs_.size(),0);
 	  // go through all tracks of  the network
@@ -451,7 +451,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 		  shared_blobs_diff_index_[shared_id] = -1;
 	  for (int layer_id = layers_.size() - 1; layer_id >= 0; layer_id--)
 	  {
-		  if (phase_ == Phase::TRAIN && opt_memory_)//&& layer_need_backward_[i])
+		  if (phase_ == TRAIN && opt_memory_)//&& layer_need_backward_[i])
 		  {
 			  if (layer_types_[layer_id] == "Reshape" || layer_types_[layer_id] == "Flatten")
 			  {
@@ -881,7 +881,7 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
 
-	if (phase_ == Phase::TRAIN && half_support_)
+	if (phase_ == TRAIN && half_support_)
 	{
 		for (int ti = 0; ti < top_vecs_[i].size(); ++ti)
 		{
@@ -944,7 +944,7 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
 
-	  if ((phase_ == Phase::TRAIN && opt_memory_)
+	  if ((phase_ == TRAIN && opt_memory_)
 		  && layer_types_[i] != "Reshape" && layer_types_[i] != "Flatten")
 	  {
 		  //share cache meory.
@@ -991,7 +991,7 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
 		  }
 	  }
 
-	  if (phase_ == Phase::TRAIN && half_support_)
+	  if (phase_ == TRAIN && half_support_)
 	  {
 		  for (int bi = 0; bi < bottom_vecs_[i].size(); ++bi)
 		  {

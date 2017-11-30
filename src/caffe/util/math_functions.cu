@@ -4,7 +4,7 @@
 #include <thrust/reduce.h>
 
 #include <cmath>
-
+#include <cfloat>
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -413,6 +413,86 @@ void caffe_gpu_rng_gaussian(const int n, const double mu, const double sigma,
                             double* r) {
   CURAND_CHECK(
       curandGenerateNormalDouble(Caffe::curand_generator(), r, n, mu, sigma));
+}
+
+template <>
+__global__ void channel_div_kernel(const int n, const int channel, const int spat_dim, const float* a,
+	const float* b, float* y) {
+	CUDA_KERNEL_LOOP(index, n) {
+		int ch_res = index / spat_dim;
+		int ch_idx = ch_res % channel;
+		y[index] = a[index] / (b[ch_idx] + FLT_EPSILON);
+	}
+}
+
+template <>
+__global__ void channel_div_kernel(const int n, const int channel, const int spat_dim, const double* a,
+	const double* b, double* y) {
+	CUDA_KERNEL_LOOP(index, n) {
+		int ch_res = index / spat_dim;
+		int ch_idx = ch_res % channel;
+		y[index] = a[index] / (b[ch_idx] + FLT_EPSILON);
+	}
+}
+
+template <>
+__global__ void channel_div_kernel_neps(const int n, const int channel, const int spat_dim, const float* a,
+	const float* b, float* y) {
+	CUDA_KERNEL_LOOP(index, n) {
+		int ch_res = index / spat_dim;
+		int ch_idx = ch_res % channel;
+		y[index] = a[index] / (b[ch_idx]);
+	}
+}
+
+template <>
+__global__ void channel_div_kernel_neps(const int n, const int channel, const int spat_dim, const double* a,
+	const double* b, double* y) {
+	CUDA_KERNEL_LOOP(index, n) {
+		int ch_res = index / spat_dim;
+		int ch_idx = ch_res % channel;
+		y[index] = a[index] / (b[ch_idx]);
+	}
+}
+
+template <>
+__global__ void channel_sub_kernel(const int n, const int channel, const int spat_dim, const float* a,
+	const float* b, float* y) {
+	CUDA_KERNEL_LOOP(index, n) {
+		int ch_res = index / spat_dim;
+		int ch_idx = ch_res % channel;
+		y[index] = a[index] - b[ch_idx];
+	}
+}
+
+template <>
+__global__ void channel_sub_kernel(const int n, const int channel, const int spat_dim, const double* a,
+	const double* b, double* y) {
+	CUDA_KERNEL_LOOP(index, n) {
+		int ch_res = index / spat_dim;
+		int ch_idx = ch_res % channel;
+		y[index] = a[index] - b[ch_idx];
+	}
+}
+
+template <>
+__global__ void num_mul_kernel(const int n, const int channel, const int spat_dim, const float* a,
+	const float* b, float* y) {
+	CUDA_KERNEL_LOOP(index, n) {
+		int ch_res = index / spat_dim;
+		int num_idx = ch_res / channel;
+		y[index] = a[index] *b[num_idx];
+	}
+}
+
+template <>
+__global__ void num_mul_kernel(const int n, const int channel, const int spat_dim, const double* a,
+	const double* b, double* y) {
+	CUDA_KERNEL_LOOP(index, n) {
+		int ch_res = index / spat_dim;
+		int num_idx = ch_res / channel;
+		y[index] = a[index] *b[num_idx];
+	}
 }
 
 }  // namespace caffe

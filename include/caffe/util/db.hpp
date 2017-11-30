@@ -78,7 +78,7 @@ protected:
 	vector<int> key_index_list;
 	vector<string> key_list;
 	vector<int> label_list;
-	vector<vector<float>> kl_info_vec;
+	vector<vector<float> > kl_info_vec;
 	size_t key_pos = 0;
 	void get_key_from_db();
 
