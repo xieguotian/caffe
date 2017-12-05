@@ -60,7 +60,7 @@ DEFINE_string(log_name, "log", "name of log file.");
 
 void initGlog()
 {
-	FLAGS_log_dirs = FLAGS_log_dirs + "\\";
+	FLAGS_log_dirs = FLAGS_log_dirs + "/";
 	//FLAGS_log_dir = ".\\log\\";
 	if (!boost::filesystem::exists(FLAGS_log_dirs))
 		//_mkdir(FLAGS_log_dirs.c_str());

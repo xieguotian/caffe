@@ -146,8 +146,9 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
   shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
 	  this->layer_param_.convolution_param().weight_filler()));
 
-  if (false)
+  if (true)
   {
+          LOG(INFO)<<"init version 2";
 	  //version 2 for initialization
 	  for (int num_l = 0; num_l < num_layer_; num_l++)
 	  {
@@ -161,6 +162,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
   }
   else
   {
+          LOG(INFO)<<"init version 1";
 	  //version 1 for initialization
 	  weight_filler->Fill(this->blobs_[0].get());
 	  //caffe_gpu_powx(this->blobs_[0]->count(), this->blobs_[0]->gpu_data(), (Dtype)1 / (Dtype)num_layer_, this->blobs_[0]->mutable_gpu_data());

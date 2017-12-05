@@ -284,8 +284,8 @@ void Solver<Dtype>::Step(int iters) {
 
     // Increment the internal iter_ counter -- its value should always indicate
     // the number of times the weights have been updated.
-    //++iter_;
-	iter_ += param_.iter_size();
+    ++iter_;
+//	iter_ += param_.iter_size();
 
     SolverAction::Enum request = GetRequestedAction();
 
@@ -629,7 +629,8 @@ void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int start_iter,
 		}
 	}
   } else {
-    int idx = (iter_ - start_iter) / param_.iter_size() % average_loss;
+    //int idx = (iter_ - start_iter) / param_.iter_size() % average_loss;
+    int idx = (iter_ - start_iter) % average_loss;
     smoothed_loss_ += (loss - losses_[idx]) / average_loss;
     losses_[idx] = loss;
 
