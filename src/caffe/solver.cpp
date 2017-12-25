@@ -207,7 +207,7 @@ void Solver<Dtype>::Step(int iters) {
     // zero-init the params
     net_->ClearParamDiffs();
     if (param_.test_interval() && iter_ % param_.test_interval() == 0
-        && (iter_ > 0 || param_.test_initialization())
+        && (iter_ > start_iter || param_.test_initialization())
         && Caffe::root_solver()) {
       TestAll();
       if (requested_early_exit_) {
