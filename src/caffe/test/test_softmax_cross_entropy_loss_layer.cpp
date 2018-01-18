@@ -91,7 +91,7 @@ TYPED_TEST(SoftmaxCrossEntropyLossLayerTest, TestGradient) {
 
 TYPED_TEST(SoftmaxCrossEntropyLossLayerTest, TestIgnoreLabelGradient) {
 	typedef typename TypeParam::Dtype Dtype;
-	this->blob_bottom_vec_.push_back(blob_bottom_hard_label_);
+	this->blob_bottom_vec_.push_back(this->blob_bottom_hard_label_);
 	LayerParameter layer_param;
 	layer_param.add_loss_weight(3);
 	layer_param.mutable_loss_param()->set_ignore_label(3);
@@ -115,7 +115,7 @@ TYPED_TEST(SoftmaxCrossEntropyLossLayerTest, TestGradientTemperature) {
 
 TYPED_TEST(SoftmaxCrossEntropyLossLayerTest, TestGradientIgnoreLabelTemperature) {
 	typedef typename TypeParam::Dtype Dtype;
-	this->blob_bottom_vec_.push_back(blob_bottom_hard_label_);
+	this->blob_bottom_vec_.push_back(this->blob_bottom_hard_label_);
 	LayerParameter layer_param;
 	layer_param.add_loss_weight(3);
 	layer_param.mutable_loss_param()->set_ignore_label(3);

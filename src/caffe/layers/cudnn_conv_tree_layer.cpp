@@ -27,6 +27,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 	shuffle_ = conv_param.shuffle();
 	intermediate_output_ = conv_param.intermediate_output();
 	num_spatial_per_supernode_ = conv_param.num_spatial_per_supernode();
+  is_inverse_ = conv_param.is_inverse();
 
 	//const int* kernel_shape_data = kernel_shape_.cpu_data();
 	const int* kernel_shape_data = this->kernel_shape_.cpu_data();
@@ -34,8 +35,14 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 	if (!use_spatial_)
 	{
 		intermediate_output_ = this->channels_;
+    if (is_inverse_)
+    {
+      intermediate_output_ = this->num_output_;
+      first_ch_per_super_node_ = this->channels_ / (this->num_output_ / ch_per_super_node_);
+      first_offset_ = this->num_output_* first_ch_per_super_node_;
+    }
 	}
-	int max_num = std::max(intermediate_output_, this->num_output_);
+	int max_num = std::max(std::max(intermediate_output_, this->num_output_),this->channels_);
 	if (use_spatial_)
 	{
 		max_num = std::max(max_num, this->channels_*kernel_shape_data[0] * kernel_shape_data[1]);
@@ -47,12 +54,14 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 	//re_weights2_.ReshapeLike(*this->blobs_[0]);
 	if (!use_spatial_)
 	{
-		vector<int> shape_cache(2);
-		shape_cache[0] = intermediate_output_; //channels_;
-		shape_cache[1] = intermediate_output_; //channels_;
+		//vector<int> shape_cache(2);
+		//shape_cache[0] = intermediate_output_; //channels_;
+		//shape_cache[1] = intermediate_output_; //channels_;
+    vector<int> shape_cache(1);
+    shape_cache[0] = intermediate_output_*max_num; //channels_;
 		re_weights_cache_.Reshape(shape_cache);
 		re_weights_cache2_.Reshape(shape_cache);
-		shape_cache[0] = this->num_output_;
+		//shape_cache[0] = this->num_output_;
 		re_weights_cache3_.Reshape(shape_cache);
 	}
 	else
@@ -82,10 +91,18 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 	LOG(INFO) << "num_layer of conv_tree :" << num_layer_ << " channels per supernode: " << ch_per_super_node_
 		<< "intermediate output: " << intermediate_output_ << "kernel_size: " << kernel_shape_data[0] << "num_spatial_per_node: " << num_spatial_per_supernode_;
 	//connects_per_layer_ = ch_per_super_node_ * channels_;
-	connects_per_layer_ = ch_per_super_node_ * intermediate_output_;
 
 	vector<int> weight_shape(1);
-	weight_shape[0] = (num_layer_ - 1)*connects_per_layer_ + this->num_output_*ch_per_super_node_;
+  if (!is_inverse_)
+  {
+    connects_per_layer_ = ch_per_super_node_ * intermediate_output_;
+	  weight_shape[0] = (num_layer_ - 1)*connects_per_layer_ + this->num_output_*ch_per_super_node_;
+  }
+  else
+  {
+    connects_per_layer_ = ch_per_super_node_ * intermediate_output_;
+    weight_shape[0] = (num_layer_ - 1)*connects_per_layer_ + this->channels_*ch_per_super_node_;
+  }
 
 	//weight_shape[1] = connects_per_layer_;
 	//if (shuffle_)
@@ -126,16 +143,23 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 		//shape_wp[0] = channels_;
 		//shape_wp[1] = channels_;
 		shape_wp[0] = intermediate_output_;
-		shape_wp[1] = intermediate_output_;
+		//shape_wp[1] = intermediate_output_;
+    shape_wp[1] = this->channels_;
 
 		Wp_[i]->Reshape(shape_wp);
 		shape_wp[0] = this->num_output_;
+    shape_wp[1] = intermediate_output_;
 		Wpi_[i]->Reshape(shape_wp);
 		//Wp_[i]->ReshapeLike(*this->blobs_[0]);
 		//Wpi_[i]->ReshapeLike(*this->blobs_[0]);
 	}
 	shape_wp[0] = this->num_output_;
+  shape_wp[1] = this->channels_;
 	Wp_[num_layer_ - 1]->Reshape(shape_wp);
+
+  shape_wp[0] = this->num_output_;
+  shape_wp[1] = this->channels_;
+  Wpi_[0]->Reshape(shape_wp);
 	//weight_shape[0] = conv_out_channels_;
 	//weight_shape[1] = conv_in_channels_ / group_;
 	//for (int i = 0; i < num_spatial_axes_; ++i) {
@@ -150,6 +174,8 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
   {
           LOG(INFO)<<"init version 2";
 	  //version 2 for initialization
+    if (!is_inverse_)
+    {
 	  for (int num_l = 0; num_l < num_layer_; num_l++)
 	  {
 		  vector<int> tmp_shape(2);
@@ -159,6 +185,22 @@ void CuDNNConvolutionTreeLayer<Dtype>::LayerSetUp(
 		  tmp_blob.set_cpu_data(this->blobs_[0]->mutable_cpu_data() + num_l*intermediate_output_*ch_per_super_node_);
 		  weight_filler->Fill(&tmp_blob);
 	  }
+    }
+    else
+    {
+      int tmp_offset = 0;
+    for (int num_l = 0; num_l < num_layer_; num_l++)
+    {
+      vector<int> tmp_shape(2);
+      tmp_shape[0] = (num_l == (num_layer_ - 1)) ? this->num_output_ : intermediate_output_;
+      tmp_shape[1] = num_l==0? first_ch_per_super_node_ : ch_per_super_node_;
+      Blob<Dtype> tmp_blob(tmp_shape);
+
+      tmp_blob.set_cpu_data(this->blobs_[0]->mutable_cpu_data() + tmp_offset);
+      weight_filler->Fill(&tmp_blob);
+      tmp_offset += tmp_shape[0]*tmp_shape[1];
+    }      
+    }
   }
   else
   {

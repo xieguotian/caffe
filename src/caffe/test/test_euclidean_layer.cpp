@@ -46,12 +46,12 @@ namespace caffe {
 		Dtype input_1[] = { 10, 6, 8, 13, 12, 15, 1, 21, 20, 14, 5,
 			16, 9, 23, 22, 18, 3, 17, 19, 11, 0, 2, 7, 4 };
 		Dtype output[] = { 102 / 2.0, 369 / 2.0, 101 / 2.0, 300 / 2.0, 209 / 2.0, 526 / 2.0, 275 / 2.0, 234 / 2.0 };
-		caffe_copy(blob_bottom_0_->count(), input_0, blob_bottom_0_->mutable_cpu_data());
-		caffe_copy(blob_bottom_1_->count(), input_1, blob_bottom_1_->mutable_cpu_data());
+		caffe_copy(this->blob_bottom_0_->count(), input_0, this->blob_bottom_0_->mutable_cpu_data());
+		caffe_copy(this->blob_bottom_1_->count(), input_1, this->blob_bottom_1_->mutable_cpu_data());
 
 		LayerParameter layer_param;
 		EuclideanLayer<Dtype> layer(layer_param);
-		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 		EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0_->num())
 			<< "(top_num,bottom_num)=" << this->blob_top_->num() << ","
 			<< this->blob_bottom_0_->num();
@@ -65,8 +65,8 @@ namespace caffe {
 			<< "(top_width,bottom_width)=" << this->blob_top_->width() << ","
 			<< this->blob_bottom_0_->width();
 
-		layer.Forward(blob_bottom_vec_, blob_top_vec_);
-		for (int i = 0; i < blob_top_->count(); i++)
+		layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+		for (int i = 0; i < this->blob_top_->count(); i++)
 		{
 			EXPECT_EQ(this->blob_top_->cpu_data()[i], output[i])
 				<< "(top_data,gt_data)=" << this->blob_top_->cpu_data()[i] << ","
@@ -82,12 +82,12 @@ namespace caffe {
 		Dtype input_1[] = { 17, 2, 23, 5, 20, 6, 1, 12, 7,
 			15, 14, 3, 4, 11, 13, 22, 18, 16, 19, 8, 0, 9, 10, 21 };
 		Dtype output[] = { 441 / 2.0, 78 / 2.0, 386 / 2.0, 293 / 2.0, 485 / 2.0, 75 / 2.0, 457 / 2.0, 419 / 2.0 };
-		caffe_copy(blob_bottom_0_->count(), input_0, blob_bottom_0_->mutable_cpu_data());
-		caffe_copy(blob_bottom_1_->count(), input_1, blob_bottom_1_->mutable_cpu_data());
+		caffe_copy(this->blob_bottom_0_->count(), input_0, this->blob_bottom_0_->mutable_cpu_data());
+		caffe_copy(this->blob_bottom_1_->count(), input_1, this->blob_bottom_1_->mutable_cpu_data());
 
 		LayerParameter layer_param;
 		EuclideanLayer<Dtype> layer(layer_param);
-		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 		EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0_->num())
 			<< "(top_num,bottom_num)=" << this->blob_top_->num() << ","
 			<< this->blob_bottom_0_->num();
@@ -101,8 +101,8 @@ namespace caffe {
 			<< "(top_width,bottom_width)=" << this->blob_top_->width() << ","
 			<< this->blob_bottom_0_->width();
 
-		layer.Forward(blob_bottom_vec_, blob_top_vec_);
-		for (int i = 0; i < blob_top_->count(); i++)
+		layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+		for (int i = 0; i < this->blob_top_->count(); i++)
 		{
 			EXPECT_EQ(this->blob_top_->cpu_data()[i], output[i])
 				<< "(top_data,gt_data)=" << this->blob_top_->cpu_data()[i] << ","
@@ -116,8 +116,8 @@ namespace caffe {
 		FillerParameter filler_param;
 		filler_param.set_std(0.1);
 		GaussianFiller<Dtype> filler(filler_param);
-		filler.Fill(blob_bottom_0_);
-		filler.Fill(blob_bottom_1_);
+		filler.Fill(this->blob_bottom_0_);
+		filler.Fill(this->blob_bottom_1_);
 		LayerParameter layer_param;
 		EuclideanLayer<Dtype> layer(layer_param);
 		GradientChecker<Dtype> checker(1e-2, 1e-3, 1701);

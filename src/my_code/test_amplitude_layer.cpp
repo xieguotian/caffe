@@ -319,12 +319,12 @@ namespace caffe {
 				2.26864171, 1.73975801, 1.84393906, 1.66360728, 1.68721675 };
 		/*{ 0.84110116, 1.69443013, 1.01946872, 1.00087348, 1.05018245,
 			1.53726957, 1.28141693, 1.09459482 };*/
-		caffe_copy(blob_bottom_->count(), input_data, blob_bottom_->mutable_cpu_data());
+		caffe_copy(this->blob_bottom_->count(), input_data, this->blob_bottom_->mutable_cpu_data());
 		//caffe_set(blob_bottom_vec_[0]->count(), (Dtype)1, blob_bottom_vec_[0]->mutable_cpu_data());
 
 		LayerParameter layer_param;
 		AmplitudeLayer<Dtype> layer(layer_param);
-		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 		EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num()) 
 			<< "(top_num,bottom_num)=" << this->blob_top_->num() << ","
 			<< this->blob_bottom_->num();
@@ -338,9 +338,9 @@ namespace caffe {
 			<< "(top_width,bottom_width)=" << this->blob_top_->width() << ","
 			<< this->blob_bottom_->width();
 
-		layer.Forward(blob_bottom_vec_, blob_top_vec_);
+		layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 		const Dtype min_precision = 1e-5;
-		for (int i = 0; i < blob_top_->count(); i++)
+		for (int i = 0; i < this->blob_top_->count(); i++)
 		{
 			EXPECT_NEAR(this->blob_top_->cpu_data()[i], output_data[i], min_precision)
 				<< "(top_data,gt_data)=" << this->blob_top_->cpu_data()[i] << ","
@@ -354,7 +354,7 @@ namespace caffe {
 		FillerParameter filler_param;
 		filler_param.set_std(0.1);
 		GaussianFiller<Dtype> filler(filler_param);
-		filler.Fill(blob_bottom_);
+		filler.Fill(this->blob_bottom_);
 
 		LayerParameter layer_param;
 		AmplitudeLayer<Dtype> layer(layer_param);

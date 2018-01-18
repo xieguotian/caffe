@@ -55,7 +55,7 @@ TYPED_TEST(ArgMaxMinLayerTest, TestArgMax) {
 		79, 10, 105 };
 	Dtype output_data[] = { 2, 1, 2, 0, 0, 1, 1, 2, 2, 1, 0, 2, 2, 1, 1, 0, 1, 1, 1, 0, 1, 2, 0,
 		0, 1, 0, 2, 2, 0, 2, 0, 0, 0, 2, 0, 2, 0, 0, 1, 2 };
-	caffe_copy(blob_bottom_->count(), input_data, blob_bottom_->mutable_cpu_data());
+	caffe_copy(this->blob_bottom_->count(), input_data, this->blob_bottom_->mutable_cpu_data());
 
 	LayerParameter layer_param;
 	ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
@@ -69,9 +69,9 @@ TYPED_TEST(ArgMaxMinLayerTest, TestArgMax) {
 	EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_->height());
 	EXPECT_EQ(this->blob_top_->width(), this->blob_bottom_->width());
 
-	layer.Forward(blob_bottom_vec_, blob_top_vec_);
+	layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 	const Dtype min_precision = 1e-5;
-	for (int i = 0; i < blob_top_->count(); i++)
+	for (int i = 0; i < this->blob_top_->count(); i++)
 	{
 
 		EXPECT_NEAR(this->blob_top_->cpu_data()[i], output_data[i], min_precision)
@@ -94,7 +94,7 @@ TYPED_TEST(ArgMaxMinLayerTest, TestArgMin) {
 		79, 10, 105 };
 	Dtype output_data[] = { 0, 2, 0, 2, 2, 2, 2, 1, 0, 0, 2, 0, 0, 2, 0, 1, 2, 0, 2, 2, 0, 1, 2,
 		2, 2, 2, 0, 0, 1, 1, 2, 2, 1, 0, 1, 0, 2, 1, 2, 1 };
-	caffe_copy(blob_bottom_->count(), input_data, blob_bottom_->mutable_cpu_data());
+	caffe_copy(this->blob_bottom_->count(), input_data, this->blob_bottom_->mutable_cpu_data());
 
 	LayerParameter layer_param;
 	ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
@@ -108,9 +108,9 @@ TYPED_TEST(ArgMaxMinLayerTest, TestArgMin) {
 	EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_->height());
 	EXPECT_EQ(this->blob_top_->width(), this->blob_bottom_->width());
 
-	layer.Forward(blob_bottom_vec_, blob_top_vec_);
+	layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 	const Dtype min_precision = 1e-5;
-	for (int i = 0; i < blob_top_->count(); i++)
+	for (int i = 0; i < this->blob_top_->count(); i++)
 	{
 
 		EXPECT_NEAR(this->blob_top_->cpu_data()[i], output_data[i], min_precision)
@@ -265,7 +265,7 @@ TYPED_TEST(ArgMaxMinLayerTest, TestArgMax2) {
 			1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0,
 			0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0,
 			1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0 };
-	caffe_copy(blob_bottom_1->count(), input_data, blob_bottom_1->mutable_cpu_data());
+	caffe_copy(this->blob_bottom_1->count(), input_data, this->blob_bottom_1->mutable_cpu_data());
 
 	LayerParameter layer_param;
 	ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
@@ -279,9 +279,9 @@ TYPED_TEST(ArgMaxMinLayerTest, TestArgMax2) {
 	EXPECT_EQ(this->blob_top_1->height(), this->blob_bottom_1->height());
 	EXPECT_EQ(this->blob_top_1->width(), this->blob_bottom_1->width());
 
-	layer.Forward(blob_bottom_vec_1, blob_top_vec_1);
+	layer.Forward(this->blob_bottom_vec_1, this->blob_top_vec_1);
 	const Dtype min_precision = 1e-5;
-	for (int i = 0; i < blob_top_1->count(); i++)
+	for (int i = 0; i < this->blob_top_1->count(); i++)
 	{
 
 		EXPECT_NEAR(this->blob_top_1->cpu_data()[i], output_data[i], min_precision)
@@ -435,7 +435,7 @@ TYPED_TEST(ArgMaxMinLayerTest, TestArgMin2) {
 			0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1,
 			1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1,
 			0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1 };
-	caffe_copy(blob_bottom_1->count(), input_data, blob_bottom_1->mutable_cpu_data());
+	caffe_copy(this->blob_bottom_1->count(), input_data, this->blob_bottom_1->mutable_cpu_data());
 
 	LayerParameter layer_param;
 	ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
@@ -449,9 +449,9 @@ TYPED_TEST(ArgMaxMinLayerTest, TestArgMin2) {
 	EXPECT_EQ(this->blob_top_1->height(), this->blob_bottom_1->height());
 	EXPECT_EQ(this->blob_top_1->width(), this->blob_bottom_1->width());
 
-	layer.Forward(blob_bottom_vec_1, blob_top_vec_1);
+	layer.Forward(this->blob_bottom_vec_1, this->blob_top_vec_1);
 	const Dtype min_precision = 1e-5;
-	for (int i = 0; i < blob_top_1->count(); i++)
+	for (int i = 0; i < this->blob_top_1->count(); i++)
 	{
 
 		EXPECT_NEAR(this->blob_top_1->cpu_data()[i], output_data[i], min_precision)

@@ -48,7 +48,7 @@ namespace caffe {
 			1.92874985e-21, 1.00000000e+00, 1.00000000e+00, 1.00000000e+00,
 			4.24835426e-17, 1.00000000e+00, 1.00000000e+00, 1.00000000e+00,
 			9.09090909e-01, 1.00000000e+00, 9.35762297e-13, 1.00000000e+00 };
-		caffe_copy(blob_bottom_->count(), input, blob_bottom_->mutable_cpu_data());
+		caffe_copy(this->blob_bottom_->count(), input, this->blob_bottom_->mutable_cpu_data());
 
 		LayerParameter layer_param;
 		SmoothThresholdParameter* sm_param = layer_param.mutable_smooth_threshold_param();
@@ -57,11 +57,11 @@ namespace caffe {
 		sm_param->mutable_threshold_filler()->set_type("constant");
 		sm_param->mutable_threshold_filler()->set_value(5);
 		SmoothThresholdLayer<Dtype> layer(layer_param);
-		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 		EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num())
 			<< "(top_num,bottom_num)=" << this->blob_top_->num() << ","
 			<< this->blob_bottom_->num();
-		EXPECT_EQ(this->blob_top_->channels(), blob_bottom_->channels())
+		EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels())
 			<< "(top_channels,bottom_channels)=" << this->blob_top_->channels() << ","
 			<< this->blob_bottom_->channels();
 		EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_->height())
@@ -71,9 +71,9 @@ namespace caffe {
 			<< "(top_width,bottom_width)=" << this->blob_top_->width() << ","
 			<< this->blob_bottom_->width();
 
-		layer.Forward(blob_bottom_vec_, blob_top_vec_);
+		layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 		const Dtype min_precision = 1e-5;
-		for (int i = 0; i < blob_top_->count(); i++)
+		for (int i = 0; i < this->blob_top_->count(); i++)
 		{
 			EXPECT_NEAR(this->blob_top_->cpu_data()[i], output[i], min_precision)
 				<< "(top_data,gt_data)=" << this->blob_top_->cpu_data()[i] << ","
@@ -93,7 +93,7 @@ namespace caffe {
 			1.00000000e+00, 1.00000000e+00, 1.00000000e+00, 1.00000000e+00,
 			1.00000000e+00, 4.24835426e-17, 1.00000000e+00, 9.09090909e-01,
 			1.00000000e+00, 1.00000000e+00, 1.00000000e+00, 1.00000000e+00 };
-		caffe_copy(blob_bottom_->count(), input, blob_bottom_->mutable_cpu_data());
+		caffe_copy(this->blob_bottom_->count(), input, this->blob_bottom_->mutable_cpu_data());
 
 		LayerParameter layer_param;
 		SmoothThresholdParameter* sm_param = layer_param.mutable_smooth_threshold_param();
@@ -102,11 +102,11 @@ namespace caffe {
 		sm_param->mutable_threshold_filler()->set_type("constant");
 		sm_param->mutable_threshold_filler()->set_value(5);
 		SmoothThresholdLayer<Dtype> layer(layer_param);
-		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 		EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num())
 			<< "(top_num,bottom_num)=" << this->blob_top_->num() << ","
 			<< this->blob_bottom_->num();
-		EXPECT_EQ(this->blob_top_->channels(), blob_bottom_->channels())
+		EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels())
 			<< "(top_channels,bottom_channels)=" << this->blob_top_->channels() << ","
 			<< this->blob_bottom_->channels();
 		EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_->height())
@@ -116,9 +116,9 @@ namespace caffe {
 			<< "(top_width,bottom_width)=" << this->blob_top_->width() << ","
 			<< this->blob_bottom_->width();
 
-		layer.Forward(blob_bottom_vec_, blob_top_vec_);
+		layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 		const Dtype min_precision = 1e-5;
-		for (int i = 0; i < blob_top_->count(); i++)
+		for (int i = 0; i < this->blob_top_->count(); i++)
 		{
 			EXPECT_NEAR(this->blob_top_->cpu_data()[i], output[i], min_precision)
 				<< "(top_data,gt_data)=" << this->blob_top_->cpu_data()[i] << ","
@@ -132,7 +132,7 @@ namespace caffe {
 		FillerParameter filler_param;
 		filler_param.set_std(0.5);
 		GaussianFiller<Dtype> filler(filler_param);
-		filler.Fill(blob_bottom_);
+		filler.Fill(this->blob_bottom_);
 		LayerParameter layer_param;
 		SmoothThresholdParameter* sm_param = layer_param.mutable_smooth_threshold_param();
 		sm_param->set_alpha(0.01);

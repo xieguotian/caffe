@@ -186,14 +186,89 @@ void CuDNNConvolutionTreeLayer<Dtype>::Forward_gpu(
 	  first_used = false;
   }
 
+  if (is_inverse_)
+  {
+  
+  //recover weight to Wp_;
+  for (int i = 0; i < num_layer_; i++)
+  {
+	  caffe_gpu_set(Wpi_[i]->count(), (Dtype)0.0, Wpi_[i]->mutable_gpu_data());
+	  int num_nodes = (is_inverse_ && i==0)? first_offset_: ch_per_super_node_* Wpi_[i]->num();
+
+	    int tmp_offset = 0;
+		if(is_inverse_)
+		{
+            if(i>0)
+            {
+               tmp_offset = first_offset_ + connects_per_layer_*(i-1);
+            }
+		}
+		else
+		{
+		    tmp_offset = connects_per_layer_*i;
+		}
+		
+	  recover_weight<Dtype> << <CAFFE_GET_BLOCKS(num_nodes), CAFFE_CUDA_NUM_THREADS >> >(
+		  num_nodes,
+		  this->blobs_[0]->gpu_data() + tmp_offset,
+		  Wpi_[i]->mutable_gpu_data(),
+		  (is_inverse_ && i==0)? this->channels_ : intermediate_output_,
+		  (is_inverse_ && i==0)? first_ch_per_super_node_ : ch_per_super_node_,
+		  shuffle_ ? this->blobs_[idx_blob_]->gpu_data() : NULL
+		  );	  
+  }
+  
+
+  //calculate Wp_;
+  caffe_copy(Wpi_[0]->count(), Wpi_[0]->gpu_data(), Wp_[0]->mutable_gpu_data());
+  for (int i = 1; i < num_layer_; i++)
+  {
+   caffe_gpu_gemm(CblasNoTrans,
+    CblasNoTrans,
+	Wpi_[i]->num(),
+	Wp_[i-1]->channels(),
+	Wp_[i-1]->num(),
+    (Dtype)1.0,
+    Wpi_[i]->gpu_data(),
+    Wp_[i-1]->gpu_data(),
+    (Dtype)0.0, Wp_[i]->mutable_gpu_data());
+  }
+  
+  //calculate Wpi_;
+  for (int i = num_layer_-2; i >= 0; i--)
+  {
+	  Dtype* cache_data;
+	  cache_data = re_weights_cache_.mutable_gpu_data();
+	  caffe_copy(Wpi_[i]->count(), 
+		  Wpi_[i]->gpu_data(), 
+		  cache_data);		  
+	  caffe_gpu_gemm(CblasNoTrans,
+		  CblasNoTrans,
+		  Wpi_[i+1]->num(),
+		  Wpi_[i]->channels(),
+		  Wpi_[i]->num(),
+		  (Dtype)1.0,
+		  Wpi_[i+1]->gpu_data(),
+		  cache_data,
+		  (Dtype)0.0, Wpi_[i]->mutable_gpu_data());		  
+  }
+  caffe_copy(Wp_[num_layer_ - 1]->count(), Wp_[num_layer_ - 1]->gpu_data(), re_weights_.mutable_gpu_data());
+  weight = re_weights_.gpu_data();
+  
+  }
+  else 
+  {
   //recover weight to Wp_;
   for (int i = 0; i < num_layer_; i++)
   {
 	  caffe_gpu_set(Wp_[i]->count(), (Dtype)0.0, Wp_[i]->mutable_gpu_data());
 	  int num_nodes = ch_per_super_node_* Wp_[i]->num();
+
+	    int tmp_offset = 0;
+		tmp_offset = connects_per_layer_*i;
 	  recover_weight<Dtype> << <CAFFE_GET_BLOCKS(num_nodes), CAFFE_CUDA_NUM_THREADS >> >(
 		  num_nodes,
-		  this->blobs_[0]->gpu_data() + i*connects_per_layer_,
+		  this->blobs_[0]->gpu_data() + tmp_offset,
 		  //re_weights_cache_.mutable_gpu_data(), 
 		  Wp_[i]->mutable_gpu_data(),
 		  //Wp_[i]->num(),
@@ -326,6 +401,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::Forward_gpu(
   //}
   //CHECK(false);
   weight = re_weights_.gpu_data();
+  }
   //*****************************
 
   for (int i = 0; i < bottom.size(); ++i) {
@@ -490,6 +566,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 			);
 		weight_diff = Wp_[num_layer_ - 1]->mutable_gpu_diff();
 	}
+
 	for (int i = num_layer_ - 1; i >= 0; i--)
 	{
 		Dtype* cache_data2;
@@ -509,7 +586,8 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 				//channels_,
 				//channels_,
 				intermediate_output_,
-				intermediate_output_,
+				//i == 0 ? this->channels_ : intermediate_output_,
+				this->channels_,
 				this->num_output_,
 				(Dtype)1.0,
 				//re_weights2_.gpu_data(),
@@ -535,7 +613,8 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 				//channels_,
 				i == num_layer_ - 1 ? this->num_output_ : intermediate_output_,
 				intermediate_output_,
-				intermediate_output_,
+				//intermediate_output_,
+				this->channels_,
 				(Dtype)1.0,
 				//re_weights_cache_.gpu_data(),
 				cache_data,
@@ -549,18 +628,41 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 			//caffe_copy(re_weights_cache_.count(), re_weights_cache_.gpu_data(), re_weights_cache2_.mutable_gpu_data());
 			cache_data2 = cache_data;
 		}
-
 		//caffe_copy(re_weights_cache2_.count(), re_weights_cache2_.gpu_data(), weight_diff);
-		int num_nodes = ch_per_super_node_* Wp_[i]->num();
+
+		int num_nodes ;
+		if (is_inverse_)
+		{
+		   num_nodes = i==0?first_offset_:ch_per_super_node_* Wpi_[i]->num();
+		}
+		else
+		{
+		   num_nodes = ch_per_super_node_* Wp_[i]->num();
+		}
+
+		int tmp_offset = 0;
+		if(is_inverse_)
+		{
+            if(i>0)
+            {
+               tmp_offset = first_offset_ + connects_per_layer_*(i-1);
+            }
+		}
+		else
+		{
+		    tmp_offset = connects_per_layer_*i;
+		}
+
 		recover_weight_diff<Dtype> << <CAFFE_GET_BLOCKS(num_nodes), CAFFE_CUDA_NUM_THREADS >> >(
 			num_nodes,
 			//re_weights_cache2_.gpu_data(),
 			cache_data2,
-			this->blobs_[0]->mutable_gpu_diff() + connects_per_layer_*i,
+			this->blobs_[0]->mutable_gpu_diff() + tmp_offset,
 			//Wp_[i]->num(),
 			//channels_,
-			intermediate_output_,
-			ch_per_super_node_,
+			//intermediate_output_,
+			(is_inverse_ && i==0)? this->channels_ : intermediate_output_,
+			(is_inverse_ && i==0)? first_ch_per_super_node_ : ch_per_super_node_,
 			shuffle_ ? this->blobs_[idx_blob_]->gpu_data() + i*this->channels_ : NULL
 			);
 	}
@@ -652,6 +754,7 @@ void CuDNNConvolutionTreeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& 
 		  this->blobs_[0]->gpu_diff(),
 		  this->blobs_[idx_param_idx]->mutable_gpu_diff());
   }
+
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(CuDNNConvolutionTreeLayer);

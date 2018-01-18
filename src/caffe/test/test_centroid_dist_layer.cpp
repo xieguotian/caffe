@@ -41,7 +41,7 @@ TYPED_TEST_CASE(CentroidDistTest, TestDtypesAndDevices);
 TYPED_TEST(CentroidDistTest, TestForward) { 
   typedef typename TypeParam::Dtype Dtype;
   Dtype bottom_[] = { 1, 2, 1, 0, 0, 2 };
-  memcpy(blob_bottom_->mutable_cpu_data(), bottom_, blob_bottom_->count()*sizeof(Dtype));
+  memcpy(this->blob_bottom_->mutable_cpu_data(), bottom_, this->blob_bottom_->count()*sizeof(Dtype));
   LayerParameter layer_param;
   layer_param.mutable_cluster_centroid_param()->set_num_cluster(2);
   layer_param.mutable_cluster_centroid_param()->set_dim(3);

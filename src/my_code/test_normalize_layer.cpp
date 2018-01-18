@@ -43,16 +43,16 @@ namespace caffe {
 	TYPED_TEST(NormalizeLayerTest, TestForward_1)
 	{
 		typedef typename TypeParam::Dtype Dtype;
-		caffe_set(blob_bottom_->count(), (Dtype)1, blob_bottom_->mutable_cpu_data());
+		caffe_set(this->blob_bottom_->count(), (Dtype)1, this->blob_bottom_->mutable_cpu_data());
 
 		LayerParameter layer_param;
 
 		NormalizeLayer<Dtype> layer(layer_param);
-		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 		EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num())
 			<< "(top_num,bottom_num)=" << this->blob_top_->num() << ","
 			<< this->blob_bottom_->num();
-		EXPECT_EQ(this->blob_top_->channels(), blob_bottom_->channels())
+		EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels())
 			<< "(top_channels,bottom_channels)=" << this->blob_top_->channels() << ","
 			<< this->blob_bottom_->channels();
 		EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_->height())
@@ -62,10 +62,10 @@ namespace caffe {
 			<< "(top_width,bottom_width)=" << this->blob_top_->width() << ","
 			<< this->blob_bottom_->width();
 		
-		layer.Forward(blob_bottom_vec_, blob_top_vec_);
+		layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 		const Dtype min_precision = 1e-5;
 		
-		for (int i = 0; i < blob_top_->count(); i++)
+		for (int i = 0; i < this->blob_top_->count(); i++)
 		{
 			EXPECT_NEAR(this->blob_top_->cpu_data()[i], 0.25, min_precision);
 		}
@@ -75,16 +75,16 @@ namespace caffe {
 	TYPED_TEST(NormalizeLayerTest, TestForward_2)
 	{
 		typedef typename TypeParam::Dtype Dtype;
-		caffe_set(blob_bottom_->count(), (Dtype)1.2, blob_bottom_->mutable_cpu_data());
+		caffe_set(this->blob_bottom_->count(), (Dtype)1.2, this->blob_bottom_->mutable_cpu_data());
 
 		LayerParameter layer_param;
 
 		NormalizeLayer<Dtype> layer(layer_param);
-		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 		EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num())
 			<< "(top_num,bottom_num)=" << this->blob_top_->num() << ","
 			<< this->blob_bottom_->num();
-		EXPECT_EQ(this->blob_top_->channels(), blob_bottom_->channels())
+		EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels())
 			<< "(top_channels,bottom_channels)=" << this->blob_top_->channels() << ","
 			<< this->blob_bottom_->channels();
 		EXPECT_EQ(this->blob_top_->height(), this->blob_bottom_->height())
@@ -94,9 +94,9 @@ namespace caffe {
 			<< "(top_width,bottom_width)=" << this->blob_top_->width() << ","
 			<< this->blob_bottom_->width();
 
-		layer.Forward(blob_bottom_vec_, blob_top_vec_);
+		layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 		const Dtype min_precision = 1e-5;
-		for (int i = 0; i < blob_top_->count(); i++)
+		for (int i = 0; i < this->blob_top_->count(); i++)
 		{
 			EXPECT_NEAR(this->blob_top_->cpu_data()[i], 0.25, min_precision);
 		}
@@ -108,7 +108,7 @@ namespace caffe {
 		FillerParameter filler_param;
 		filler_param.set_std(0.5);
 		GaussianFiller<Dtype> filler(filler_param);
-		filler.Fill(blob_bottom_);
+		filler.Fill(this->blob_bottom_);
 
 		LayerParameter layer_param;
 

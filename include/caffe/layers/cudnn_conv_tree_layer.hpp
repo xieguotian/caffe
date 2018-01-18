@@ -92,6 +92,9 @@ class CuDNNConvolutionTreeLayer : public ConvolutionLayer<Dtype> {
   bool use_spatial_;
   int spatial_idx_;
   int num_spatial_per_supernode_;
+  bool is_inverse_;
+  int first_ch_per_super_node_;
+  int first_offset_;
 };
 #endif
 

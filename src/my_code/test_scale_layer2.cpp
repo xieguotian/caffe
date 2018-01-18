@@ -41,8 +41,8 @@ namespace caffe {
 		ConvolutionParameter* conv_param = layer_param.mutable_convolution_param();
 		conv_param->set_num_output(8);
 		Scale2Layer<Dtype> layer(layer_param);
-		caffe_set(blob_bottom_->count(), (Dtype)1, blob_bottom_->mutable_cpu_data());
-		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+		caffe_set(this->blob_bottom_->count(), (Dtype)1, this->blob_bottom_->mutable_cpu_data());
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
 		Dtype* param0 = layer.blobs()[0]->mutable_cpu_data();
 		caffe_set(layer.blobs()[0]->count(), (Dtype)0, param0);
@@ -56,18 +56,18 @@ namespace caffe {
 		param1[4] = 7;
 		param1[5] = 4;
 		param1[9] = 5;
-		layer.Forward(blob_bottom_vec_, blob_top_vec_);
+		layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 		const Dtype min_precision = 1e-5;
-		int ch = blob_top_->channels();
-		int height = blob_top_->height();
-		int width = blob_top_->width();
-		for (int i = 0; i < blob_top_->count(); i++)
+		int ch = this->blob_top_->channels();
+		int height = this->blob_top_->height();
+		int width = this->blob_top_->width();
+		for (int i = 0; i < this->blob_top_->count(); i++)
 		{
 			int ch_idx = (i / width / height) % ch;
 			if (ch_idx == 3 || ch_idx == 7 || ch_idx == 4 || ch_idx == 5)
-				EXPECT_NEAR(blob_top_->mutable_cpu_data()[i], 1, min_precision);
+				EXPECT_NEAR(this->blob_top_->mutable_cpu_data()[i], 1, min_precision);
 			else
-				EXPECT_NEAR(blob_top_->mutable_cpu_data()[i], -1, min_precision);
+				EXPECT_NEAR(this->blob_top_->mutable_cpu_data()[i], -1, min_precision);
 
 		}
 	}
@@ -77,7 +77,7 @@ namespace caffe {
 		ConvolutionParameter* conv_param = layer_param.mutable_convolution_param();
 		conv_param->set_num_output(8);
 		Scale2Layer<Dtype> layer(layer_param);
-		layer.SetUp(blob_bottom_vec_, blob_top_vec_);
+		layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 		Dtype* param0 = layer.blobs()[0]->mutable_cpu_data();
 		caffe_set(layer.blobs()[0]->count(), (Dtype)0, param0);
 		param0[1] = 0.2;
