@@ -148,7 +148,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
             << layer_param.name();
       }
     } else {
-      layers_[layer_id]->SetUp(bottom_vecs_[layer_id], top_vecs_[layer_id]);
+      layers_[layer_id]->SetUp(bottom_vecs_[layer_id], top_vecs_[layer_id], &data_cache_);
     }
 	
 	//if this is not a loss layer then a blob is deletable

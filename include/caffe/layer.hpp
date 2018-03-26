@@ -65,7 +65,8 @@ class Layer {
    * This method may not be overridden.
    */
   void SetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+      const vector<Blob<Dtype>*>& top, Blob<Dtype>* cache=NULL) {
+    data_cache_.reset(cache);
     InitMutex();
     CheckBlobCounts(bottom, top);
     LayerSetUp(bottom, top);
@@ -336,6 +337,8 @@ class Layer {
    *  the objective function. */
   vector<Dtype> loss_;
 
+  shared_ptr<Blob<Dtype>> data_cache_;
+
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) = 0;
@@ -431,6 +434,7 @@ class Layer {
       }
     }
   }
+
 
  private:
   /** Whether this layer is actually shared by other nets*/

@@ -394,6 +394,7 @@ class Net {
   bool opt_test_shared_memory_;
   bool show_asum_debug_;
   map<string, vector<Dtype> > show_asum_info_;
+  Blob<Dtype> data_cache_;
 
   bool is_signal_decay_;
   Dtype signal_decay_;

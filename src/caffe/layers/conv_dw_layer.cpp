@@ -123,6 +123,15 @@ void ConvolutionDepthwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& botto
   weight_multiplier_shape.push_back(top[0]->width());
   weight_multiplier_.Reshape(weight_multiplier_shape);
   caffe_gpu_set(weight_multiplier_.count(), Dtype(1), weight_multiplier_.mutable_gpu_data());
+
+  if (this->data_cache_->count()<weight_buffer_.count())
+  {
+    vector<int> tmp_shape(1);
+    tmp_shape[0]=weight_buffer_.count();
+    this->data_cache_->Reshape(tmp_shape);
+  }
+  weight_buffer_.ShareData_LE(*this->data_cache_.get());
+  weight_buffer_.ShareDiff_LE(*this->data_cache_.get());  
   if (this->layer_param_.convolution_param().bias_term())
   {
     vector<int> bias_buffer_shape;
